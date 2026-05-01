@@ -1,13 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext, createElement } from 'react';
 
 export interface User { id: string; email: string; }
 
-export function useAuth() {
+interface AuthContext {
+  user: User | null;
+  loading: boolean;
+  signIn: (email: string) => void;
+  signOut: () => void;
+}
+
+const AuthCtx = createContext<AuthContext>({
+  user: null, loading: true,
+  signIn: () => {}, signOut: () => {}
+});
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check localStorage for demo session
     const stored = localStorage.getItem('aellux_user');
     if (stored) {
       try { setUser(JSON.parse(stored)); } catch {}
@@ -26,5 +37,9 @@ export function useAuth() {
     setUser(null);
   };
 
-  return { user, loading, signIn, signOut };
+  return createElement(AuthCtx.Provider, { value: { user, loading, signIn, signOut } }, children);
+}
+
+export function useAuth() {
+  return useContext(AuthCtx);
 }
