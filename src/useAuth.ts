@@ -1,4 +1,5 @@
 import { useState, useEffect, createContext, useContext, createElement } from 'react';
+import { supabase, upsertUser, getUser, upgradeUser } from './supabase';
 
 export interface User {
   id: string;
@@ -13,14 +14,14 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isPro: boolean;
-  signIn: (email: string) => void;
+  signIn: (email: string) => Promise<void>;
   upgradeToPro: (customerId: string, subscriptionId: string) => void;
   signOut: () => void;
 }
 
 const AuthCtx = createContext<AuthContextType>({
   user: null, loading: true, isPro: false,
-  signIn: () => {}, upgradeToPro: () => {}, signOut: () => {},
+  signIn: async () => {}, upgradeToPro: () => {}, signOut: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -28,74 +29,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Load from localStorage first for instant UI
     const stored = localStorage.getItem('aellux_user');
     if (stored) {
-      try {
-        const u = JSON.parse(stored) as User;
-        setUser(u);
-        // Re-verify pro status against Stripe if they have an email
-        if (u.email && u.plan === 'pro') {
-          verifyPro(u.email).then(result => {
-            if (!result.active && u.plan === 'pro') {
-              const downgraded = { ...u, plan: 'free' as const };
-              setUser(downgraded);
-              localStorage.setItem('aellux_user', JSON.stringify(downgraded));
-            }
-          }).catch(() => {});
-        }
-      } catch {}
+      try { setUser(JSON.parse(stored)); } catch {}
     }
 
     // Check URL for Stripe return
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get('session_id');
-    const upgraded = params.get('upgraded');
-    if (sessionId && upgraded === 'true') {
-      // Verify the session
+    if (sessionId && params.get('upgraded') === 'true') {
       fetch('/api/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId }),
-      }).then(r => r.json()).then(data => {
+      }).then(r => r.json()).then(async data => {
         if (data.active && data.email) {
+          const dbUser = await upgradeUser(data.email, data.customerId, data.subscriptionId);
           const newUser: User = {
-            id: data.customerId || data.email,
+            id: dbUser?.id || data.email,
             email: data.email,
             plan: 'pro',
             customerId: data.customerId,
             subscriptionId: data.subscriptionId,
-            signedUpAt: new Date().toISOString(),
+            signedUpAt: dbUser?.created_at || new Date().toISOString(),
           };
           setUser(newUser);
           localStorage.setItem('aellux_user', JSON.stringify(newUser));
         }
-        // Clean URL
         window.history.replaceState({}, '', window.location.pathname);
-      }).catch(() => {
-        window.history.replaceState({}, '', window.location.pathname);
-      });
+      }).catch(() => window.history.replaceState({}, '', window.location.pathname));
     }
 
     setLoading(false);
   }, []);
 
-  const signIn = (email: string) => {
-    const existing = localStorage.getItem('aellux_user');
-    let existingUser: User | null = null;
-    try { if (existing) existingUser = JSON.parse(existing); } catch {}
+  const signIn = async (email: string) => {
+    // Check Supabase first (existing user with pro plan)
+    let dbUser = await getUser(email);
 
-    // Keep existing pro status if same email
-    if (existingUser && existingUser.email === email) {
-      setUser(existingUser);
-      return;
+    if (!dbUser) {
+      // New user — create in Supabase + log to Notion CRM
+      dbUser = await upsertUser(email, 'free');
+      // Fire and forget CRM log
+      fetch('/api/crm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, plan: 'free', event: 'signup' }),
+      }).catch(() => {});
     }
 
     const newUser: User = {
-      id: email,
+      id: dbUser?.id || email,
       email,
-      plan: 'free',
-      signedUpAt: new Date().toISOString(),
+      plan: dbUser?.plan || 'free',
+      customerId: dbUser?.customer_id,
+      subscriptionId: dbUser?.subscription_id,
+      signedUpAt: dbUser?.created_at || new Date().toISOString(),
     };
+
     setUser(newUser);
     localStorage.setItem('aellux_user', JSON.stringify(newUser));
   };
@@ -105,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const upgraded = { ...user, plan: 'pro' as const, customerId, subscriptionId };
     setUser(upgraded);
     localStorage.setItem('aellux_user', JSON.stringify(upgraded));
+    upgradeUser(user.email, customerId, subscriptionId);
   };
 
   const signOut = () => {
@@ -117,15 +110,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, children);
 }
 
-async function verifyPro(email: string): Promise<{ active: boolean }> {
-  const res = await fetch('/api/verify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
-  });
-  return res.json();
-}
-
-export function useAuth() {
-  return useContext(AuthCtx);
-}
+export function useAuth() { return useContext(AuthCtx); }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
+import { saveDocument, getDocuments, deleteDocument, savePersonalised, getPersonalised } from './supabase';
 import AuthPaywall from './AuthPaywall';
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
@@ -283,15 +284,38 @@ export default function App() {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load from localStorage on mount
+  // Load from Supabase on mount (with localStorage fallback)
   useEffect(() => {
+    // Immediate localStorage load for fast UI
     try {
       const saved = localStorage.getItem('aellux_documents');
       if (saved) { const docs = JSON.parse(saved); setDocuments(docs); if (docs.length > 0) setPanel('dashboard'); }
-      const savedPersonalised = localStorage.getItem('aellux_personalised');
-      if (savedPersonalised) setPersonalised(JSON.parse(savedPersonalised));
+      const savedP = localStorage.getItem('aellux_personalised');
+      if (savedP) setPersonalised(JSON.parse(savedP));
     } catch {}
-  }, []);
+
+    // Then sync from Supabase if logged in
+    if (user?.id) {
+      getDocuments(user.id).then(docs => {
+        if (docs.length > 0) {
+          const mapped = docs.map(d => ({
+            id: d.id, name: d.name, date: d.date, document_type: d.document_type,
+            markers: d.markers, summary: d.summary, flags: d.flags,
+            recommendations: d.recommendations, uploadedAt: d.uploaded_at,
+          }));
+          setDocuments(mapped);
+          localStorage.setItem('aellux_documents', JSON.stringify(mapped));
+          setPanel('dashboard');
+        }
+      });
+      getPersonalised(user.id).then(p => {
+        if (Object.keys(p).length > 0) {
+          setPersonalised(p);
+          localStorage.setItem('aellux_personalised', JSON.stringify(p));
+        }
+      });
+    }
+  }, [user?.id]);
 
   // Awakening sequence
   useEffect(() => {
@@ -349,6 +373,15 @@ export default function App() {
     if (docs.length > 0 && panel === 'upload') setPanel('dashboard');
   }, [panel]);
 
+  const saveDocumentToDb = useCallback(async (doc: Document) => {
+    if (!user?.id) return;
+    await saveDocument(user.id, {
+      name: doc.name, date: doc.date, document_type: doc.document_type,
+      markers: doc.markers, summary: doc.summary, flags: doc.flags,
+      recommendations: doc.recommendations, uploaded_at: doc.uploadedAt,
+    });
+  }, [user?.id]);
+
   // ── FILE PROCESSING ──────────────────────────────────────────────────────
 
   const processFile = async (file: File) => {
@@ -404,6 +437,7 @@ export default function App() {
 
       const updatedDocs = [...documents, newDoc];
       saveDocuments(updatedDocs);
+      saveDocumentToDb(newDoc);
       setUploadStatus(`✓ ${file.name} — extracted ${newDoc.markers.length} markers`);
       setOrbState('speaking');
       setResponse(extracted.summary || `I have extracted ${newDoc.markers.length} biomarkers from ${file.name}.`);
@@ -436,6 +470,7 @@ export default function App() {
       const updated = { ...personalised, [type]: data };
       setPersonalised(updated);
       try { localStorage.setItem('aellux_personalised', JSON.stringify(updated)); } catch {}
+      if (user?.id) savePersonalised(user.id, type, data);
       setOrbState('speaking');
       setResponse(data.key_insight || data.aellux_voice || 'Your personalised protocol has been generated from your health data.');
       setTimeout(() => setOrbState('idle'), 4000);
