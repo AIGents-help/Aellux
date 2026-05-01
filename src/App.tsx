@@ -253,7 +253,7 @@ const AwakenScreen = ({ onComplete }: { onComplete: () => void }) => {
           )}
           {phase === 'speaking' && text && (
             <p style={{
-              fontSize: 15, color: 'rgba(0,202,162,.78)', fontStyle: 'italic',
+              fontSize: 18, color: 'rgba(0,202,162,.78)', fontStyle: 'italic',
               lineHeight: 1.85, letterSpacing: '.4px', minHeight: 52,
               animation: 'ae-fade-up .5s ease forwards',
             }}>
@@ -269,7 +269,7 @@ const AwakenScreen = ({ onComplete }: { onComplete: () => void }) => {
             style={{
               background: 'transparent', border: '.5px solid rgba(0,172,138,.2)',
               color: 'rgba(0,172,138,.5)', padding: '6px 16px', borderRadius: 3,
-              font: 'inherit', fontSize: 10, letterSpacing: 2.5, textTransform: 'uppercase',
+              font: 'inherit', fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase',
               cursor: 'pointer', transition: 'all .28s',
             }}
             onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = 'rgba(0,192,155,.45)'; (e.target as HTMLElement).style.color = 'rgba(0,192,155,.75)'; }}
@@ -324,7 +324,7 @@ const RecordPanel = ({ onOrbState }: { onOrbState: (s: OrbState) => void }) => {
             }
           }} />
           <p className="ae-micro" style={{ color: 'rgba(0,172,138,.45)', marginBottom: 2 }}>+ upload</p>
-          <p style={{ fontSize: 9, color: 'rgba(0,130,105,.25)', letterSpacing: .8 }}>pdf · csv · json</p>
+          <p style={{ fontSize: 12, color: 'rgba(0,130,105,.25)', letterSpacing: .8 }}>pdf · csv · json</p>
         </label>
       </div>
 
@@ -359,7 +359,7 @@ const RecordPanel = ({ onOrbState }: { onOrbState: (s: OrbState) => void }) => {
           style={{
             position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
             background: 'none', border: 'none', cursor: 'pointer',
-            color: 'rgba(0,172,138,.4)', fontSize: 13, padding: 2,
+            color: 'rgba(0,172,138,.4)', fontSize: 16, padding: 2,
             transition: 'color .22s',
           }}
           onMouseEnter={e => { (e.target as HTMLElement).style.color = 'rgba(0,212,168,.75)'; }}
@@ -385,13 +385,13 @@ const RecordPanel = ({ onOrbState }: { onOrbState: (s: OrbState) => void }) => {
             <p className="ae-label" style={{ color: 'rgba(0,172,138,.42)' }}>Latest Intelligence</p>
             <button
               onClick={() => setShowDeltas(false)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,130,105,.3)', fontSize: 10, padding: 0 }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,130,105,.3)', fontSize: 16, padding: 0 }}
             >dismiss</button>
           </div>
           {MOCK_DELTAS.map((d, i) => (
             <div key={i} className="ae-card" style={{ animationDelay: `${i * 0.1}s` }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
-                <span style={{ fontSize: 14, color: d.color, flexShrink: 0, marginTop: 2 }}>{d.icon}</span>
+                <span style={{ fontSize: 17, color: d.color, flexShrink: 0, marginTop: 2 }}>{d.icon}</span>
                 <div>
                   <p className="ae-micro" style={{ color: 'rgba(0,135,108,.35)', marginBottom: 5 }}>{d.label}</p>
                   <p style={{ fontSize: 13.5, color: 'rgba(0,190,155,.72)', lineHeight: 1.75, fontStyle: 'italic' }}>{d.value}</p>
@@ -451,12 +451,12 @@ const ComparePanel = ({ onOrbState }: { onOrbState: (s: OrbState) => void }) => 
             <div style={{ flex: 1 }}>
               <p className="ae-micro" style={{ color: 'rgba(0,135,108,.35)', marginBottom: 4 }}>{m.name}</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, color: 'rgba(0,150,120,.5)' }}>{m.then}</span>
-                <span style={{ fontSize: 10, color: 'rgba(0,130,105,.3)' }}>→</span>
+                <span style={{ fontSize: 18, color: 'rgba(0,150,120,.5)' }}>{m.then}</span>
+                <span style={{ fontSize: 16, color: 'rgba(0,130,105,.3)' }}>→</span>
                 <span style={{ fontSize: 13.5, color: m.good ? 'rgba(0,212,168,.88)' : 'rgba(220,120,80,.75)', fontWeight: 500 }}>{m.now}</span>
               </div>
             </div>
-            <span style={{ fontSize: 14, color: m.good ? 'rgba(0,212,168,.7)' : 'rgba(220,100,80,.6)' }}>
+            <span style={{ fontSize: 17, color: m.good ? 'rgba(0,212,168,.7)' : 'rgba(220,100,80,.6)' }}>
               {m.dir === 'up' ? '↑' : m.dir === 'down' ? '↓' : '→'}
             </span>
           </div>
@@ -476,7 +476,7 @@ const ComparePanel = ({ onOrbState }: { onOrbState: (s: OrbState) => void }) => 
           style={{
             marginTop: 10, background: 'none', border: '.5px solid rgba(0,150,120,.14)',
             color: 'rgba(0,150,120,.4)', padding: '4px 10px', borderRadius: 2,
-            font: 'inherit', fontSize: 9.5, letterSpacing: 2, textTransform: 'uppercase',
+            font: 'inherit', fontSize: 9.5, letterSpacing: 1.5, textTransform: 'uppercase',
             cursor: 'pointer', transition: 'all .22s',
           }}
           onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = 'rgba(0,192,155,.3)'; (e.target as HTMLElement).style.color = 'rgba(0,192,155,.65)'; }}
@@ -519,7 +519,7 @@ const ProtocolPanel = ({ onOrbState }: { onOrbState: (s: OrbState) => void }) =>
               strokeDasharray={circumference} strokeDashoffset={dash} style={{ transition: 'stroke-dashoffset .8s ease' }} />
           </svg>
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <p style={{ fontSize: 13, color: 'rgba(0,212,168,.88)', lineHeight: 1 }}>{score}</p>
+            <p style={{ fontSize: 16, color: 'rgba(0,212,168,.88)', lineHeight: 1 }}>{score}</p>
             <p style={{ fontSize: 8, color: 'rgba(0,135,108,.4)', letterSpacing: 1 }}>%</p>
           </div>
         </div>
@@ -541,7 +541,7 @@ const ProtocolPanel = ({ onOrbState }: { onOrbState: (s: OrbState) => void }) =>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <span className="ae-badge" style={{ background: `${tierColor(p.tier)}18`, color: tierColor(p.tier) }}>{p.tier}</span>
-              <p style={{ fontSize: 13, color: 'rgba(0,192,155,.82)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.label}</p>
+              <p style={{ fontSize: 16, color: 'rgba(0,192,155,.82)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.label}</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div className="ae-prog-track">
@@ -560,7 +560,7 @@ const ProtocolPanel = ({ onOrbState }: { onOrbState: (s: OrbState) => void }) =>
 
       {/* Ask about protocol */}
       <div style={{ marginTop: 18, padding: '11px 13px', borderRadius: 3, border: '.5px dashed rgba(0,172,138,.12)', background: 'rgba(0,8,16,.4)' }}>
-        <p style={{ fontSize: 12, color: 'rgba(0,152,125,.45)', fontStyle: 'italic' }}>
+        <p style={{ fontSize: 18, color: 'rgba(0,152,125,.45)', fontStyle: 'italic' }}>
           "Why Omega-3 before sleep adjustments?"
         </p>
         <button
@@ -573,7 +573,7 @@ const ProtocolPanel = ({ onOrbState }: { onOrbState: (s: OrbState) => void }) =>
           }}
           style={{
             marginTop: 7, background: 'none', border: 'none', cursor: 'pointer',
-            color: 'rgba(0,152,125,.38)', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase',
+            color: 'rgba(0,152,125,.38)', fontSize: 16, letterSpacing: 1.5, textTransform: 'uppercase',
             padding: 0, font: 'inherit', transition: 'color .22s',
           }}
           onMouseEnter={e => { (e.target as HTMLElement).style.color = 'rgba(0,192,155,.65)'; }}
@@ -600,15 +600,15 @@ const NotifOverlay = ({ notif, onDismiss }: { notif: typeof NOTIF_POOL[0] | null
                 {isHigh ? 'signal · high urgency' : 'signal · low urgency'}
               </p>
             </div>
-            <button onClick={onDismiss} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,130,105,.3)', fontSize: 12, padding: 0 }}>×</button>
+            <button onClick={onDismiss} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,130,105,.3)', fontSize: 18, padding: 0 }}>×</button>
           </div>
-          <p style={{ fontSize: 13, color: 'rgba(0,192,155,.85)', marginBottom: 6 }}>{notif.title}</p>
+          <p style={{ fontSize: 16, color: 'rgba(0,192,155,.85)', marginBottom: 6 }}>{notif.title}</p>
           <p style={{ fontSize: 12.5, color: 'rgba(0,165,135,.6)', lineHeight: 1.72, fontStyle: 'italic', marginBottom: 11 }}>{notif.body}</p>
           <button
             style={{
               background: 'rgba(0,48,38,.22)', border: '.5px solid rgba(0,192,155,.18)',
               color: 'rgba(0,192,155,.7)', padding: '4px 10px', borderRadius: 2,
-              font: 'inherit', fontSize: 10, letterSpacing: 1.8, textTransform: 'uppercase', cursor: 'pointer',
+              font: 'inherit', fontSize: 16, letterSpacing: 1.8, textTransform: 'uppercase', cursor: 'pointer',
             }}
             onClick={onDismiss}
           >{notif.action}</button>
@@ -667,7 +667,7 @@ export default function App() {
 
         {/* Brand */}
         <div style={{ textAlign: 'center', marginBottom: 22 }}>
-          <p style={{ fontSize: 13, letterSpacing: 4, color: 'rgba(0,192,155,.72)', marginBottom: 2 }}>AELLUX</p>
+          <p style={{ fontSize: 16, letterSpacing: 2.5, color: 'rgba(0,192,155,.72)', marginBottom: 2 }}>AELLUX</p>
           <div className="ae-divider" style={{ margin: '0 auto' }} />
         </div>
 
@@ -695,7 +695,7 @@ export default function App() {
               onClick={() => setNotif(n)}
             >
               <div style={{ width: 4, height: 4, borderRadius: '50%', background: n.urgency === 'high' ? 'rgba(220,80,80,.7)' : 'rgba(0,192,155,.7)', flexShrink: 0 }} />
-              <p style={{ fontSize: 10, color: 'rgba(0,162,132,.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</p>
+              <p style={{ fontSize: 16, color: 'rgba(0,162,132,.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</p>
             </div>
           ))}
         </div>

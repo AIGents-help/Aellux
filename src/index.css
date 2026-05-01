@@ -1,256 +1,137 @@
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 @import "tailwindcss";
-
-@theme {
-  --font-sans: "EB Garamond", Georgia, serif;
-  --font-serif: "EB Garamond", Georgia, serif;
-  --font-mono: "JetBrains Mono", monospace;
-
-  --color-aellux-bg: #020810;
-  --color-aellux-bg2: #000812;
-  --color-aellux-teal: #00d2a5;
-  --color-aellux-teal-dim: rgba(0,210,165,0.65);
-  --color-aellux-teal-ghost: rgba(0,210,165,0.1);
-  --color-aellux-blue: rgba(0,160,220,1);
-  --color-aellux-border: rgba(0,180,140,0.1);
-  --color-aellux-text: rgba(0,210,165,0.82);
-  --color-aellux-text-dim: rgba(0,170,138,0.55);
-  --color-aellux-text-muted: rgba(0,130,105,0.35);
-}
 
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
-
   html, body, #root {
-    height: 100%;
-    overflow: hidden;
+    height: 100%; overflow: hidden;
     background: #020810;
-    color: rgba(0,210,165,0.82);
+    color: rgba(0,220,175,0.92);
     font-family: "EB Garamond", Georgia, serif;
+    font-size: 18px;
   }
-
-  ::-webkit-scrollbar { width: 2px; height: 2px; }
-  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar { width: 2px; }
   ::-webkit-scrollbar-thumb { background: rgba(0,180,140,0.2); border-radius: 2px; }
-  ::selection { background: rgba(0,210,165,0.2); color: rgba(0,255,200,0.95); }
+  ::selection { background: rgba(0,210,165,0.2); }
 }
 
-/* ── ANIMATIONS ── */
-@keyframes ae-breath { 0%,100%{transform:scale(1)} 50%{transform:scale(1.018)} }
-@keyframes ae-iris { 0%,100%{opacity:.82} 50%{opacity:1} }
-@keyframes ae-rim { 0%,100%{opacity:.4} 50%{opacity:.9} }
-@keyframes ae-orbit-cw { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-@keyframes ae-orbit-ccw { from{transform:rotate(0deg)} to{transform:rotate(-360deg)} }
-@keyframes ae-fade-up { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-@keyframes ae-card-in { 0%{opacity:0;transform:translateY(14px) scale(.96)} 60%{transform:translateY(-2px) scale(1.003)} 100%{opacity:1;transform:none} }
-@keyframes ae-think { 0%,100%{opacity:.28} 50%{opacity:.9} }
-@keyframes ae-listen-ring { 0%{width:18px;height:18px;opacity:.6} 100%{width:200px;height:200px;opacity:0} }
-@keyframes ae-speak-ring { 0%{width:8px;height:8px;opacity:.5} 100%{width:260px;height:260px;opacity:0} }
-@keyframes ae-dorm { 0%,85%,100%{border-color:rgba(0,80,60,0)} 42%{border-color:rgba(0,100,80,.14);transform:scale(1.035)} }
-@keyframes ae-hint { 0%,100%{opacity:.18} 50%{opacity:.6} }
-@keyframes ae-awaken { 0%{width:0;height:0;opacity:.9;border-width:2px} 100%{width:500px;height:500px;opacity:0;border-width:.5px} }
-@keyframes ae-typewriter { from{opacity:0;max-width:0} to{opacity:1;max-width:100%} }
-@keyframes ae-scan { 0%{top:-1px} 100%{top:100%} }
-@keyframes ae-star { 0%,100%{opacity:0} 50%{opacity:var(--op,.28)} }
-@keyframes ae-sweep { from{transform:scaleX(0);transform-origin:left} to{transform:scaleX(1)} }
+@keyframes aellux-fade-up { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes aellux-star-twinkle { 0%,100%{opacity:0} 50%{opacity:0.3} }
 
 /* ── LAYOUT ── */
-.ae-layout {
+.aellux-layout {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 220px 1fr;
   height: 100vh;
   overflow: hidden;
-  background: #020810;
 }
 
 /* ── LEFT COLUMN ── */
-.ae-lc {
+.aellux-lc {
   display: flex; flex-direction: column; align-items: center;
-  padding: 20px 0 18px;
-  border-right: .5px solid rgba(0,175,138,.07);
-  background: rgba(0,4,10,.78);
+  padding: 28px 0 20px;
+  border-right: 1px solid rgba(0,180,140,.1);
+  background: rgba(0,4,10,.8);
   position: relative; overflow: hidden; height: 100vh;
 }
-.ae-lc::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 50% 34%, rgba(0,110,85,.04) 0%, transparent 62%);
+.aellux-lc::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 35%, rgba(0,110,85,.06) 0%, transparent 65%);
   pointer-events: none;
 }
 
-/* ── ORB ── */
-.ae-orb-wrap {
-  position: relative; border-radius: 50%;
-  animation: ae-breath 9s ease-in-out infinite;
-  flex-shrink: 0;
-}
-.ae-orb-mem {
-  position: absolute; inset: 0; border-radius: 50%;
-  background: radial-gradient(ellipse at 36% 30%, rgba(0,230,180,.22) 0%, rgba(0,150,210,.12) 22%, rgba(0,25,55,.88) 52%, rgba(0,8,22,.97) 100%);
-}
-.ae-orb-iris {
-  position: absolute; inset: 0; border-radius: 50%;
-  background: radial-gradient(ellipse at 50% 50%, rgba(0,255,200,1) 0%, rgba(0,210,170,.85) 18%, rgba(0,160,200,.5) 38%, transparent 70%);
-  animation: ae-iris 8s ease-in-out infinite;
-}
-.ae-orb-rim {
-  position: absolute; inset: -1px; border-radius: 50%;
-  border: 1px solid rgba(0,200,160,.18);
-  animation: ae-rim 8s ease-in-out infinite;
-}
-.ae-orb-spec {
-  position: absolute; top: 18%; left: 22%;
-  width: 35%; height: 28%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(255,255,255,.07) 0%, transparent 100%);
-  transform: rotate(-20deg);
-}
-
 /* ── NAV ── */
-.ae-nav {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 9px; border-radius: 3px;
-  border: .5px solid transparent; cursor: pointer;
-  transition: all .22s;
-  font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase;
-  color: rgba(0,140,115,.38); width: 158px;
+.aellux-nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 3px;
+  border: 1px solid transparent; cursor: pointer;
+  transition: border-color .25s, background .25s, color .25s;
+  font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(0,160,130,.55); width: 176px; background: none;
+  font-family: inherit;
 }
-.ae-nav:hover { border-color: rgba(0,192,155,.15); background: rgba(0,18,30,.5); color: rgba(0,192,155,.62); }
-.ae-nav.active { border-color: rgba(0,192,155,.22); background: rgba(0,20,34,.58); color: rgba(0,212,168,.88); }
+.aellux-nav-item:hover { border-color: rgba(0,195,155,.25); background: rgba(0,18,30,.5); color: rgba(0,210,170,.85); }
+.aellux-nav-item.active { border-color: rgba(0,195,155,.35); background: rgba(0,20,34,.65); color: rgba(0,230,180,.95); }
 
-/* ── SPEAK INPUT ── */
-.ae-input {
-  width: 100%; background: rgba(0,12,24,.7);
-  border: .5px solid rgba(0,172,138,.14); border-radius: 3px;
-  color: rgba(0,202,162,.85); font-size: 12.5px; font-family: inherit;
-  padding: 7px 28px 7px 10px; outline: none; letter-spacing: .7px;
+/* ── INPUT ── */
+.aellux-speak-input {
+  width: 100%; background: rgba(0,12,24,.75);
+  border: 1px solid rgba(0,175,138,.2); border-radius: 3px;
+  color: rgba(0,220,175,.92); font-size: 15px; font-family: inherit;
+  padding: 10px 34px 10px 12px; outline: none; letter-spacing: .3px;
   transition: border-color .3s;
 }
-.ae-input::placeholder { color: rgba(0,148,120,.2); font-size: 11px; }
-.ae-input:focus { border-color: rgba(0,192,155,.32); }
-
-/* ── UPLOAD ── */
-.ae-upload {
-  width: 158px; border: .5px dashed rgba(0,172,138,.16); border-radius: 3px;
-  padding: 9px; text-align: center; background: rgba(0,10,20,.4);
-  cursor: pointer; transition: all .28s;
-}
-.ae-upload:hover { border-color: rgba(0,212,168,.38); background: rgba(0,26,38,.5); }
+.aellux-speak-input::placeholder { color: rgba(0,155,125,.35); font-size: 13px; }
+.aellux-speak-input:focus { border-color: rgba(0,200,160,.45); }
 
 /* ── TOPBAR ── */
-.ae-topbar {
+.aellux-topbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 20px; height: 40px;
-  border-bottom: .5px solid rgba(0,172,138,.05);
-  flex-shrink: 0; background: rgba(0,3,8,.6);
+  padding: 0 24px; height: 48px;
+  border-bottom: 1px solid rgba(0,175,138,.08);
+  flex-shrink: 0; background: rgba(0,3,8,.7);
 }
 
 /* ── CARDS ── */
-.ae-card {
-  border: .5px solid rgba(0,172,138,.1); border-radius: 4px;
-  background: rgba(0,9,18,.7); padding: 12px 14px; margin-bottom: 8px;
-  animation: ae-fade-up .45s ease forwards;
-  position: relative; overflow: hidden;
-}
-.ae-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: .5px;
-  background: linear-gradient(90deg, transparent, rgba(0,192,155,.28), transparent);
-  animation: ae-sweep .9s ease forwards;
+.aellux-delta-card {
+  border: 1px solid rgba(0,175,138,.15); border-radius: 5px;
+  background: rgba(0,9,18,.8); padding: 16px 18px;
+  animation: aellux-fade-up .5s ease forwards; position: relative;
 }
 
 /* ── RESPONSE BOX ── */
-.ae-response {
-  min-height: 48px; padding: 12px 14px; margin-bottom: 14px;
-  border: .5px solid rgba(0,192,155,.09); border-left: 1.5px solid rgba(0,192,155,.28);
-  border-radius: 0 4px 4px 0; background: rgba(0,12,22,.5);
-  font-size: 14px; line-height: 1.95; color: rgba(0,195,162,.72);
-  font-style: italic; letter-spacing: .25px; opacity: 0; transition: opacity .7s;
+.aellux-response {
+  padding: 12px 14px;
+  border: 1px solid rgba(0,195,155,.15); border-left: 2px solid rgba(0,195,155,.45);
+  border-radius: 0 4px 4px 0; background: rgba(0,12,22,.6);
+  font-size: 15px; line-height: 1.85; color: rgba(0,210,170,.85);
+  font-style: italic; opacity: 0; transition: opacity .8s;
 }
-.ae-response.show { opacity: 1; }
+.aellux-response.visible { opacity: 1; }
 
-/* ── NOTIFICATION CARD ── */
-.ae-notif {
-  width: 420px; background: rgba(2,10,22,.98);
-  border: .5px solid rgba(0,192,152,.13); border-radius: 5px;
-  overflow: hidden; opacity: 0; transform: translateY(12px) scale(.97);
-  pointer-events: none; position: relative;
-}
-.ae-notif.in { animation: ae-card-in .6s cubic-bezier(.34,1.56,.64,1) forwards; pointer-events: all; }
-
-/* ── PROTO ITEM ── */
-.ae-proto {
-  display: flex; align-items: flex-start; gap: 8px;
-  padding: 9px 11px; border-radius: 3px;
-  border: .5px solid rgba(0,172,132,.09); background: rgba(0,9,20,.64);
-  cursor: pointer; transition: all .22s; margin-bottom: 6px;
-  position: relative; overflow: hidden;
-}
-.ae-proto:hover { border-color: rgba(0,192,152,.18); background: rgba(0,16,29,.74); transform: translateX(2px); }
-.ae-proto.done { opacity: .32; }
-
-/* ── COMPARISON ── */
-.ae-syn {
-  border: .5px solid rgba(0,172,132,.09); border-radius: 4px;
-  background: rgba(0,9,18,.7); padding: 14px 16px;
-  position: relative; overflow: hidden;
+/* ── SYNTHESIS BOX ── */
+.aellux-syn-box {
+  border: 1px solid rgba(0,172,132,.15); border-radius: 5px;
+  background: rgba(0,9,18,.8); padding: 18px 20px;
 }
 
-/* ── UTILITY ── */
-.ae-label { font-size: 10.5px; letter-spacing: 3px; text-transform: uppercase; }
-.ae-micro { font-size: 9.5px; letter-spacing: 2px; text-transform: uppercase; }
-.ae-divider { width: 40px; height: .5px; background: rgba(0,172,138,.1); }
-.ae-badge { font-size: 9px; letter-spacing: 1px; padding: 1px 5px; border-radius: 2px; background: rgba(0,192,155,.1); color: rgba(0,202,162,.62); }
-.ae-prog-track { flex: 1; height: 1.5px; background: rgba(0,48,38,.38); border-radius: 2px; overflow: hidden; }
-.ae-prog-fill { height: 100%; border-radius: 2px; width: 0%; transition: width 1.1s ease; }
-.ae-check {
-  width: 13px; height: 13px; border-radius: 50%;
-  border: .5px solid rgba(0,172,132,.18);
+/* ── PROTOCOL ITEMS ── */
+.aellux-proto-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 14px 16px; border-radius: 4px;
+  border: 1px solid rgba(0,172,132,.15); background: rgba(0,9,20,.75);
+  cursor: pointer; transition: border-color .25s, background .25s;
+  margin-bottom: 8px;
+}
+.aellux-proto-item:hover { border-color: rgba(0,192,152,.28); background: rgba(0,16,29,.85); }
+.aellux-proto-item.completed { opacity: .38; }
+
+/* ── RANGE TABS ── */
+.aellux-rtab {
+  padding: 6px 14px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+  background: transparent; border: 1px solid rgba(0,132,105,.25);
+  color: rgba(0,160,130,.55); border-radius: 3px; cursor: pointer;
+  transition: all .25s; font-family: inherit;
+}
+.aellux-rtab:hover { border-color: rgba(0,192,152,.45); color: rgba(0,210,170,.85); }
+.aellux-rtab.active { border-color: rgba(0,192,152,.55); color: rgba(0,225,180,.95); background: rgba(0,56,44,.3); }
+
+/* ── CHECK ── */
+.aellux-check {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 1px solid rgba(0,172,132,.28);
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; cursor: pointer; transition: all .28s;
+  flex-shrink: 0; cursor: pointer; transition: background .3s, border-color .3s;
+  margin-top: 2px;
 }
-.ae-check:hover { border-color: rgba(0,192,152,.42); }
-.ae-check.on { background: rgba(0,192,152,.13); border-color: rgba(0,192,152,.46); }
-.ae-rtab {
-  padding: 3px 8px; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
-  font-family: inherit; background: transparent;
-  border: .5px solid rgba(0,130,105,.16); color: rgba(0,135,108,.38);
-  border-radius: 2px; cursor: pointer; transition: all .22s;
-}
-.ae-rtab:hover { border-color: rgba(0,192,152,.32); color: rgba(0,192,152,.62); }
-.ae-rtab.on { border-color: rgba(0,192,152,.4); color: rgba(0,212,168,.86); background: rgba(0,54,42,.22); }
+.aellux-check:hover { border-color: rgba(0,192,152,.55); }
+.aellux-check.checked { background: rgba(0,192,152,.18); border-color: rgba(0,192,152,.6); }
 
-/* ── AWAKEN SCREEN ── */
-.ae-awaken-bg {
-  position: fixed; inset: 0;
-  background: radial-gradient(ellipse at 50% 50%, rgba(0,35,28,.9) 0%, #020810 65%);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 100;
+/* ── BADGE ── */
+.aellux-badge {
+  font-size: 10px; letter-spacing: 1px; padding: 2px 7px;
+  border-radius: 2px; background: rgba(0,195,155,.12); color: rgba(0,215,172,.75);
 }
 
-/* ── SCROLLABLE PANELS ── */
-.ae-panel {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
-  padding: 0 20px 20px;
-  scrollbar-width: thin; scrollbar-color: rgba(0,175,138,.15) transparent;
-}
-
-/* ── NOTIF QUEUE ITEM ── */
-.ae-nqi {
-  display: flex; align-items: center; gap: 5px;
-  padding: 5px 8px; background: rgba(2,8,20,.96);
-  border: .5px solid rgba(0,172,132,.1); border-radius: 3px;
-  opacity: 0; transform: translateX(12px);
-  transition: opacity .32s, transform .32s;
-  cursor: pointer; width: 174px;
-}
-.ae-nqi.show { opacity: 1; transform: translateX(0); }
-
-/* ── WEEK GRID ── */
-.ae-wkd {
-  height: 15px; border-radius: 2px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 8.5px;
-}
-.ae-wkd.hit { background: rgba(0,50,40,.55); border: .5px solid rgba(0,192,152,.18); color: rgba(0,192,152,.65); }
-.ae-wkd.miss { background: rgba(0,9,18,.5); border: .5px solid rgba(0,46,36,.24); color: rgba(0,80,64,.24); }
+/* ── DIVIDER ── */
+.aellux-divider { width: 48px; height: 1px; background: rgba(0,175,138,.12); }
