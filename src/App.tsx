@@ -194,8 +194,75 @@ function TrendChart({ marker, history }: { marker: string; history: Array<{ date
 
 // ── MAIN APP ─────────────────────────────────────────────────────────────────
 
-export default function App() {
+
+// ── UPGRADE MODAL ────────────────────────────────────────────────────────────
+function UpgradeModal({ onClose }: { onClose: () => void }) {
+  const [email, setEmail] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
   const { user } = useAuth();
+
+  const handleUpgrade = async () => {
+    const e = user?.email || email;
+    if (!e) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: e }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch {}
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,8,16,.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <div style={{ background: 'rgba(0,10,22,.98)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 10, padding: '40px 36px', maxWidth: 440, width: '90%', textAlign: 'center' }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>✦</div>
+        <h2 style={{ fontSize: 26, color: 'rgba(0,215,172,.95)', fontWeight: 400, margin: '0 0 12px' }}>Aellux Pro</h2>
+        <p style={{ fontSize: 16, color: 'rgba(0,185,150,.68)', lineHeight: 1.75, marginBottom: 28 }}>
+          Unlock AI-generated meal protocols, supplement stacks, daily protocols, and unlimited Aellux conversations — all personalised to your actual biomarkers.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+          {['Personalised meal protocol from your markers', 'Supplement stack with full dosing rationale', 'Daily protocol ranked by biomarker impact', 'Unlimited AI conversations with your data'].map(f => (
+            <div key={f} style={{ fontSize: 15, color: 'rgba(0,205,165,.82)', textAlign: 'left', display: 'flex', gap: 10 }}>
+              <span style={{ color: 'rgba(0,195,155,.7)' }}>✦</span>{f}
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 32, color: 'rgba(0,215,172,.96)', marginBottom: 6, fontWeight: 400 }}>$29<span style={{ fontSize: 16, color: 'rgba(0,175,142,.5)', fontWeight: 400 }}>/month</span></div>
+        <div style={{ fontSize: 14, color: 'rgba(0,155,125,.45)', marginBottom: 24 }}>Cancel anytime · Powered by Stripe</div>
+        <button onClick={handleUpgrade} disabled={loading}
+          style={{ width: '100%', fontSize: 17, color: '#020810', background: 'rgba(0,200,160,.88)', border: 'none', borderRadius: 5, padding: '14px 0', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500, marginBottom: 12 }}>
+          {loading ? 'Opening Stripe...' : 'Upgrade to Pro →'}
+        </button>
+        <button onClick={onClose} style={{ fontSize: 14, color: 'rgba(0,155,125,.45)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Maybe later</button>
+      </div>
+    </div>
+  );
+}
+
+// ── PRO GATE ─────────────────────────────────────────────────────────────────
+function ProGate({ isPro, onUpgrade, feature }: { isPro: boolean; onUpgrade: () => void; feature: string }) {
+  if (isPro) return null;
+  return (
+    <div style={{ background: 'rgba(0,8,16,.85)', border: '1px solid rgba(0,195,155,.2)', borderRadius: 8, padding: '36px 28px', textAlign: 'center', marginBottom: 24 }}>
+      <div style={{ fontSize: 28, marginBottom: 14 }}>✦</div>
+      <div style={{ fontSize: 20, color: 'rgba(0,215,172,.92)', marginBottom: 10, fontWeight: 500 }}>{feature} is a Pro feature</div>
+      <p style={{ fontSize: 16, color: 'rgba(0,175,142,.65)', lineHeight: 1.75, marginBottom: 24, maxWidth: 360, margin: '0 auto 24px' }}>
+        Upgrade to Aellux Pro to get this personalised to your actual biomarkers.
+      </p>
+      <button onClick={onUpgrade}
+        style={{ fontSize: 17, color: '#020810', background: 'rgba(0,200,160,.88)', border: 'none', borderRadius: 5, padding: '13px 32px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
+        Upgrade to Pro — $29/mo →
+      </button>
+    </div>
+  );
+}
+
+export default function App() {
+  const { user, isPro, signOut } = useAuth();
   const [orbState, setOrbState] = useState<OrbState>('dormant');
   const [panel, setPanel] = useState<Panel>('upload');
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -209,6 +276,7 @@ export default function App() {
   const [input, setInput] = useState('');
   const [response, setResponse] = useState('');
   const [asking, setAsking] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const [awakened, setAwakened] = useState(false);
   const [awakePhase, setAwakePhase] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -484,6 +552,18 @@ export default function App() {
         )}
 
         <div style={{ flex: 1 }} />
+        <div style={{ padding: '0 14px', width: '100%', marginBottom: 12 }}>
+          <div style={{ background: 'rgba(0,6,14,.7)', border: '1px solid rgba(0,165,132,.1)', borderRadius: 4, padding: '10px 12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <div style={{ fontSize: 13, color: 'rgba(0,190,155,.72)' }}>{user?.email?.split('@')[0]}</div>
+              <div style={{ fontSize: 11, padding: '2px 8px', border: isPro ? '1px solid rgba(0,195,155,.4)' : '1px solid rgba(0,155,125,.2)', borderRadius: 10, color: isPro ? 'rgba(0,210,165,.85)' : 'rgba(0,155,125,.5)', letterSpacing: 1, textTransform: 'uppercase' }}>{isPro ? 'Pro' : 'Free'}</div>
+            </div>
+            {!isPro && (
+              <button onClick={() => setShowUpgrade(true)} style={{ width: '100%', fontSize: 13, color: 'rgba(0,210,165,.85)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.25)', borderRadius: 3, padding: '6px 0', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>Upgrade to Pro →</button>
+            )}
+            <button onClick={signOut} style={{ width: '100%', fontSize: 12, color: 'rgba(0,140,115,.4)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4, textAlign: 'left' }}>Sign out</button>
+          </div>
+        </div>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
           {Array.from({ length: 14 }).map((_, i) => (
             <div key={i} style={{ position: 'absolute', width: 1.5, height: 1.5, borderRadius: '50%', background: 'rgba(0,200,160,.2)', left: `${12 + (i * 19.3) % 70}%`, top: `${8 + (i * 22.7) % 80}%`, animation: `aellux-star-twinkle ${3 + (i % 4)}s ${i * 0.5}s ease-in-out infinite` }} />
@@ -761,7 +841,9 @@ export default function App() {
           {/* ── MEALS ── */}
           {panel === 'meals' && (
             <div>
-              {!personalised.meals ? (
+              {!isPro ? (
+                <ProGate isPro={isPro} onUpgrade={() => setShowUpgrade(true)} feature="Meal Protocol" />
+              ) : !personalised.meals ? (
                 <div style={{ textAlign: 'center', padding: '50px 20px' }}>
                   <p style={{ fontSize: 18, color: 'rgba(0,190,155,.75)', marginBottom: 10, lineHeight: 1.7 }}>
                     {allMarkers.length === 0 ? 'Upload your health documents first.' : `Aellux will design your meal protocol from your ${allMarkers.length} biomarkers.`}
@@ -1040,6 +1122,8 @@ export default function App() {
 
         </div>
       </div>
+
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </div>
   );
 }
