@@ -2,90 +2,112 @@
 @import "tailwindcss";
 
 @layer base {
-  *, *::before, *::after { box-sizing: border-box; }
-  html, body, #root {
-    height: 100%; overflow: hidden;
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html {
     background: #020810;
     color: rgba(0,220,175,0.92);
     font-family: "EB Garamond", Georgia, serif;
     font-size: 18px;
   }
-  ::-webkit-scrollbar { width: 2px; }
+
+  body, #root {
+    min-height: 100vh;
+    background: #020810;
+  }
+
+  ::-webkit-scrollbar { width: 3px; }
   ::-webkit-scrollbar-thumb { background: rgba(0,180,140,0.2); border-radius: 2px; }
   ::selection { background: rgba(0,210,165,0.2); }
 }
 
-@keyframes aellux-fade-up { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-@keyframes aellux-star-twinkle { 0%,100%{opacity:0} 50%{opacity:0.3} }
+@keyframes aellux-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes aellux-star-twinkle {
+  0%, 100% { opacity: 0; }
+  50%       { opacity: 0.35; }
+}
 
-/* ── LAYOUT ── */
+/* ── APP LAYOUT — dashboard view only ── */
 .aellux-layout {
   display: grid;
   grid-template-columns: 220px 1fr;
   height: 100vh;
-  overflow: hidden;
+  overflow: hidden; /* only the dashboard shell is locked */
 }
 
 /* ── LEFT COLUMN ── */
 .aellux-lc {
-  display: flex; flex-direction: column; align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 28px 0 20px;
   border-right: 1px solid rgba(0,180,140,.1);
-  background: rgba(0,4,10,.8);
-  position: relative; overflow: hidden; height: 100vh;
+  background: rgba(0,4,10,.85);
+  position: relative;
+  overflow: hidden;
+  height: 100vh;
 }
 .aellux-lc::before {
-  content: ''; position: absolute; inset: 0;
+  content: '';
+  position: absolute; inset: 0;
   background: radial-gradient(ellipse at 50% 35%, rgba(0,110,85,.06) 0%, transparent 65%);
   pointer-events: none;
 }
 
-/* ── NAV ── */
+/* ── NAV ITEMS ── */
 .aellux-nav-item {
   display: flex; align-items: center; gap: 8px;
   padding: 9px 12px; border-radius: 3px;
   border: 1px solid transparent; cursor: pointer;
   transition: border-color .25s, background .25s, color .25s;
-  font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
-  color: rgba(0,160,130,.55); width: 176px; background: none;
-  font-family: inherit;
+  font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(0,160,130,.6); width: 176px; background: none;
+  font-family: inherit; text-align: left;
 }
-.aellux-nav-item:hover { border-color: rgba(0,195,155,.25); background: rgba(0,18,30,.5); color: rgba(0,210,170,.85); }
-.aellux-nav-item.active { border-color: rgba(0,195,155,.35); background: rgba(0,20,34,.65); color: rgba(0,230,180,.95); }
+.aellux-nav-item:hover  { border-color: rgba(0,195,155,.25); background: rgba(0,18,30,.5); color: rgba(0,210,170,.88); }
+.aellux-nav-item.active { border-color: rgba(0,195,155,.38); background: rgba(0,20,34,.65); color: rgba(0,230,180,.96); }
 
 /* ── INPUT ── */
 .aellux-speak-input {
-  width: 100%; background: rgba(0,12,24,.75);
+  width: 100%;
+  background: rgba(0,12,24,.75);
   border: 1px solid rgba(0,175,138,.2); border-radius: 3px;
   color: rgba(0,220,175,.92); font-size: 15px; font-family: inherit;
   padding: 10px 34px 10px 12px; outline: none; letter-spacing: .3px;
   transition: border-color .3s;
 }
-.aellux-speak-input::placeholder { color: rgba(0,155,125,.35); font-size: 13px; }
-.aellux-speak-input:focus { border-color: rgba(0,200,160,.45); }
+.aellux-speak-input::placeholder { color: rgba(0,155,125,.38); font-size: 13px; }
+.aellux-speak-input:focus { border-color: rgba(0,200,160,.48); }
 
 /* ── TOPBAR ── */
 .aellux-topbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; height: 48px;
+  padding: 0 24px; height: 50px;
   border-bottom: 1px solid rgba(0,175,138,.08);
-  flex-shrink: 0; background: rgba(0,3,8,.7);
+  flex-shrink: 0;
+  background: rgba(0,3,8,.75);
 }
 
 /* ── CARDS ── */
 .aellux-delta-card {
   border: 1px solid rgba(0,175,138,.15); border-radius: 5px;
   background: rgba(0,9,18,.8); padding: 16px 18px;
-  animation: aellux-fade-up .5s ease forwards; position: relative;
+  animation: aellux-fade-up .5s ease forwards;
 }
 
 /* ── RESPONSE BOX ── */
 .aellux-response {
   padding: 12px 14px;
-  border: 1px solid rgba(0,195,155,.15); border-left: 2px solid rgba(0,195,155,.45);
-  border-radius: 0 4px 4px 0; background: rgba(0,12,22,.6);
-  font-size: 15px; line-height: 1.85; color: rgba(0,210,170,.85);
-  font-style: italic; opacity: 0; transition: opacity .8s;
+  border: 1px solid rgba(0,195,155,.15);
+  border-left: 2px solid rgba(0,195,155,.45);
+  border-radius: 0 4px 4px 0;
+  background: rgba(0,12,22,.6);
+  font-size: 15px; line-height: 1.85;
+  color: rgba(0,210,170,.85); font-style: italic;
+  opacity: 0; transition: opacity .8s;
 }
 .aellux-response.visible { opacity: 1; }
 
@@ -97,41 +119,41 @@
 
 /* ── PROTOCOL ITEMS ── */
 .aellux-proto-item {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 14px 16px; border-radius: 4px;
-  border: 1px solid rgba(0,172,132,.15); background: rgba(0,9,20,.75);
-  cursor: pointer; transition: border-color .25s, background .25s;
-  margin-bottom: 8px;
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 16px 18px; border-radius: 4px;
+  border: 1px solid rgba(0,172,132,.15);
+  background: rgba(0,9,20,.75); cursor: pointer;
+  transition: border-color .25s, background .25s;
 }
-.aellux-proto-item:hover { border-color: rgba(0,192,152,.28); background: rgba(0,16,29,.85); }
-.aellux-proto-item.completed { opacity: .38; }
+.aellux-proto-item:hover    { border-color: rgba(0,192,152,.28); background: rgba(0,16,29,.85); }
+.aellux-proto-item.completed { opacity: .4; }
 
 /* ── RANGE TABS ── */
 .aellux-rtab {
-  padding: 6px 14px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
-  background: transparent; border: 1px solid rgba(0,132,105,.25);
-  color: rgba(0,160,130,.55); border-radius: 3px; cursor: pointer;
-  transition: all .25s; font-family: inherit;
+  padding: 7px 16px; font-size: 12px; letter-spacing: 1.5px;
+  text-transform: uppercase; background: transparent;
+  border: 1px solid rgba(0,132,105,.25); color: rgba(0,160,130,.6);
+  border-radius: 3px; cursor: pointer; transition: all .25s; font-family: inherit;
 }
-.aellux-rtab:hover { border-color: rgba(0,192,152,.45); color: rgba(0,210,170,.85); }
-.aellux-rtab.active { border-color: rgba(0,192,152,.55); color: rgba(0,225,180,.95); background: rgba(0,56,44,.3); }
+.aellux-rtab:hover  { border-color: rgba(0,192,152,.45); color: rgba(0,210,170,.88); }
+.aellux-rtab.active { border-color: rgba(0,192,152,.58); color: rgba(0,225,180,.96); background: rgba(0,56,44,.3); }
 
 /* ── CHECK ── */
 .aellux-check {
-  width: 16px; height: 16px; border-radius: 50%;
-  border: 1px solid rgba(0,172,132,.28);
+  width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid rgba(0,172,132,.3);
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; cursor: pointer; transition: background .3s, border-color .3s;
-  margin-top: 2px;
+  cursor: pointer; transition: background .3s, border-color .3s; margin-top: 2px;
 }
-.aellux-check:hover { border-color: rgba(0,192,152,.55); }
-.aellux-check.checked { background: rgba(0,192,152,.18); border-color: rgba(0,192,152,.6); }
-
-/* ── BADGE ── */
-.aellux-badge {
-  font-size: 10px; letter-spacing: 1px; padding: 2px 7px;
-  border-radius: 2px; background: rgba(0,195,155,.12); color: rgba(0,215,172,.75);
-}
+.aellux-check:hover  { border-color: rgba(0,192,152,.55); }
+.aellux-check.checked { background: rgba(0,192,152,.18); border-color: rgba(0,192,152,.65); }
 
 /* ── DIVIDER ── */
 .aellux-divider { width: 48px; height: 1px; background: rgba(0,175,138,.12); }
+
+/* ── LANDING PAGE — full scroll ── */
+.aellux-landing {
+  min-height: 100vh;
+  background: #020810;
+  overflow-y: auto;
+}

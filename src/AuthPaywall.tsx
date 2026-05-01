@@ -59,6 +59,7 @@ export default function AuthPaywall() {
       minHeight: '100vh', background: '#020810',
       fontFamily: '"EB Garamond", Georgia, serif',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
+      overflowY: 'auto',
     }}>
       {/* Hero */}
       <div style={{ textAlign: 'center', padding: '72px 24px 48px' }}>
