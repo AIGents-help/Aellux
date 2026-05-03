@@ -119,7 +119,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!password) return { error: 'Enter your password.' };
 
     const dbUser = await getUser(email);
-    if (!dbUser) return { error: 'No account found with this email. Sign up instead.' };
+    if (!dbUser) {
+      // No account — create one with this password (acts as sign-up via sign-in)
+      const salt = generateSalt();
+      const hash = await hashPassword(password, salt);
+      const newUser = await upsertUser(email, 'free', hash, salt);
+      if (!newUser) return { error: 'Could not create account. Please try again.' };
+      const userData: User = { id: newUser.id, email: newUser.email, plan: newUser.plan as 'free'|'pro', signedUpAt: newUser.created_at };
+      setUser(userData);
+      localStorage.setItem('aellux_user', JSON.stringify(userData));
+      return {};
+    }
 
     // Verify password
     if (dbUser.password_hash && dbUser.password_salt) {
