@@ -794,11 +794,30 @@ export default function App() {
                               <SparkChart values={m.history.map(h => h.value)} color={color} />
                             )}
                           </div>
-                          {m.reference_range_low !== undefined && (
-                            <div style={{ marginTop: 8, height: 2, background: 'rgba(0,40,30,.5)', borderRadius: 2, overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${Math.min(100, Math.max(0, ((m.value - m.reference_range_low!) / ((m.reference_range_high! - m.reference_range_low!) || 1)) * 100))}%`, background: inRange ? 'rgba(0,200,160,.6)' : 'rgba(255,140,60,.6)', borderRadius: 2 }} />
-                            </div>
-                          )}
+                          {m.reference_range_low !== undefined && (() => {
+                            const lo = m.reference_range_low!;
+                            const hi = m.reference_range_high!;
+                            const range = hi - lo || 1;
+                            const winLo = lo - range * 0.25;
+                            const winHi = hi + range * 0.25;
+                            const winRange = winHi - winLo;
+                            const loFrac = (lo - winLo) / winRange * 100;
+                            const hiFrac = (hi - winLo) / winRange * 100;
+                            const valFrac = Math.min(100, Math.max(0, (m.value - winLo) / winRange * 100));
+                            return (
+                              <div style={{ marginTop: 10 }}>
+                                <div style={{ position: 'relative', height: 8, background: 'rgba(0,30,22,.6)', borderRadius: 4, overflow: 'visible' }}>
+                                  <div style={{ position: 'absolute', left: `${loFrac}%`, width: `${hiFrac - loFrac}%`, height: '100%', background: 'rgba(0,180,140,.18)', borderRadius: 2 }} />
+                                  <div style={{ position: 'absolute', left: `${valFrac}%`, top: -2, width: 3, height: 12, background: inRange ? 'rgba(0,215,165,.9)' : 'rgba(255,130,60,.9)', borderRadius: 2, transform: 'translateX(-50%)', boxShadow: inRange ? '0 0 6px rgba(0,215,165,.5)' : '0 0 6px rgba(255,130,60,.5)' }} />
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 11, color: 'rgba(0,155,125,.4)' }}>
+                                  <span>{lo}</span>
+                                  <span style={{ color: 'rgba(0,155,125,.3)', fontSize: 10 }}>ref range</span>
+                                  <span>{hi}</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       );
                     })}
