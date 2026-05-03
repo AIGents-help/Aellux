@@ -193,6 +193,82 @@ function TrendChart({ marker, history }: { marker: string; history: Array<{ date
   );
 }
 
+
+// ── MULTI-MARKER OVERLAY CHART ─────────────────────────────────────────────────
+
+function MultiTrendChart({ markers, activeKeys, allDates }: {
+  markers: Array<{ name: string; category: string; history: Array<{ date: string; value: number; unit: string }>; color: string }>;
+  activeKeys: Set<string>;
+  allDates: string[];
+}) {
+  const W = 640, H = 240, pl = 52, pr = 24, pt = 24, pb = 44;
+  const iW = W - pl - pr, iH = H - pt - pb;
+  const activeMarkers = markers.filter(m => activeKeys.has(m.name) && m.history.length > 1);
+  const normalise = (marker: typeof markers[0]) => {
+    const sorted = [...marker.history].sort((a, b) => a.date.localeCompare(b.date));
+    const vals = sorted.map(d => d.value);
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const range = hi - lo || 1;
+    return sorted.map(d => ({ date: d.date, norm: ((d.value - lo) / range) * 100, value: d.value, unit: d.unit }));
+  };
+  const px = (date: string) => {
+    const i = allDates.indexOf(date);
+    if (i < 0 || allDates.length < 2) return pl;
+    return pl + (i / (allDates.length - 1)) * iW;
+  };
+  const py = (norm: number) => pt + iH - (norm / 100) * iH;
+  if (activeMarkers.length === 0) return (
+    <div style={{ background: 'rgba(0,4,12,.9)', border: '1px solid rgba(0,175,138,.12)', borderRadius: 8, padding: '48px 0', textAlign: 'center', color: 'rgba(0,165,132,.4)', fontSize: 14 }}>
+      Toggle markers below to display trends
+    </div>
+  );
+  return (
+    <div style={{ background: 'rgba(0,4,12,.9)', border: '1px solid rgba(0,175,138,.12)', borderRadius: 8, padding: '0 0 4px' }}>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible', display: 'block' }}>
+        <defs>
+          {activeMarkers.map(m => (
+            <linearGradient key={m.name} id={`mg-${m.name.replace(/\s/g,'_')}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={m.color} stopOpacity="0.15" />
+              <stop offset="100%" stopColor={m.color} stopOpacity="0" />
+            </linearGradient>
+          ))}
+        </defs>
+        {[0, 25, 50, 75, 100].map(pct => (
+          <g key={pct}>
+            <line x1={pl} y1={py(pct)} x2={pl + iW} y2={py(pct)} stroke="rgba(0,175,138,.06)" strokeWidth="1" />
+            <text x={pl - 6} y={py(pct) + 4} textAnchor="end" fontSize="9" fill="rgba(0,175,138,.3)" fontFamily="EB Garamond, Georgia, serif">{pct === 0 ? 'low' : pct === 100 ? 'high' : ''}</text>
+          </g>
+        ))}
+        {allDates.map((d) => (
+          <text key={d} x={px(d)} y={H - 8} textAnchor="middle" fontSize="10" fill="rgba(0,175,138,.5)" fontFamily="EB Garamond, Georgia, serif">
+            {d.slice(0, 7)}
+          </text>
+        ))}
+        {allDates.map(d => (
+          <line key={d} x1={px(d)} y1={pt} x2={px(d)} y2={pt + iH} stroke="rgba(0,175,138,.04)" strokeWidth="1" strokeDasharray="2,4" />
+        ))}
+        {activeMarkers.map(m => {
+          const pts = normalise(m);
+          const polyPts = pts.map(p => `${px(p.date)},${py(p.norm)}`).join(' ');
+          const areaClose = `${px(pts[pts.length-1].date)},${pt+iH} ${px(pts[0].date)},${pt+iH}`;
+          return (
+            <g key={m.name}>
+              <polygon points={`${polyPts} ${areaClose}`} fill={`url(#mg-${m.name.replace(/\s/g,'_')})`} />
+              <polyline points={polyPts} fill="none" stroke={m.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
+              {pts.map((p, i) => (
+                <g key={i}>
+                  <circle cx={px(p.date)} cy={py(p.norm)} r="4" fill={m.color} opacity="0.85" />
+                  <title>{m.name}: {p.value} {p.unit} ({p.date})</title>
+                </g>
+              ))}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 // ── MAIN APP ─────────────────────────────────────────────────────────────────
 
 
@@ -282,6 +358,7 @@ export default function App() {
   const [awakePhase, setAwakePhase] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [dragOver, setDragOver] = useState(false);
+  const [activeMarkerKeys, setActiveMarkerKeys] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load from Supabase on mount (with localStorage fallback)
@@ -365,6 +442,17 @@ export default function App() {
     if (!selectedMarker) return null;
     return allMarkers.find(m => m.name.toLowerCase() === selectedMarker.toLowerCase()) || null;
   }, [selectedMarker, allMarkers]);
+
+  // Keep activeMarkerKeys in sync
+  useEffect(() => {
+    setActiveMarkerKeys(prev => {
+      const next = new Set(prev);
+      for (const doc of documents) {
+        for (const m of doc.markers) next.add(m.name);
+      }
+      return next;
+    });
+  }, [documents]);
 
   // Save to localStorage when docs change
   const saveDocuments = useCallback((docOrDocs: Document | Document[]) => {
@@ -842,56 +930,77 @@ export default function App() {
             <div>
               {allMarkers.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 60, color: 'rgba(0,175,142,.6)', fontSize: 17 }}>Upload documents to see trends.</div>
-              ) : (
-                <>
-                  {/* Marker selector */}
-                  <div style={{ marginBottom: 22 }}>
-                    <p style={{ ...S.label, marginBottom: 12 }}>Select biomarker to trend</p>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {allMarkers.filter(m => m.history && m.history.length > 0).map(m => (
-                        <button key={m.name} onClick={() => setSelectedMarker(m.name)}
-                          className={`aellux-rtab ${selectedMarker === m.name ? 'active' : ''}`}
-                          style={{ fontFamily: 'inherit', borderColor: selectedMarker === m.name ? CATEGORY_COLORS[m.category] : undefined }}>
-                          {m.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {selectedMarkerData && selectedMarkerData.history && selectedMarkerData.history.length > 0 ? (
-                    <TrendChart marker={selectedMarkerData.name} history={selectedMarkerData.history} />
-                  ) : selectedMarker ? (
-                    <div style={{ ...S.card, padding: 24, color: 'rgba(0,175,142,.6)', fontSize: 16 }}>Only one data point for {selectedMarker}. Upload more documents to see the trend.</div>
-                  ) : (
-                    <div style={{ ...S.card, padding: 24, color: 'rgba(0,175,142,.6)', fontSize: 16 }}>Select a biomarker above to see its trend over time.</div>
-                  )}
-
-                  {/* All markers with sparklines */}
-                  <div style={{ marginTop: 28 }}>
-                    <p style={{ ...S.label, marginBottom: 14 }}>All Biomarkers with History</p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {allMarkers.filter(m => m.history && m.history.length > 0).map(m => {
-                        const sorted = [...m.history].sort((a, b) => a.date.localeCompare(b.date));
-                        const first = sorted[0]?.value, last = sorted[sorted.length - 1]?.value;
-                        const pct = first ? ((last - first) / first * 100).toFixed(1) : null;
-                        const color = CATEGORY_COLORS[m.category] || '#aaa';
-                        return (
-                          <div key={m.name} onClick={() => { setSelectedMarker(m.name); window.scrollTo(0, 0); }}
-                            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px', ...S.card, cursor: 'pointer', transition: 'border-color .2s' }}>
-                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                            <div style={{ width: 160, fontSize: 15, color: 'rgba(0,210,170,.88)' }}>{m.name}</div>
-                            <div style={{ fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', color: `${color}88`, width: 110 }}>{m.category}</div>
-                            <div style={{ fontSize: 22, fontWeight: 500, color: STATUS_COLORS[m.status] || 'rgba(0,210,165,.85)', width: 100 }}>{m.value}<span style={{ fontSize: 13, fontWeight: 400, color: 'rgba(0,160,130,.5)', marginLeft: 3 }}>{m.unit}</span></div>
-                            <div style={{ flex: 1 }}><SparkChart values={sorted.map(h => h.value)} color={color} width={100} /></div>
-                            {pct && <div style={{ fontSize: 16, fontWeight: 500, color: Number(pct) > 0 ? 'rgba(0,210,165,.85)' : 'rgba(255,120,80,.85)', width: 70, textAlign: 'right' }}>{Number(pct) > 0 ? '+' : ''}{pct}%</div>}
-                            <div style={{ fontSize: 13, color: STATUS_COLORS[m.status] || 'rgba(0,185,150,.7)', width: 80, textAlign: 'right' }}>{m.status}</div>
+              ) : (() => {
+                const trendMarkers = allMarkers.filter(m => m.history && m.history.length > 1);
+                const singleMarkers = allMarkers.filter(m => m.history && m.history.length === 1);
+                const allDates = Array.from(new Set(
+                  trendMarkers.flatMap(m => m.history.map((h: any) => h.date))
+                )).sort();
+                const markersWithColor = trendMarkers.map(m => ({ ...m, color: CATEGORY_COLORS[m.category] || '#aaa' }));
+                return (
+                  <>
+                    {trendMarkers.length === 0 ? (
+                      <div style={{ ...S.card, padding: 32, textAlign: 'center', color: 'rgba(0,175,142,.6)', fontSize: 16, marginBottom: 24 }}>
+                        Upload at least 2 documents from different dates to see trends.
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                          <div>
+                            <p style={{ ...S.label, marginBottom: 2 }}>Biomarker Trends</p>
+                            <div style={{ fontSize: 13, color: 'rgba(0,165,132,.5)' }}>{allDates.length} time points · normalised overlay</div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </>
-              )}
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button onClick={() => setActiveMarkerKeys(new Set(trendMarkers.map(m => m.name)))}
+                              style={{ fontSize: 12, color: 'rgba(0,200,160,.8)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.25)', borderRadius: 4, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>All on</button>
+                            <button onClick={() => setActiveMarkerKeys(new Set())}
+                              style={{ fontSize: 12, color: 'rgba(0,155,125,.5)', background: 'none', border: '1px solid rgba(0,155,125,.2)', borderRadius: 4, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>All off</button>
+                          </div>
+                        </div>
+                        <MultiTrendChart markers={markersWithColor} activeKeys={activeMarkerKeys} allDates={allDates} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 16 }}>
+                          {trendMarkers.map(m => {
+                            const color = CATEGORY_COLORS[m.category] || '#aaa';
+                            const sorted = [...m.history].sort((a: any, b: any) => a.date.localeCompare(b.date));
+                            const first = sorted[0]?.value, last = sorted[sorted.length - 1]?.value;
+                            const pct = first ? ((last - first) / first * 100).toFixed(1) : null;
+                            const isActive = activeMarkerKeys.has(m.name);
+                            const improving = pct !== null && Number(pct) <= 0;
+                            return (
+                              <div key={m.name}
+                                onClick={() => setActiveMarkerKeys(prev => { const n = new Set(prev); n.has(m.name) ? n.delete(m.name) : n.add(m.name); return n; })}
+                                style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 6, cursor: 'pointer', background: isActive ? `${color}0d` : 'rgba(0,4,10,.5)', border: `1px solid ${isActive ? `${color}40` : 'rgba(0,165,132,.08)'}`, transition: 'all .15s' }}>
+                                <div style={{ width: 36, height: 20, borderRadius: 10, flexShrink: 0, background: isActive ? color : 'rgba(0,50,40,.6)', position: 'relative', transition: 'background .2s' }}>
+                                  <div style={{ position: 'absolute', top: 3, left: isActive ? 18 : 3, width: 14, height: 14, borderRadius: '50%', background: isActive ? '#020810' : 'rgba(0,165,132,.4)', transition: 'left .2s' }} />
+                                </div>
+                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0, opacity: isActive ? 1 : 0.3 }} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 15, color: isActive ? 'rgba(0,215,172,.92)' : 'rgba(0,165,132,.45)', fontWeight: 500 }}>{m.name}</div>
+                                  <div style={{ fontSize: 11, color: `${color}66`, letterSpacing: 1, textTransform: 'uppercase' }}>{m.category}</div>
+                                </div>
+                                <div style={{ opacity: isActive ? 1 : 0.25 }}><SparkChart values={sorted.map((h: any) => h.value)} color={color} width={80} /></div>
+                                <div style={{ textAlign: 'right', minWidth: 80 }}>
+                                  <div style={{ fontSize: 20, fontWeight: 500, color: isActive ? (STATUS_COLORS[m.status] || color) : 'rgba(0,165,132,.35)' }}>{last}<span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(0,155,125,.4)', marginLeft: 2 }}>{sorted[0]?.unit}</span></div>
+                                  <div style={{ fontSize: 13, color: 'rgba(0,160,130,.5)' }}>{m.status}</div>
+                                </div>
+                                {pct && <div style={{ minWidth: 60, textAlign: 'right', fontSize: 16, fontWeight: 600, color: improving ? 'rgba(0,210,165,.9)' : 'rgba(255,120,80,.9)', opacity: isActive ? 1 : 0.3 }}>{Number(pct) > 0 ? '+' : ''}{pct}%</div>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {singleMarkers.length > 0 && (
+                          <div style={{ marginTop: 20, padding: '12px 16px', borderRadius: 6, background: 'rgba(0,8,16,.5)', border: '1px solid rgba(0,155,122,.1)' }}>
+                            <div style={{ fontSize: 12, color: 'rgba(0,155,125,.45)', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Single data point — no trend yet</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                              {singleMarkers.map(m => <div key={m.name} style={{ fontSize: 13, color: 'rgba(0,175,140,.5)', padding: '3px 10px', border: '1px solid rgba(0,155,122,.15)', borderRadius: 4 }}>{m.name} · {m.value} {m.unit}</div>)}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
 
