@@ -367,11 +367,15 @@ export default function App() {
   }, [selectedMarker, allMarkers]);
 
   // Save to localStorage when docs change
-  const saveDocuments = useCallback((docs: Document[]) => {
-    setDocuments(docs);
-    try { localStorage.setItem('aellux_documents', JSON.stringify(docs)); } catch {}
-    if (docs.length > 0 && panel === 'upload') setPanel('dashboard');
-  }, [panel]);
+  const saveDocuments = useCallback((docOrDocs: Document | Document[]) => {
+    const append = !Array.isArray(docOrDocs);
+    setDocuments(prev => {
+      const docs = append ? [...prev, docOrDocs as Document] : docOrDocs as Document[];
+      try { localStorage.setItem('aellux_documents', JSON.stringify(docs)); } catch {}
+      if (docs.length > 0) setPanel(p => p === 'upload' ? 'dashboard' : p);
+      return docs;
+    });
+  }, []);
 
   const saveDocumentToDb = useCallback(async (doc: Document) => {
     if (!user?.id) return;
@@ -435,8 +439,7 @@ export default function App() {
         uploadedAt: new Date().toISOString(),
       };
 
-      const updatedDocs = [...documents, newDoc];
-      saveDocuments(updatedDocs);
+      saveDocuments(newDoc);
       saveDocumentToDb(newDoc);
       setUploadStatus(`✓ ${file.name} — extracted ${newDoc.markers.length} markers`);
       setOrbState('speaking');
