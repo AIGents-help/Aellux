@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import TrackerConnect, { type TrackerEntry } from "./TrackerConnect";
+import AccountabilityEngine from "./AccountabilityEngine";
 
 // ─── GOAL PRESETS ────────────────────────────────────────────────────────────
 const GOAL_PRESETS = [
@@ -611,69 +613,170 @@ function AddModal({ onClose, onAdd, existingIds }: any) {
 }
 
 // ─── MAIN EXPORT ─────────────────────────────────────────────────────────────
+type ProtoTab = 'plan' | 'library' | 'trackers' | 'accountability';
+
 export default function ProtocolsSection({ markers = [] }: { markers?: any[] }) {
+  const [tab, setTab] = useState<ProtoTab>('plan');
   const [protocols, setProtocols] = useState(SEED_PROTOCOLS);
   const [outcome, setOutcome] = useState("Performance");
   const [category, setCategory] = useState("all");
   const [showModal, setShowModal] = useState(false);
+  const [trackerEntries, setTrackerEntries] = useState<TrackerEntry[]>(() => {
+    try { return JSON.parse(localStorage.getItem('aellux_tracker_entries') || '[]'); } catch { return []; }
+  });
+  const [connectedSources, setConnectedSources] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('aellux_connected_sources') || '[]'); } catch { return []; }
+  });
+
+  function handleTrackerData(entries: TrackerEntry[], source: string) {
+    const merged = [...trackerEntries.filter(e => e.source !== source || e.date < entries[0]?.date), ...entries]
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 2000);
+    setTrackerEntries(merged);
+    localStorage.setItem('aellux_tracker_entries', JSON.stringify(merged));
+    if (!connectedSources.includes(source)) {
+      const updated = [...connectedSources, source];
+      setConnectedSources(updated);
+      localStorage.setItem('aellux_connected_sources', JSON.stringify(updated));
+    }
+  }
 
   const filtered = category === "all" ? protocols : protocols.filter(p => p.category === category);
   const existingIds = protocols.map(p => p.id);
-
   const S: React.CSSProperties = { fontFamily: "EB Garamond, Georgia, serif" };
+
+  const TABS: Array<{ id: ProtoTab; label: string; icon: string; badge?: number }> = [
+    { id: 'plan',           label: 'Do This Now',     icon: '⚡' },
+    { id: 'library',        label: 'Protocol Library', icon: '📚' },
+    { id: 'trackers',       label: 'Trackers',         icon: '📡', badge: connectedSources.length },
+    { id: 'accountability', label: 'Accountability',   icon: '🎯', badge: trackerEntries.length > 0 ? 1 : undefined },
+  ];
 
   return (
     <div>
-      {/* Do This Now Engine */}
-      <DoThisNow markers={markers} />
+      {/* Tab bar */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "1px solid rgba(0,165,132,.12)", paddingBottom: 0 }}>
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            style={{
+              display: "flex", alignItems: "center", gap: 7,
+              background: "none", border: "none",
+              borderBottom: tab === t.id ? "2px solid #00d2a5" : "2px solid transparent",
+              color: tab === t.id ? "#00d2a5" : "rgba(0,175,142,.5)",
+              fontFamily: "EB Garamond,serif", fontSize: 15, padding: "0 16px 14px",
+              cursor: "pointer", transition: "all .15s", position: "relative",
+            }}>
+            <span>{t.icon}</span>
+            {t.label}
+            {t.badge !== undefined && t.badge > 0 && (
+              <span style={{ fontSize: 10, background: "rgba(0,195,155,.2)", color: "#00d2a5", padding: "1px 6px", borderRadius: 10, fontFamily: "monospace" }}>{t.badge}</span>
+            )}
+          </button>
+        ))}
+      </div>
 
-      <div style={{ height:1, background:"rgba(0,165,132,.1)", margin:"0 0 28px" }} />
+      {/* ── DO THIS NOW ── */}
+      {tab === 'plan' && <DoThisNow markers={markers} />}
 
-      {/* Protocol Library header */}
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:20, flexWrap:"wrap", gap:12 }}>
+      {/* ── PROTOCOL LIBRARY ── */}
+      {tab === 'library' && (
         <div>
-          <div style={{ fontSize:12, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(0,200,160,.65)", marginBottom:4, ...S }}>Protocol Library</div>
-          <div style={{ fontSize:22, color:"rgba(0,215,172,.94)", fontWeight:500, ...S }}>Trending Protocols</div>
-        </div>
-        <button onClick={() => setShowModal(true)}
-          style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(0,200,160,.88)", color:"#020810", border:"none", fontFamily:"EB Garamond,serif", fontSize:16, padding:"10px 20px", borderRadius:3, cursor:"pointer", fontWeight:500 }}>
-          <span style={{ fontSize:18 }}>+</span> Add Protocol
-        </button>
-      </div>
-
-      {/* Outcome selector */}
-      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16, flexWrap:"wrap" }}>
-        <span style={{ fontSize:12, letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(0,155,125,.45)", ...S }}>Outcome →</span>
-        {OUTCOMES.map(o => (
-          <button key={o} onClick={() => setOutcome(o)}
-            style={{ display:"flex", alignItems:"center", gap:7, background:"rgba(0,6,14,.82)", border:`1px solid ${outcome===o?"#00d2a5":"rgba(0,165,132,.14)"}`, color:outcome===o?"#00d2a5":"rgba(0,175,142,.6)", fontFamily:"EB Garamond,serif", fontSize:14, padding:"7px 16px", borderRadius:3, cursor:"pointer" }}>
-            <span style={{ width:6, height:6, borderRadius:"50%", background:outcome===o?"#00d2a5":"rgba(0,155,125,.3)", boxShadow:outcome===o?"0 0 5px #00d2a5":"none" }} />
-            {o}
-          </button>
-        ))}
-      </div>
-
-      {/* Category filter */}
-      <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:20 }}>
-        {CATEGORIES.map(c => (
-          <button key={c} onClick={() => setCategory(c)}
-            style={{ background:category===c?"#64d2ff":"rgba(0,6,14,.82)", border:`1px solid ${category===c?"#64d2ff":"rgba(0,165,132,.14)"}`, color:category===c?"#020810":"rgba(0,165,132,.6)", fontFamily:"EB Garamond,serif", fontSize:12, letterSpacing:"0.1em", textTransform:"uppercase", padding:"5px 14px", borderRadius:2, cursor:"pointer" }}>
-            {c === "all" ? `All (${protocols.length})` : `${c} (${protocols.filter(p=>p.category===c).length})`}
-          </button>
-        ))}
-      </div>
-
-      {/* Grid */}
-      {filtered.length === 0
-        ? <div style={{ textAlign:"center", padding:"60px 20px", color:"rgba(0,175,142,.4)", fontSize:16, ...S }}>No protocols in this category. Use + Add Protocol to research one.</div>
-        : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:12 }}>
-            {filtered.map(p => (
-              <ProtocolCard key={p.id} protocol={p} selectedOutcome={outcome} onRemove={(id: string) => setProtocols(prev => prev.filter(x => x.id !== id))} />
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:20, flexWrap:"wrap", gap:12 }}>
+            <div>
+              <div style={{ fontSize:12, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(0,200,160,.65)", marginBottom:4, ...S }}>Protocol Library</div>
+              <div style={{ fontSize:22, color:"rgba(0,215,172,.94)", fontWeight:500, ...S }}>Trending Protocols</div>
+            </div>
+            <button onClick={() => setShowModal(true)}
+              style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(0,200,160,.88)", color:"#020810", border:"none", fontFamily:"EB Garamond,serif", fontSize:16, padding:"10px 20px", borderRadius:3, cursor:"pointer", fontWeight:500 }}>
+              <span style={{ fontSize:18 }}>+</span> Add Protocol
+            </button>
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16, flexWrap:"wrap" }}>
+            <span style={{ fontSize:12, letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(0,155,125,.45)", ...S }}>Outcome →</span>
+            {OUTCOMES.map(o => (
+              <button key={o} onClick={() => setOutcome(o)}
+                style={{ display:"flex", alignItems:"center", gap:7, background:"rgba(0,6,14,.82)", border:`1px solid ${outcome===o?"#00d2a5":"rgba(0,165,132,.14)"}`, color:outcome===o?"#00d2a5":"rgba(0,175,142,.6)", fontFamily:"EB Garamond,serif", fontSize:14, padding:"7px 16px", borderRadius:3, cursor:"pointer" }}>
+                <span style={{ width:6, height:6, borderRadius:"50%", background:outcome===o?"#00d2a5":"rgba(0,155,125,.3)", boxShadow:outcome===o?"0 0 5px #00d2a5":"none" }} />
+                {o}
+              </button>
             ))}
           </div>
-      }
+          <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:20 }}>
+            {CATEGORIES.map(c => (
+              <button key={c} onClick={() => setCategory(c)}
+                style={{ background:category===c?"#64d2ff":"rgba(0,6,14,.82)", border:`1px solid ${category===c?"#64d2ff":"rgba(0,165,132,.14)"}`, color:category===c?"#020810":"rgba(0,165,132,.6)", fontFamily:"EB Garamond,serif", fontSize:12, letterSpacing:"0.1em", textTransform:"uppercase", padding:"5px 14px", borderRadius:2, cursor:"pointer" }}>
+                {c === "all" ? `All (${protocols.length})` : `${c} (${protocols.filter(p=>p.category===c).length})`}
+              </button>
+            ))}
+          </div>
+          {filtered.length === 0
+            ? <div style={{ textAlign:"center", padding:"60px 20px", color:"rgba(0,175,142,.4)", fontSize:16, ...S }}>No protocols in this category.</div>
+            : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:12 }}>
+                {filtered.map(p => (
+                  <ProtocolCard key={p.id} protocol={p} selectedOutcome={outcome} onRemove={(id: string) => setProtocols(prev => prev.filter(x => x.id !== id))} />
+                ))}
+              </div>
+          }
+          {showModal && <AddModal onClose={() => setShowModal(false)} onAdd={(p: any) => setProtocols(prev => [...prev, p])} existingIds={existingIds} />}
+        </div>
+      )}
 
-      {showModal && <AddModal onClose={() => setShowModal(false)} onAdd={(p: any) => setProtocols(prev => [...prev, p])} existingIds={existingIds} />}
+      {/* ── TRACKERS ── */}
+      {tab === 'trackers' && (
+        <div>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize:12, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(0,200,160,.65)", marginBottom:4, ...S }}>Data Sources</div>
+            <div style={{ fontSize:22, color:"rgba(0,215,172,.94)", fontWeight:500, ...S }}>Connect Your Trackers</div>
+            <div style={{ fontSize:14, color:"rgba(0,175,142,.5)", marginTop:6, ...S, lineHeight:1.6 }}>
+              Upload exports from your wearables or log manually. Aellux uses this data to verify protocol execution — not just what you claim you did.
+            </div>
+          </div>
+          <TrackerConnect
+            onDataImported={handleTrackerData}
+            connectedSources={connectedSources}
+          />
+          {trackerEntries.length > 0 && (
+            <div style={{ marginTop:24, background:"rgba(0,6,14,.82)", border:"1px solid rgba(0,165,132,.14)", borderRadius:6, padding:"16px 20px" }}>
+              <div style={{ fontSize:12, letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(0,175,142,.5)", marginBottom:10, ...S }}>Imported Data Summary</div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:10 }}>
+                {[
+                  { label:"Total Days", value: new Set(trackerEntries.map(e => e.date)).size },
+                  { label:"Data Points", value: trackerEntries.reduce((acc, e) => acc + Object.keys(e.metrics).length, 0) },
+                  { label:"Sources", value: new Set(trackerEntries.map(e => e.source)).size },
+                  { label:"Date Range", value: trackerEntries.length > 0 ? `${trackerEntries[trackerEntries.length-1].date.slice(5)} – ${trackerEntries[0].date.slice(5)}` : '—' },
+                ].map(s => (
+                  <div key={s.label} style={{ background:"rgba(0,4,12,.7)", border:"1px solid rgba(0,165,132,.1)", borderRadius:3, padding:"10px 12px" }}>
+                    <div style={{ fontSize:11, color:"rgba(0,165,132,.5)", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:4, ...S }}>{s.label}</div>
+                    <div style={{ fontSize:18, color:"#00d2a5", ...S }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => { setTrackerEntries([]); setConnectedSources([]); localStorage.removeItem('aellux_tracker_entries'); localStorage.removeItem('aellux_connected_sources'); }}
+                style={{ marginTop:14, background:"none", border:"1px solid rgba(255,100,100,.2)", color:"rgba(255,100,100,.4)", fontFamily:"EB Garamond,serif", fontSize:12, padding:"5px 14px", borderRadius:2, cursor:"pointer" }}>
+                Clear all tracker data
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── ACCOUNTABILITY ── */}
+      {tab === 'accountability' && (
+        <div>
+          {trackerEntries.length === 0 && (
+            <div style={{ background:"rgba(255,160,64,.06)", border:"1px solid rgba(255,160,64,.2)", borderRadius:6, padding:"14px 18px", marginBottom:20, display:"flex", gap:12, alignItems:"flex-start" }}>
+              <span style={{ fontSize:18, flexShrink:0 }}>📡</span>
+              <div>
+                <div style={{ fontSize:14, color:"rgba(255,190,100,.85)", fontWeight:500, marginBottom:4, ...S }}>No tracker data yet</div>
+                <div style={{ fontSize:13, color:"rgba(255,170,80,.6)", lineHeight:1.6, ...S }}>
+                  Connect a tracker or log manually in the <button onClick={() => setTab('trackers')} style={{ background:"none", border:"none", color:"#00d2a5", cursor:"pointer", fontFamily:"EB Garamond,serif", fontSize:13, padding:0, textDecoration:"underline" }}>Trackers tab</button> first. Without data, accountability is just vibes.
+                </div>
+              </div>
+            </div>
+          )}
+          <AccountabilityEngine trackerEntries={trackerEntries} markers={markers} />
+        </div>
+      )}
     </div>
   );
 }
