@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useAuth } from './useAuth';
 import { saveDocument, getDocuments, deleteDocument, savePersonalised, getPersonalised } from './supabase';
 import AuthPaywall from './AuthPaywall';
+import ProtocolsSection from './ProtocolsSection';
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
 type OrbState = 'dormant' | 'idle' | 'listening' | 'thinking' | 'speaking';
-type Panel = 'upload' | 'dashboard' | 'trends' | 'meals' | 'supps' | 'protocol' | 'ask';
+type Panel = 'upload' | 'dashboard' | 'trends' | 'meals' | 'supps' | 'protocol' | 'protocols' | 'ask';
 
 interface Marker {
   name: string;
@@ -612,6 +613,7 @@ export default function App() {
     { id: 'upload',    label: '+ Upload Records',  count: documents.length },
     { id: 'dashboard', label: 'Health Dashboard',  count: allMarkers.length },
     { id: 'trends',    label: 'Biomarker Trends'                            },
+    { id: 'protocols', label: 'Protocols & Plans'                           },
     { id: 'meals',     label: 'Meal Protocol'                               },
     { id: 'supps',     label: 'Supplement Stack'                            },
     { id: 'protocol',  label: 'Daily Protocol'                              },
@@ -1238,6 +1240,13 @@ export default function App() {
                   <button onClick={() => { setPersonalised(p => ({ ...p, protocol: undefined })); }} style={{ marginTop: 20, fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── PROTOCOLS ── */}
+          {panel === 'protocols' && (
+            <div>
+              <ProtocolsSection markers={allMarkers} />
             </div>
           )}
 
