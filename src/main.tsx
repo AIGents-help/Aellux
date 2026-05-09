@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { AuthProvider } from './useAuth'
 import App from './App'
 import './index.css'
+import './aellux-readability.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
