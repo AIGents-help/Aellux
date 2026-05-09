@@ -5,7 +5,7 @@ import AuthPaywall from './AuthPaywall';
 import ProtocolsSection from './ProtocolsSection';
 import ProfilePage from './ProfilePage';
 
-// Ã¢ÂÂÃ¢ÂÂ TYPES Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ TYPES ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 
 type OrbState = 'dormant' | 'idle' | 'listening' | 'thinking' | 'speaking';
 type Panel = 'upload' | 'dashboard' | 'trends' | 'meals' | 'supps' | 'protocol' | 'protocols' | 'ask' | 'profile';
@@ -64,7 +64,7 @@ const STATUS_COLORS: Record<string, string> = {
   low:        'rgba(120,160,255,.9)',
 };
 
-// Ã¢ÂÂÃ¢ÂÂ ORB Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ ORB ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 
 function Orb({ state, size = 110 }: { state: OrbState; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -115,7 +115,7 @@ function Orb({ state, size = 110 }: { state: OrbState; size?: number }) {
   return <canvas ref={canvasRef} width={size} height={size} style={{ display: 'block' }} />;
 }
 
-// Ã¢ÂÂÃ¢ÂÂ MINI SPARK CHART Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ MINI SPARK CHART ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 
 function SparkChart({ values, color, width = 80, height = 30 }: { values: number[]; color: string; width?: number; height?: number }) {
   if (values.length < 2) return null;
@@ -130,7 +130,7 @@ function SparkChart({ values, color, width = 80, height = 30 }: { values: number
   );
 }
 
-// Ã¢ÂÂÃ¢ÂÂ FULL TREND CHART Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ FULL TREND CHART ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 
 function TrendChart({ marker, history }: { marker: string; history: Array<{ date: string; value: number; unit: string }> }) {
   if (history.length < 2) return <div style={{ color: 'rgba(0,165,132,.5)', fontSize: 14, padding: 20 }}>Need at least 2 data points to show trend.</div>;
@@ -144,7 +144,7 @@ function TrendChart({ marker, history }: { marker: string; history: Array<{ date
   const pts = sorted.map((d, i) => `${px(i)},${py(d.value)}`).join(' ');
   const first = vals[0], last = vals[vals.length - 1];
   const change = ((last - first) / first * 100).toFixed(1);
-  const improving = last < first ? true : last > first; // simplified Ã¢ÂÂ ideally direction-aware
+  const improving = last < first ? true : last > first; // simplified ÃÂ¢ÃÂÃÂ ideally direction-aware
 
   return (
     <div style={{ background: 'rgba(0,6,14,.85)', border: '1px solid rgba(0,175,138,.14)', borderRadius: 7, padding: '20px 24px' }}>
@@ -160,7 +160,7 @@ function TrendChart({ marker, history }: { marker: string; history: Array<{ date
           <div style={{ fontSize: 22, fontWeight: 500, color: change.startsWith('-') ? 'rgba(255,120,80,.9)' : 'rgba(0,210,165,.9)' }}>
             {Number(change) > 0 ? '+' : ''}{change}%
           </div>
-          <div style={{ fontSize: 13, color: 'rgba(0,160,130,.5)' }}>{sorted[0].date} Ã¢ÂÂ {sorted[sorted.length - 1].date}</div>
+          <div style={{ fontSize: 13, color: 'rgba(0,160,130,.5)' }}>{sorted[0].date} ÃÂ¢ÃÂÃÂ {sorted[sorted.length - 1].date}</div>
         </div>
       </div>
       <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
@@ -196,7 +196,7 @@ function TrendChart({ marker, history }: { marker: string; history: Array<{ date
 }
 
 
-// Ã¢ÂÂÃ¢ÂÂ MULTI-MARKER OVERLAY CHART Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ MULTI-MARKER OVERLAY CHART ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 
 function MultiTrendChart({ markers, activeKeys, allDates }: {
   markers: Array<{ name: string; category: string; history: Array<{ date: string; value: number; unit: string }>; color: string }>;
@@ -271,10 +271,10 @@ function MultiTrendChart({ markers, activeKeys, allDates }: {
   );
 }
 
-// Ã¢ÂÂÃ¢ÂÂ MAIN APP Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ MAIN APP ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 
 
-// Ã¢ÂÂÃ¢ÂÂ UPGRADE MODAL Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ UPGRADE MODAL ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 function UpgradeModal({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -298,23 +298,23 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,8,16,.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
       <div style={{ background: 'rgba(0,10,22,.98)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 10, padding: '40px 36px', maxWidth: 440, width: '90%', textAlign: 'center' }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>Ã¢ÂÂ¦</div>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>ÃÂ¢ÃÂÃÂ¦</div>
         <h2 style={{ fontSize: 26, color: 'rgba(0,215,172,.95)', fontWeight: 400, margin: '0 0 12px' }}>Aellux Pro</h2>
         <p style={{ fontSize: 16, color: 'rgba(0,185,150,.68)', lineHeight: 1.75, marginBottom: 28 }}>
-          Unlock AI-generated meal protocols, supplement stacks, daily protocols, and unlimited Aellux conversations Ã¢ÂÂ all personalised to your actual biomarkers.
+          Unlock AI-generated meal protocols, supplement stacks, daily protocols, and unlimited Aellux conversations ÃÂ¢ÃÂÃÂ all personalised to your actual biomarkers.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
           {['Personalised meal protocol from your markers', 'Supplement stack with full dosing rationale', 'Daily protocol ranked by biomarker impact', 'Unlimited AI conversations with your data'].map(f => (
             <div key={f} style={{ fontSize: 15, color: 'rgba(0,205,165,.82)', textAlign: 'left', display: 'flex', gap: 10 }}>
-              <span style={{ color: 'rgba(0,195,155,.7)' }}>Ã¢ÂÂ¦</span>{f}
+              <span style={{ color: 'rgba(0,195,155,.7)' }}>ÃÂ¢ÃÂÃÂ¦</span>{f}
             </div>
           ))}
         </div>
         <div style={{ fontSize: 32, color: 'rgba(0,215,172,.96)', marginBottom: 6, fontWeight: 400 }}>$29<span style={{ fontSize: 16, color: 'rgba(0,175,142,.5)', fontWeight: 400 }}>/month</span></div>
-        <div style={{ fontSize: 14, color: 'rgba(0,155,125,.45)', marginBottom: 24 }}>Cancel anytime ÃÂ· Powered by Stripe</div>
+        <div style={{ fontSize: 14, color: 'rgba(0,155,125,.45)', marginBottom: 24 }}>Cancel anytime ÃÂÃÂ· Powered by Stripe</div>
         <button onClick={handleUpgrade} disabled={loading}
           style={{ width: '100%', fontSize: 17, color: '#020810', background: 'rgba(0,200,160,.88)', border: 'none', borderRadius: 5, padding: '14px 0', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500, marginBottom: 12 }}>
-          {loading ? 'Opening Stripe...' : 'Upgrade to Pro Ã¢ÂÂ'}
+          {loading ? 'Opening Stripe...' : 'Upgrade to Pro ÃÂ¢ÃÂÃÂ'}
         </button>
         <button onClick={onClose} style={{ fontSize: 14, color: 'rgba(0,155,125,.45)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Maybe later</button>
       </div>
@@ -322,19 +322,19 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// Ã¢ÂÂÃ¢ÂÂ PRO GATE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ PRO GATE ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 function ProGate({ isPro, onUpgrade, feature }: { isPro: boolean; onUpgrade: () => void; feature: string }) {
   if (isPro) return null;
   return (
     <div style={{ background: 'rgba(0,8,16,.85)', border: '1px solid rgba(0,195,155,.2)', borderRadius: 8, padding: '36px 28px', textAlign: 'center', marginBottom: 24 }}>
-      <div style={{ fontSize: 28, marginBottom: 14 }}>Ã¢ÂÂ¦</div>
+      <div style={{ fontSize: 28, marginBottom: 14 }}>ÃÂ¢ÃÂÃÂ¦</div>
       <div style={{ fontSize: 20, color: 'rgba(0,215,172,.92)', marginBottom: 10, fontWeight: 500 }}>{feature} is a Pro feature</div>
       <p style={{ fontSize: 16, color: 'rgba(0,175,142,.65)', lineHeight: 1.75, marginBottom: 24, maxWidth: 360, margin: '0 auto 24px' }}>
         Upgrade to Aellux Pro to get this personalised to your actual biomarkers.
       </p>
       <button onClick={onUpgrade}
         style={{ fontSize: 17, color: '#020810', background: 'rgba(0,200,160,.88)', border: 'none', borderRadius: 5, padding: '13px 32px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
-        Upgrade to Pro Ã¢ÂÂ $29/mo Ã¢ÂÂ
+        Upgrade to Pro ÃÂ¢ÃÂÃÂ $29/mo ÃÂ¢ÃÂÃÂ
       </button>
     </div>
   );
@@ -476,7 +476,7 @@ export default function App() {
     });
   }, [user?.id]);
 
-  // Ã¢ÂÂÃ¢ÂÂ FILE PROCESSING Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ FILE PROCESSING ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 
   const processFile = async (file: File) => {
     setUploading(true);
@@ -531,7 +531,7 @@ export default function App() {
 
       saveDocuments(newDoc);
       saveDocumentToDb(newDoc);
-      setUploadStatus(`Ã¢ÂÂ ${file.name} Ã¢ÂÂ extracted ${newDoc.markers.length} markers`);
+      setUploadStatus(`ÃÂ¢ÃÂÃÂ ${file.name} ÃÂ¢ÃÂÃÂ extracted ${newDoc.markers.length} markers`);
       setOrbState('speaking');
       setResponse(extracted.summary || `I have extracted ${newDoc.markers.length} biomarkers from ${file.name}.`);
       setTimeout(() => setOrbState('idle'), 4000);
@@ -547,7 +547,7 @@ export default function App() {
     Array.from(files).forEach(f => processFile(f));
   };
 
-  // Ã¢ÂÂÃ¢ÂÂ PERSONALISATION GENERATION Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ PERSONALISATION GENERATION ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 
   const generatePersonalised = async (type: 'meals' | 'supps' | 'protocol' | 'synthesis') => {
     if (allMarkers.length === 0) { alert('Upload health documents first.'); return; }
@@ -575,7 +575,7 @@ export default function App() {
     }
   };
 
-  // Ã¢ÂÂÃ¢ÂÂ ASK AELLUX Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ ASK AELLUX ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 
   const handleAsk = useCallback(async () => {
     if (!input.trim() || asking) return;
@@ -587,7 +587,7 @@ export default function App() {
       const res = await fetch('/api/claude', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          systemPrompt: `You are Aellux Ã¢ÂÂ an ancient biological intelligence. The user has ${allMarkers.length} biomarkers from ${documents.length} documents. Speak with quiet authority, 3-4 sentences max. Reference specific numbers. Start with "I have observed..." or "Your biology reveals..."`,
+          systemPrompt: `You are Aellux ÃÂ¢ÃÂÃÂ an ancient biological intelligence. The user has ${allMarkers.length} biomarkers from ${documents.length} documents. Speak with quiet authority, 3-4 sentences max. Reference specific numbers. Start with "I have observed..." or "Your biology reveals..."`,
           userMessage: `My biomarkers: ${markerContext}\n\nQuestion: ${q}`,
           maxTokens: 250,
         }),
@@ -632,7 +632,7 @@ export default function App() {
 
   return (
     <div className="aellux-layout">
-      {/* Ã¢ÂÂÃ¢ÂÂ LEFT COLUMN Ã¢ÂÂÃ¢ÂÂ */}
+      {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ LEFT COLUMN ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
       <div className="aellux-lc">
         <div style={{ marginBottom: 10 }}><Orb state={orbState} size={110} /></div>
         <div style={{ fontSize: 15, letterSpacing: 3.5, textTransform: 'uppercase', color: 'rgba(0,210,165,.78)', marginBottom: 20 }}>Aellux</div>
@@ -658,7 +658,7 @@ export default function App() {
               <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(0,165,132,.5)', marginBottom: 6 }}>Health Profile</div>
               <div style={{ fontSize: 14, color: 'rgba(0,200,165,.75)', marginBottom: 3 }}>{allMarkers.length} biomarkers</div>
               <div style={{ fontSize: 14, color: 'rgba(0,185,150,.6)', marginBottom: 3 }}>{documents.length} documents</div>
-              {flaggedMarkers.length > 0 && <div style={{ fontSize: 14, color: 'rgba(255,160,60,.8)' }}>Ã¢ÂÂ  {flaggedMarkers.length} need attention</div>}
+              {flaggedMarkers.length > 0 && <div style={{ fontSize: 14, color: 'rgba(255,160,60,.8)' }}>ÃÂ¢ÃÂÃÂ  {flaggedMarkers.length} need attention</div>}
             </div>
           </div>
         )}
@@ -671,7 +671,7 @@ export default function App() {
             onFocus={() => !asking && setOrbState('listening')}
             onBlur={() => orbState === 'listening' && setOrbState('idle')}
           />
-          <button onClick={handleAsk} disabled={asking || !input.trim()} style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,180,145,.55)', fontSize: 15, fontFamily: 'inherit' }}>Ã¢ÂÂµ</button>
+          <button onClick={handleAsk} disabled={asking || !input.trim()} style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,180,145,.55)', fontSize: 15, fontFamily: 'inherit' }}>ÃÂ¢ÃÂÃÂµ</button>
         </div>
 
         {response && (
@@ -688,7 +688,7 @@ export default function App() {
               <div style={{ fontSize: 11, padding: '2px 8px', border: isPro ? '1px solid rgba(0,195,155,.4)' : '1px solid rgba(0,155,125,.2)', borderRadius: 10, color: isPro ? 'rgba(0,210,165,.85)' : 'rgba(0,155,125,.5)', letterSpacing: 1, textTransform: 'uppercase' }}>{isPro ? 'Pro' : 'Free'}</div>
             </div>
             {!isPro && (
-              <button onClick={() => setShowUpgrade(true)} style={{ width: '100%', fontSize: 13, color: 'rgba(0,210,165,.85)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.25)', borderRadius: 3, padding: '6px 0', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>Upgrade to Pro Ã¢ÂÂ</button>
+              <button onClick={() => setShowUpgrade(true)} style={{ width: '100%', fontSize: 13, color: 'rgba(0,210,165,.85)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.25)', borderRadius: 3, padding: '6px 0', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>Upgrade to Pro ÃÂ¢ÃÂÃÂ</button>
             )}
             <button onClick={() => setPanel('profile')} style={{ width: '100%', fontSize: 11, color: 'rgba(0,210,165,.72)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginTop: 10, textAlign: 'left', letterSpacing: '0.08em', padding: '6px 0', borderTop: '1px solid rgba(0,210,165,.12)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <span>&#9881;</span> PROFILE &amp; SETTINGS
@@ -705,7 +705,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Ã¢ÂÂÃ¢ÂÂ MAIN PANEL Ã¢ÂÂÃ¢ÂÂ */}
+      {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ MAIN PANEL ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: '#020810' }}>
         <div className="aellux-topbar">
           <span style={{ fontSize: 15, letterSpacing: 2.5, textTransform: 'uppercase', color: 'rgba(0,195,155,.78)' }}>
@@ -719,7 +719,7 @@ export default function App() {
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
 
-          {/* Ã¢ÂÂÃ¢ÂÂ UPLOAD Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ UPLOAD ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
           {panel === 'upload' && (
             <div>
               {/* Drop zone */}
@@ -735,13 +735,13 @@ export default function App() {
                   transition: 'all .2s', marginBottom: 28,
                 }}
               >
-                <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.6 }}>Ã¢ÂÂ</div>
+                <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.6 }}>ÃÂ¢ÃÂÃÂ</div>
                 <div style={{ fontSize: 20, color: 'rgba(0,210,165,.85)', marginBottom: 8, fontWeight: 500 }}>Drop your health records here</div>
                 <div style={{ fontSize: 16, color: 'rgba(0,175,142,.6)', marginBottom: 16, lineHeight: 1.7 }}>
-                  Blood panels ÃÂ· DEXA scans ÃÂ· Sleep reports ÃÂ· Microbiome results<br />
-                  Wearable exports ÃÂ· Physician notes ÃÂ· Lab results
+                  Blood panels ÃÂÃÂ· DEXA scans ÃÂÃÂ· Sleep reports ÃÂÃÂ· Microbiome results<br />
+                  Wearable exports ÃÂÃÂ· Physician notes ÃÂÃÂ· Lab results
                 </div>
-                <div style={{ fontSize: 14, color: 'rgba(0,155,125,.45)' }}>PDF ÃÂ· CSV ÃÂ· JPG ÃÂ· PNG ÃÂ· TXT Ã¢ÂÂ Aellux reads everything</div>
+                <div style={{ fontSize: 14, color: 'rgba(0,155,125,.45)' }}>PDF ÃÂÃÂ· CSV ÃÂÃÂ· JPG ÃÂÃÂ· PNG ÃÂÃÂ· TXT ÃÂ¢ÃÂÃÂ Aellux reads everything</div>
                 <input ref={fileInputRef} type="file" multiple accept=".pdf,.csv,.txt,.json,.jpg,.jpeg,.png,.xml" style={{ display: 'none' }} onChange={e => e.target.files && handleFiles(e.target.files)} />
               </div>
 
@@ -767,17 +767,17 @@ export default function App() {
                               <span style={{ fontSize: 17, color: 'rgba(0,215,172,.92)', fontWeight: 500 }}>{doc.name}</span>
                               <span style={{ fontSize: 11, padding: '2px 8px', border: '1px solid rgba(0,175,138,.25)', borderRadius: 2, color: 'rgba(0,185,148,.6)', letterSpacing: 1, textTransform: 'uppercase' }}>{doc.document_type}</span>
                             </div>
-                            <div style={{ fontSize: 14, color: 'rgba(0,175,142,.6)', marginBottom: 8 }}>{doc.date} ÃÂ· {doc.markers.length} markers extracted</div>
+                            <div style={{ fontSize: 14, color: 'rgba(0,175,142,.6)', marginBottom: 8 }}>{doc.date} ÃÂÃÂ· {doc.markers.length} markers extracted</div>
                             {doc.summary && <div style={{ fontSize: 15, fontStyle: 'italic', color: 'rgba(0,195,160,.72)', lineHeight: 1.75 }}>{doc.summary}</div>}
                             {doc.flags.length > 0 && (
                               <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                 {doc.flags.map((f, i) => (
-                                  <span key={i} style={{ fontSize: 13, padding: '3px 10px', background: 'rgba(255,130,60,.08)', border: '1px solid rgba(255,130,60,.25)', borderRadius: 3, color: 'rgba(255,160,80,.85)' }}>Ã¢ÂÂ  {f}</span>
+                                  <span key={i} style={{ fontSize: 13, padding: '3px 10px', background: 'rgba(255,130,60,.08)', border: '1px solid rgba(255,130,60,.25)', borderRadius: 3, color: 'rgba(255,160,80,.85)' }}>ÃÂ¢ÃÂÃÂ  {f}</span>
                                 ))}
                               </div>
                             )}
                           </div>
-                          <button onClick={() => saveDocuments(documents.filter(d => d.id !== doc.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,150,120,.35)', fontSize: 16, padding: 4 }}>Ã¢ÂÂ</button>
+                          <button onClick={() => saveDocuments(documents.filter(d => d.id !== doc.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,150,120,.35)', fontSize: 16, padding: 4 }}>ÃÂ¢ÃÂÃÂ</button>
                         </div>
                       </div>
                     ))}
@@ -790,12 +790,12 @@ export default function App() {
                   <div style={{ ...S.label, marginBottom: 14 }}>What Aellux reads and understands</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
                     {[
-                      ['Ã°ÂÂ©Â¸ Blood Panels', 'CBC, CMP, lipids, hormones, vitamins, minerals, inflammatory markers'],
-                      ['Ã°ÂÂÂ Wearable Data', 'Apple Health, Garmin, Oura, Whoop CSV exports Ã¢ÂÂ HRV, sleep, steps, VO2max'],
-                      ['Ã°ÂÂ§Â¬ DEXA / Body Comp', 'Body fat %, lean mass, bone density, visceral fat estimates'],
-                      ['Ã°ÂÂÂ´ Sleep Reports', 'Sleep stages, deep sleep duration, sleep efficiency, disturbances'],
-                      ['Ã°ÂÂ¦Â  Microbiome', 'Gut bacteria ratios, diversity scores, pathogen flags'],
-                      ['Ã°ÂÂÂ Physician Notes', 'Clinical observations, diagnoses, medication effects'],
+                      ['ÃÂ°ÃÂÃÂ©ÃÂ¸ Blood Panels', 'CBC, CMP, lipids, hormones, vitamins, minerals, inflammatory markers'],
+                      ['ÃÂ°ÃÂÃÂÃÂ Wearable Data', 'Apple Health, Garmin, Oura, Whoop CSV exports ÃÂ¢ÃÂÃÂ HRV, sleep, steps, VO2max'],
+                      ['ÃÂ°ÃÂÃÂ§ÃÂ¬ DEXA / Body Comp', 'Body fat %, lean mass, bone density, visceral fat estimates'],
+                      ['ÃÂ°ÃÂÃÂÃÂ´ Sleep Reports', 'Sleep stages, deep sleep duration, sleep efficiency, disturbances'],
+                      ['ÃÂ°ÃÂÃÂ¦ÃÂ  Microbiome', 'Gut bacteria ratios, diversity scores, pathogen flags'],
+                      ['ÃÂ°ÃÂÃÂÃÂ Physician Notes', 'Clinical observations, diagnoses, medication effects'],
                     ].map(([title, desc]) => (
                       <div key={String(title)} style={{ padding: '14px 16px', background: 'rgba(0,8,16,.5)', border: '1px solid rgba(0,165,132,.1)', borderRadius: 5 }}>
                         <div style={{ fontSize: 16, color: 'rgba(0,210,170,.85)', marginBottom: 5 }}>{title}</div>
@@ -808,13 +808,13 @@ export default function App() {
             </div>
           )}
 
-          {/* Ã¢ÂÂÃ¢ÂÂ DASHBOARD Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ DASHBOARD ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
           {panel === 'dashboard' && (
             <div>
               {allMarkers.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px' }}>
                   <div style={{ fontSize: 18, color: 'rgba(0,185,150,.6)', marginBottom: 12 }}>No health data yet</div>
-                  <button onClick={() => setPanel('upload')} style={{ fontSize: 16, color: 'rgba(0,210,165,.85)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 4, padding: '10px 24px', cursor: 'pointer', fontFamily: 'inherit' }}>Upload your first document Ã¢ÂÂ</button>
+                  <button onClick={() => setPanel('upload')} style={{ fontSize: 16, color: 'rgba(0,210,165,.85)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 4, padding: '10px 24px', cursor: 'pointer', fontFamily: 'inherit' }}>Upload your first document ÃÂ¢ÃÂÃÂ</button>
                 </div>
               ) : (
                 <>
@@ -837,7 +837,7 @@ export default function App() {
                   {/* Flags */}
                   {flaggedMarkers.length > 0 && (
                     <div style={{ marginBottom: 22 }}>
-                      <div style={{ ...S.label, marginBottom: 12, color: 'rgba(255,160,60,.7)' }}>Ã¢ÂÂ  Needs Attention ({flaggedMarkers.length})</div>
+                      <div style={{ ...S.label, marginBottom: 12, color: 'rgba(255,160,60,.7)' }}>ÃÂ¢ÃÂÃÂ  Needs Attention ({flaggedMarkers.length})</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                         {flaggedMarkers.map(m => (
                           <div key={m.name} onClick={() => { setSelectedMarker(m.name); setPanel('trends'); }} style={{ ...S.card, padding: '14px 16px', cursor: 'pointer', borderColor: 'rgba(255,130,60,.22)', transition: 'border-color .2s' }}>
@@ -848,7 +848,7 @@ export default function App() {
                               <span style={{ fontSize: 13, color: 'rgba(0,160,130,.5)' }}>{m.unit}</span>
                             </div>
                             {m.reference_range_low !== undefined && (
-                              <div style={{ fontSize: 13, color: 'rgba(0,155,125,.45)', marginTop: 4 }}>Ref: {m.reference_range_low}Ã¢ÂÂ{m.reference_range_high}</div>
+                              <div style={{ fontSize: 13, color: 'rgba(0,155,125,.45)', marginTop: 4 }}>Ref: {m.reference_range_low}ÃÂ¢ÃÂÃÂ{m.reference_range_high}</div>
                             )}
                           </div>
                         ))}
@@ -924,7 +924,7 @@ export default function App() {
                     <div style={{ marginTop: 24, textAlign: 'center' }}>
                       <button onClick={() => generatePersonalised('synthesis')} disabled={generatingType === 'synthesis'}
                         style={{ fontSize: 16, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '12px 28px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                        {generatingType === 'synthesis' ? 'Aellux is synthesising...' : 'Generate full health synthesis Ã¢ÂÂ'}
+                        {generatingType === 'synthesis' ? 'Aellux is synthesising...' : 'Generate full health synthesis ÃÂ¢ÃÂÃÂ'}
                       </button>
                     </div>
                   )}
@@ -933,7 +933,7 @@ export default function App() {
             </div>
           )}
 
-          {/* Ã¢ÂÂÃ¢ÂÂ TRENDS Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ TRENDS ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
           {panel === 'trends' && (
             <div>
               {allMarkers.length === 0 ? (
@@ -956,7 +956,7 @@ export default function App() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                           <div>
                             <p style={{ ...S.label, marginBottom: 2 }}>Biomarker Trends</p>
-                            <div style={{ fontSize: 13, color: 'rgba(0,165,132,.5)' }}>{allDates.length} time points ÃÂ· normalised overlay</div>
+                            <div style={{ fontSize: 13, color: 'rgba(0,165,132,.5)' }}>{allDates.length} time points ÃÂÃÂ· normalised overlay</div>
                           </div>
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button onClick={() => setActiveMarkerKeys(new Set(trendMarkers.map(m => m.name)))}
@@ -998,9 +998,9 @@ export default function App() {
                         </div>
                         {singleMarkers.length > 0 && (
                           <div style={{ marginTop: 20, padding: '12px 16px', borderRadius: 6, background: 'rgba(0,8,16,.5)', border: '1px solid rgba(0,155,122,.1)' }}>
-                            <div style={{ fontSize: 12, color: 'rgba(0,155,125,.45)', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Single data point Ã¢ÂÂ no trend yet</div>
+                            <div style={{ fontSize: 12, color: 'rgba(0,155,125,.45)', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Single data point ÃÂ¢ÃÂÃÂ no trend yet</div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                              {singleMarkers.map(m => <div key={m.name} style={{ fontSize: 13, color: 'rgba(0,175,140,.5)', padding: '3px 10px', border: '1px solid rgba(0,155,122,.15)', borderRadius: 4 }}>{m.name} ÃÂ· {m.value} {m.unit}</div>)}
+                              {singleMarkers.map(m => <div key={m.name} style={{ fontSize: 13, color: 'rgba(0,175,140,.5)', padding: '3px 10px', border: '1px solid rgba(0,155,122,.15)', borderRadius: 4 }}>{m.name} ÃÂÃÂ· {m.value} {m.unit}</div>)}
                             </div>
                           </div>
                         )}
@@ -1012,7 +1012,7 @@ export default function App() {
             </div>
           )}
 
-          {/* Ã¢ÂÂÃ¢ÂÂ MEALS Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ MEALS ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
           {panel === 'meals' && (
             <div>
               {!isPro ? (
@@ -1023,11 +1023,11 @@ export default function App() {
                     {allMarkers.length === 0 ? 'Upload your health documents first.' : `Aellux will design your meal protocol from your ${allMarkers.length} biomarkers.`}
                   </p>
                   <p style={{ fontSize: 15, color: 'rgba(0,165,132,.5)', marginBottom: 28, lineHeight: 1.7 }}>
-                    Every meal will be specifically engineered to address your actual results Ã¢ÂÂ not a generic template.
+                    Every meal will be specifically engineered to address your actual results ÃÂ¢ÃÂÃÂ not a generic template.
                   </p>
                   <button onClick={() => generatePersonalised('meals')} disabled={generatingType === 'meals' || allMarkers.length === 0}
                     style={{ fontSize: 17, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                    {generatingType === 'meals' ? 'Ã¢ÂÂ³ Aellux is designing your meals...' : 'Generate my personalised meal protocol Ã¢ÂÂ'}
+                    {generatingType === 'meals' ? 'ÃÂ¢ÃÂÃÂ³ Aellux is designing your meals...' : 'Generate my personalised meal protocol ÃÂ¢ÃÂÃÂ'}
                   </button>
                 </div>
               ) : (
@@ -1066,7 +1066,7 @@ export default function App() {
                               <span>{meal.macros.p}g protein</span>
                             </div>
                           )}
-                          <div style={{ fontSize: 20, color: 'rgba(0,175,140,.4)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>Ã¢ÂÂ</div>
+                          <div style={{ fontSize: 20, color: 'rgba(0,175,140,.4)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>ÃÂ¢ÃÂÃÂ</div>
                         </div>
                         {isOpen && (
                           <div style={{ padding: '0 22px 22px', borderTop: '1px solid rgba(0,165,132,.1)' }}>
@@ -1075,7 +1075,7 @@ export default function App() {
                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 18 }}>
                                 {meal.items.map((item: string, ii: number) => (
                                   <div key={ii} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, color: 'rgba(0,200,165,.85)' }}>
-                                    <span style={{ color: 'rgba(0,175,140,.4)', fontSize: 10 }}>Ã¢ÂÂ</span>{item}
+                                    <span style={{ color: 'rgba(0,175,140,.4)', fontSize: 10 }}>ÃÂ¢ÃÂÃÂ</span>{item}
                                   </div>
                                 ))}
                               </div>
@@ -1089,7 +1089,7 @@ export default function App() {
                     <div style={{ ...S.card, padding: '18px 22px', marginTop: 20 }}>
                       <div style={{ ...S.label, color: 'rgba(255,150,60,.65)', marginBottom: 14 }}>Foods to avoid based on your markers</div>
                       {personalised.meals.foods_to_avoid.map((f: string, i: number) => (
-                        <div key={i} style={{ fontSize: 15, color: 'rgba(255,160,70,.78)', marginBottom: 7, paddingLeft: 12, borderLeft: '2px solid rgba(255,130,60,.2)' }}>Ã¢ÂÂ {f}</div>
+                        <div key={i} style={{ fontSize: 15, color: 'rgba(255,160,70,.78)', marginBottom: 7, paddingLeft: 12, borderLeft: '2px solid rgba(255,130,60,.2)' }}>ÃÂ¢ÃÂÃÂ {f}</div>
                       ))}
                     </div>
                   )}
@@ -1099,7 +1099,7 @@ export default function App() {
             </div>
           )}
 
-          {/* Ã¢ÂÂÃ¢ÂÂ SUPPLEMENTS Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ SUPPLEMENTS ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
           {panel === 'supps' && (
             <div>
               {!personalised.supps ? (
@@ -1110,7 +1110,7 @@ export default function App() {
                   <p style={{ fontSize: 15, color: 'rgba(0,165,132,.5)', marginBottom: 28, lineHeight: 1.7 }}>No generic recommendations. Only what your actual biology requires.</p>
                   <button onClick={() => generatePersonalised('supps')} disabled={generatingType === 'supps' || allMarkers.length === 0}
                     style={{ fontSize: 17, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                    {generatingType === 'supps' ? 'Ã¢ÂÂ³ Aellux is building your stack...' : 'Generate my personalised supplement stack Ã¢ÂÂ'}
+                    {generatingType === 'supps' ? 'ÃÂ¢ÃÂÃÂ³ Aellux is building your stack...' : 'Generate my personalised supplement stack ÃÂ¢ÃÂÃÂ'}
                   </button>
                 </div>
               ) : (
@@ -1124,7 +1124,7 @@ export default function App() {
                   {[1, 2, 3].map(priority => {
                     const supps = (personalised.supps.supplements || []).filter((s: any) => s.priority === priority);
                     if (!supps.length) return null;
-                    const pLabel = priority === 1 ? 'Priority 1 Ã¢ÂÂ Foundation' : priority === 2 ? 'Priority 2 Ã¢ÂÂ Optimisation' : 'Priority 3 Ã¢ÂÂ Optional';
+                    const pLabel = priority === 1 ? 'Priority 1 ÃÂ¢ÃÂÃÂ Foundation' : priority === 2 ? 'Priority 2 ÃÂ¢ÃÂÃÂ Optimisation' : 'Priority 3 ÃÂ¢ÃÂÃÂ Optional';
                     return (
                       <div key={priority} style={{ marginBottom: 28 }}>
                         <p style={{ ...S.label, marginBottom: 12 }}>{pLabel}</p>
@@ -1141,19 +1141,19 @@ export default function App() {
                                       <span style={{ fontSize: 11, padding: '2px 8px', border: `1px solid ${sc}`, borderRadius: 2, color: sc, letterSpacing: 1, textTransform: 'uppercase' }}>{s.status}</span>
                                       {s.evidence_level && <span style={{ fontSize: 11, color: 'rgba(0,165,132,.5)', letterSpacing: 1 }}>{s.evidence_level} evidence</span>}
                                     </div>
-                                    <div style={{ fontSize: 15, color: 'rgba(0,178,145,.72)' }}>{s.dose} ÃÂ· {s.timing}</div>
+                                    <div style={{ fontSize: 15, color: 'rgba(0,178,145,.72)' }}>{s.dose} ÃÂÃÂ· {s.timing}</div>
                                   </div>
                                   <div style={{ textAlign: 'right' }}>
                                     {s.expected_impact && <div style={{ fontSize: 15, color: 'rgba(0,200,162,.78)' }}>{s.expected_impact}</div>}
                                     {s.cost_monthly && <div style={{ fontSize: 14, color: 'rgba(0,155,125,.48)' }}>{s.cost_monthly}/mo</div>}
                                   </div>
-                                  <div style={{ fontSize: 20, color: 'rgba(0,175,140,.4)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s', marginLeft: 8 }}>Ã¢ÂÂ</div>
+                                  <div style={{ fontSize: 20, color: 'rgba(0,175,140,.4)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s', marginLeft: 8 }}>ÃÂ¢ÃÂÃÂ</div>
                                 </div>
                                 {isOpen && (
                                   <div style={{ padding: '0 22px 22px', borderTop: '1px solid rgba(0,165,132,.1)' }}>
                                     <p style={{ fontSize: 16, color: 'rgba(0,205,165,.84)', lineHeight: 1.88, margin: '16px 0 12px', fontStyle: 'italic', paddingLeft: 14, borderLeft: '2px solid rgba(0,190,152,.28)' }}>{s.why}</p>
                                     {s.synergies?.length > 0 && <div style={{ fontSize: 14, color: 'rgba(0,175,142,.6)' }}>Synergises with: {s.synergies.join(', ')}</div>}
-                                    {s.contraindications?.length > 0 && <div style={{ fontSize: 14, color: 'rgba(255,150,60,.65)', marginTop: 6 }}>Ã¢ÂÂ  {s.contraindications.join('; ')}</div>}
+                                    {s.contraindications?.length > 0 && <div style={{ fontSize: 14, color: 'rgba(255,150,60,.65)', marginTop: 6 }}>ÃÂ¢ÃÂÃÂ  {s.contraindications.join('; ')}</div>}
                                   </div>
                                 )}
                               </div>
@@ -1177,7 +1177,7 @@ export default function App() {
             </div>
           )}
 
-          {/* Ã¢ÂÂÃ¢ÂÂ PROTOCOL Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ PROTOCOL ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
           {panel === 'protocol' && (
             <div>
               {!personalised.protocol ? (
@@ -1185,10 +1185,10 @@ export default function App() {
                   <p style={{ fontSize: 18, color: 'rgba(0,190,155,.75)', marginBottom: 10, lineHeight: 1.7 }}>
                     {allMarkers.length === 0 ? 'Upload your health documents first.' : `Aellux will design your daily protocol from your ${allMarkers.length} biomarkers.`}
                   </p>
-                  <p style={{ fontSize: 15, color: 'rgba(0,165,132,.5)', marginBottom: 28, lineHeight: 1.7 }}>What you should actually do every day Ã¢ÂÂ ranked by impact on your specific biology.</p>
+                  <p style={{ fontSize: 15, color: 'rgba(0,165,132,.5)', marginBottom: 28, lineHeight: 1.7 }}>What you should actually do every day ÃÂ¢ÃÂÃÂ ranked by impact on your specific biology.</p>
                   <button onClick={() => generatePersonalised('protocol')} disabled={generatingType === 'protocol' || allMarkers.length === 0}
                     style={{ fontSize: 17, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                    {generatingType === 'protocol' ? 'Ã¢ÂÂ³ Aellux is designing your protocol...' : 'Generate my daily protocol Ã¢ÂÂ'}
+                    {generatingType === 'protocol' ? 'ÃÂ¢ÃÂÃÂ³ Aellux is designing your protocol...' : 'Generate my daily protocol ÃÂ¢ÃÂÃÂ'}
                   </button>
                 </div>
               ) : (
@@ -1220,7 +1220,7 @@ export default function App() {
                       <div key={p.id || i} className={`aellux-proto-item ${done.has(p.id || String(i)) ? 'completed' : ''}`}
                         onClick={() => setDone(prev => { const n = new Set(prev); const key = p.id || String(i); n.has(key) ? n.delete(key) : n.add(key); return n; })}>
                         <div className={`aellux-check ${done.has(p.id || String(i)) ? 'checked' : ''}`}>
-                          {done.has(p.id || String(i)) && <span style={{ fontSize: 10, color: 'rgba(0,200,160,.92)' }}>Ã¢ÂÂ</span>}
+                          {done.has(p.id || String(i)) && <span style={{ fontSize: 10, color: 'rgba(0,200,160,.92)' }}>ÃÂ¢ÃÂÃÂ</span>}
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
@@ -1237,9 +1237,9 @@ export default function App() {
                   </div>
                   {personalised.protocol.avoid?.length > 0 && (
                     <div style={{ ...S.card, padding: '18px 22px', marginTop: 20 }}>
-                      <div style={{ ...S.label, color: 'rgba(255,150,60,.65)', marginBottom: 12 }}>Stop doing Ã¢ÂÂ based on your markers</div>
+                      <div style={{ ...S.label, color: 'rgba(255,150,60,.65)', marginBottom: 12 }}>Stop doing ÃÂ¢ÃÂÃÂ based on your markers</div>
                       {personalised.protocol.avoid.map((a: string, i: number) => (
-                        <div key={i} style={{ fontSize: 15, color: 'rgba(255,160,70,.78)', marginBottom: 8, paddingLeft: 12, borderLeft: '2px solid rgba(255,130,60,.2)' }}>Ã¢ÂÂ {a}</div>
+                        <div key={i} style={{ fontSize: 15, color: 'rgba(255,160,70,.78)', marginBottom: 8, paddingLeft: 12, borderLeft: '2px solid rgba(255,130,60,.2)' }}>ÃÂ¢ÃÂÃÂ {a}</div>
                       ))}
                     </div>
                   )}
@@ -1249,14 +1249,14 @@ export default function App() {
             </div>
           )}
 
-          {/* Ã¢ÂÂÃ¢ÂÂ PROTOCOLS Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ PROTOCOLS ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
           {panel === 'protocols' && (
             <div>
               <ProtocolsSection markers={allMarkers} />
             </div>
           )}
 
-          {/* Ã¢ÂÂÃ¢ÂÂ ASK Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ ASK ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
           {panel === 'ask' && (
             <div>
               <p style={{ ...S.label, marginBottom: 8 }}>Ask Aellux anything about your health</p>
@@ -1269,22 +1269,12 @@ export default function App() {
                   placeholder="What should I focus on? Why is my CRP elevated? What does my testosterone trend mean?"
                   value={input} onChange={e => setInput(e.target.value)}
 
-        {panel === 'profile' && (
-          <ProfilePage
-            user={user}
-            isPro={isPro}
-            signOut={signOut}
-            upgradeToPro={upgradeToPro}
-            documents={documents}
-            personalised={personalised}
-            setPanel={setPanel}
-          />
-        )}
+        
                   onKeyDown={e => e.key === 'Enter' && handleAsk()}
                 />
                 <button onClick={handleAsk} disabled={asking || !input.trim()}
                   style={{ fontSize: 16, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 22px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-                  {asking ? 'Ã¢ÂÂ³' : 'Ask Ã¢ÂÂ'}
+                  {asking ? 'ÃÂ¢ÃÂÃÂ³' : 'Ask ÃÂ¢ÃÂÃÂ'}
                 </button>
               </div>
               {response && (
@@ -1312,6 +1302,18 @@ export default function App() {
               </div>
             </div>
           )}
+
+        {panel === 'profile' && (
+          <ProfilePage
+            user={user}
+            isPro={isPro}
+            signOut={signOut}
+            upgradeToPro={upgradeToPro}
+            documents={documents}
+            personalised={personalised}
+            setPanel={setPanel}
+          />
+        )}
 
         </div>
       </div>
