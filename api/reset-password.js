@@ -8,7 +8,7 @@ export default async function handler(req) {
 
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const RESEND_KEY = process.env.RESEND_API_KEY;
-  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@aellux.health';
+  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
   const APP_URL = process.env.VITE_APP_URL || 'https://aellux.health';
 
   try {
@@ -18,6 +18,11 @@ export default async function handler(req) {
     if (action === 'request') {
       if (!email || !email.includes('@')) {
         return json({ error: 'Enter a valid email address.' }, 400);
+      }
+
+      if (!RESEND_KEY) {
+        console.error('[reset-password] RESEND_API_KEY is not set');
+        return json({ error: 'Email service not configured.' }, 500);
       }
 
       // Check user exists
@@ -46,7 +51,7 @@ export default async function handler(req) {
 
       // Send reset email via Resend
       const resetUrl = `${APP_URL}?reset_token=${resetToken}&email=${encodeURIComponent(email.trim())}`;
-      await fetch(RESEND_API, {
+      const resendRes = await fetch(RESEND_API, {
         method: 'POST',
         headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -54,22 +59,29 @@ export default async function handler(req) {
           to: [email.trim()],
           subject: 'Reset your Aellux password',
           html: `
-            <div style="font-family:Georgia,serif;background:#030d14;color:#a8ffe8;padding:40px;max-width:480px;margin:0 auto;border-radius:8px;">
-              <div style="text-align:center;margin-bottom:28px;">
-                <div style="width:52px;height:52px;border-radius:50%;background:radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%);margin:0 auto 16px;"></div>
-                <h1 style="font-size:32px;color:#a8ffe8;margin:0;font-weight:500;">Aellux</h1>
-              </div>
-              <p style="color:rgba(0,210,165,.85);font-size:17px;line-height:1.7;margin-bottom:8px;">You requested a password reset.</p>
-              <p style="color:rgba(0,180,145,.6);font-size:15px;line-height:1.7;margin-bottom:28px;">This link expires in 1 hour. If you didn't request this, ignore this email — your password won't change.</p>
-              <div style="text-align:center;margin-bottom:28px;">
-                <a href="${resetUrl}" style="display:inline-block;background:rgba(0,210,165,.9);color:#030d14;font-size:16px;font-weight:600;padding:14px 36px;border-radius:6px;text-decoration:none;font-family:Georgia,serif;">Reset My Password</a>
-              </div>
-              <p style="color:rgba(0,155,125,.4);font-size:13px;text-align:center;">Or copy this link: <span style="color:rgba(0,185,145,.5);word-break:break-all;">${resetUrl}</span></p>
-            </div>
-          `,
+<div style="font-family:Georgia,serif;background:#030d14;color:#a8ffe8;padding:40px;max-width:480px;margin:0 auto;border-radius:8px;">
+  <div style="text-align:center;margin-bottom:28px;">
+    <div style="width:52px;height:52px;border-radius:50%;background:radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%);margin:0 auto 16px;"></div>
+    <h1 style="font-size:32px;color:#a8ffe8;margin:0;font-weight:500;">Aellux</h1>
+  </div>
+  <p style="color:rgba(0,210,165,.85);font-size:17px;line-height:1.7;margin-bottom:8px;">You requested a password reset.</p>
+  <p style="color:rgba(0,180,145,.6);font-size:15px;line-height:1.7;margin-bottom:28px;">This link expires in 1 hour. If you didn't request this, ignore this email — your password won't change.</p>
+  <div style="text-align:center;margin-bottom:28px;">
+    <a href="${resetUrl}" style="display:inline-block;background:rgba(0,210,165,.9);color:#030d14;font-size:16px;font-weight:600;padding:14px 36px;border-radius:6px;text-decoration:none;font-family:Georgia,serif;">Reset My Password</a>
+  </div>
+  <p style="color:rgba(0,155,125,.4);font-size:13px;text-align:center;">Or copy this link: <span style="color:rgba(0,185,145,.5);word-break:break-all;">${resetUrl}</span></p>
+</div>
+`,
         }),
       });
 
+      if (!resendRes.ok) {
+        const resendErr = await resendRes.json().catch(() => ({}));
+        console.error('[reset-password] Resend error:', resendRes.status, JSON.stringify(resendErr));
+        return json({ error: 'Failed to send reset email. Please try again.' }, 500);
+      }
+
+      console.log('[reset-password] Reset email sent to', email.trim());
       return json({ success: true });
     }
 
@@ -117,6 +129,7 @@ export default async function handler(req) {
 
     return json({ error: 'Unknown action.' }, 400);
   } catch (err) {
+    console.error('[reset-password] Uncaught error:', err.message);
     return json({ error: err.message || 'Server error.' }, 500);
   }
 }
