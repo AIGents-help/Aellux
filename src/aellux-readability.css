@@ -1,82 +1,135 @@
-/* Aellux readability overrides — improves legibility of sidebar nav, dashboard headers, biomarker cards, and secondary descriptive text without disrupting the brand aesthetic. */
+/* Aellux Readability v2 — comprehensive legibility overhaul */
 
-/* 1. Boost weight + brightness of all letter-spaced UPPERCASE labels (sidebar nav, page headers, category tags). These were appearing as hairline strokes that disappeared into the background. */
-[style*="letter-spacing"][style*="uppercase"],
-  [style*="text-transform: uppercase"],
-  [style*="textTransform: 'uppercase'"] {
-  font-weight: 600 !important;
-  letter-spacing: 0.18em !important;
+/* ── 1. Global text baseline ─────────────────────────────────────────────── */
+body, #root {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* 2. Sidebar nav items — the UPLOAD RECORDS / HEALTH DASHBOARD / BIOMARKER TRENDS list. Match the small caps style that's used for all sidebar entries. */
-.aellux-nav-item,
-  .aellux-side-item,
-  nav button,
-  nav a {
-    font-weight: 600 !important;
-  letter-spacing: 0.16em !important;
-  color: rgba(0, 220, 175, 0.92) !important;
+/* ── 2. All letter-spaced uppercase labels — bring up brightness ─────────── */
+[style*="letterSpacing"][style*="uppercase"],
+[style*="letter-spacing"][style*="uppercase"] {
+  color: rgba(0, 210, 165, 0.72) !important;
 }
 
-/* 3. Biomarker / panel card titles (Vitamin D3, Magnesium glycinate, etc) and category tags (NUTRITIONAL, CARDIOVASCULAR). These are key data labels — they need to be obviously readable, not decorative. */
-.aellux-card,
-  .aellux-card-title,
-  [class*="card-title"],
-  [class*="biomarker"] {
-  font-weight: 600 !important;
-  }
-
-  /* 4. Reference range / unit text under values (e.g. 'Ref: 0.45-4.5', 'mg', 'cup cooked'). These are clinical context — must be readable without squinting. */
-  [style*="rgba(0, 160, 130"],
-  [style*="rgba(0,160,130"],
-  [style*="rgba(0, 175, 138"],
-  [style*="rgba(0,175,138"] {
-    color: rgba(0, 230, 185, 0.95) !important;
-  }
-
-  /* 5. Italic 'biography' / paragraph descriptive text (Anthony Kates intro, 'Upload your medical records...'). Italic Garamond at 400 weight is too thin on dark — bump to 500. */
-  em,
-  i,
-  [style*="font-style: italic"],
-  [style*="fontStyle: 'italic'"] {
-  font-weight: 600 !important;
-  }
-
-  /* 6. Force a minimum opacity floor on teal text to prevent washout. Anything below 0.7 alpha on the brand teal becomes effectively unreadable on #020810. */
-  [style*="rgba(0, 120, 100"],
-  [style*="rgba(0,120,100"],
-  [style*="rgba(0, 132, 105"],
-  [style*="rgba(0,132,105"] {
-  color: rgba(0, 175, 140, 0.78) !important;
-  }
-
-  /* 7. Sign Out / secondary action links — make them visible enough to find without making them shout. */
-  a[href="#"],
-  button.secondary,
-  [class*="signout"],
-  [class*="sign-out"] {
-  font-weight: 500 !important;
-  color: rgba(0, 200, 160, 0.7) !important;
-  }
-
-  /* 8. Tooltip / helper text — bump weight without touching color so existing color hierarchy is preserved. */
-  .aellux-rtab,
-  .aellux-tag,
-  [class*="-tag"],
-  [class*="-pill"] {
-  font-weight: 600 !important;
-  }
-
-  /* 9. Make the body base weight 500 across all logged-in app surfaces (everything except landing/auth pages where the elegant thinness is intentional). */
-  body:not(.aellux-landing-active) {
-  font-weight: 500;
+/* ── 3. Sidebar nav items ─────────────────────────────────────────────────── */
+/* Primary nav links (UPLOAD RECORDS / HEALTH DASHBOARD / etc) */
+[style*="fontSize: 10"][style*="letterSpacing"],
+[style*="font-size: 10"][style*="letter-spacing"] {
+  color: rgba(0, 210, 165, 0.78) !important;
+  font-size: 11px !important;
 }
 
-/* 10. Health Profile / status text in lower sidebar (53 biomarkers, 9 documents, 11 need attention). Make these obviously readable since they drive user attention. */
-[class*="profile"] li,
-  [class*="profile"] p,
-  [class*="status"] {
-  font-weight: 500 !important;
-  color: rgba(0, 210, 168, 0.88) !important;
-  }
-  
+/* ── 4. Page section headers (h2-level titles on each page) ──────────────── */
+/* e.g. "Health Dashboard", "Biomarker Trends", "Meal Protocol" */
+[style*="fontSize: 22"],
+[style*="fontSize: 24"],
+[style*="fontSize: 20"] {
+  color: rgba(0, 220, 175, 0.95) !important;
+}
+
+/* ── 5. Body copy / description text — lift from near-invisible ──────────── */
+[style*="rgba(0,185,145,.45)"],
+[style*="rgba(0,185,145,0.45)"] {
+  color: rgba(0, 200, 160, 0.72) !important;
+}
+[style*="rgba(0,170,135,.4)"],
+[style*="rgba(0,170,135,0.4)"] {
+  color: rgba(0, 200, 160, 0.65) !important;
+}
+[style*="rgba(0,155,125,.35)"],
+[style*="rgba(0,155,125,0.35)"] {
+  color: rgba(0, 195, 158, 0.62) !important;
+}
+[style*="rgba(0,140,110,.3)"],
+[style*="rgba(0,140,110,0.3)"] {
+  color: rgba(0, 195, 158, 0.58) !important;
+}
+
+/* ── 6. Biomarker card values & labels ───────────────────────────────────── */
+[style*="biomarker"] span,
+[class*="biomarker"] {
+  color: rgba(0, 215, 170, 0.88) !important;
+}
+
+/* ── 7. Section sub-headers (category labels, section dividers) ──────────── */
+[style*="fontSize: 11"][style*="letterSpacing"],
+[style*="fontSize: 12"][style*="letterSpacing"] {
+  color: rgba(0, 210, 165, 0.65) !important;
+}
+
+/* ── 8. Card/panel body text ─────────────────────────────────────────────── */
+[style*="lineHeight: 1.7"],
+[style*="lineHeight: 1.6"],
+[style*="line-height: 1.7"],
+[style*="line-height: 1.6"] {
+  color: rgba(0, 210, 165, 0.78) !important;
+}
+
+/* ── 9. Meal protocol / supplement / daily protocol text ─────────────────── */
+[style*="rgba(0,200,160"],
+[style*="rgba(0,195,158"] {
+  opacity: 1 !important;
+}
+
+/* ── 10. Protocol & plan cards ───────────────────────────────────────────── */
+[style*="rgba(0,180,145,.5)"],
+[style*="rgba(0,180,145,0.5)"] {
+  color: rgba(0, 205, 165, 0.78) !important;
+}
+[style*="rgba(0,165,130,.4)"],
+[style*="rgba(0,165,130,0.4)"] {
+  color: rgba(0, 200, 162, 0.7) !important;
+}
+
+/* ── 11. Health Profile / status text in lower sidebar ───────────────────── */
+[style*="profile"] li,
+[style*="profile"] p,
+[class*="profile"] span {
+  color: rgba(0, 210, 165, 0.72) !important;
+  font-size: 12px !important;
+}
+
+/* ── 12. Attention / alert items ─────────────────────────────────────────── */
+[style*="rgba(255,160,50"],
+[style*="rgba(255,160,50"] {
+  color: rgba(255, 175, 60, 0.92) !important;
+}
+
+/* ── 13. Sign out / secondary action buttons ─────────────────────────────── */
+[style*="signout"],
+[class*="signout"] {
+  color: rgba(255, 100, 100, 0.75) !important;
+}
+
+/* ── 14. Supplement/Meal/Daily card descriptions ─────────────────────────── */
+p[style*="rgba(0"],
+li[style*="rgba(0"] {
+  color: rgba(0, 210, 165, 0.75) !important;
+}
+
+/* ── 15. Trend labels and biomarker sublabels ────────────────────────────── */
+[style*="fontSize: 13"][style*="rgba(0,"] {
+  color: rgba(0, 210, 165, 0.7) !important;
+}
+
+/* ── 16. Force minimum opacity on all teal text ──────────────────────────── */
+[style*="color: rgba(0,"] {
+  text-rendering: optimizeLegibility;
+}
+
+/* ── 17. Ask Aellux input ────────────────────────────────────────────────── */
+textarea, input[type="text"] {
+  color: rgba(0, 220, 175, 0.9) !important;
+  background: rgba(0, 20, 30, 0.6) !important;
+}
+textarea::placeholder,
+input[type="text"]::placeholder {
+  color: rgba(0, 180, 145, 0.45) !important;
+}
+
+/* ── 18. Page-level content wrapper min contrast ─────────────────────────── */
+/* Ensures secondary pages don't feel washed out */
+main, [role="main"], .page-content {
+  color: rgba(0, 210, 165, 0.82);
+}
