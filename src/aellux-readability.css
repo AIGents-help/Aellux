@@ -23,7 +23,7 @@
   .aellux-card-title,
   [class*="card-title"],
   [class*="biomarker"] {
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   }
 
   /* 4. Reference range / unit text under values (e.g. 'Ref: 0.45-4.5', 'mg', 'cup cooked'). These are clinical context — must be readable without squinting. */
@@ -31,7 +31,7 @@
   [style*="rgba(0,160,130"],
   [style*="rgba(0, 175, 138"],
   [style*="rgba(0,175,138"] {
-  color: rgba(0, 200, 160, 0.85) !important;
+    color: rgba(0, 230, 185, 0.95) !important;
   }
 
   /* 5. Italic 'biography' / paragraph descriptive text (Anthony Kates intro, 'Upload your medical records...'). Italic Garamond at 400 weight is too thin on dark — bump to 500. */
@@ -39,7 +39,7 @@
   i,
   [style*="font-style: italic"],
   [style*="fontStyle: 'italic'"] {
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   }
 
   /* 6. Force a minimum opacity floor on teal text to prevent washout. Anything below 0.7 alpha on the brand teal becomes effectively unreadable on #020810. */
