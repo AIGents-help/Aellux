@@ -1,0 +1,82 @@
+/* Aellux readability overrides — improves legibility of sidebar nav, dashboard headers, biomarker cards, and secondary descriptive text without disrupting the brand aesthetic. */
+
+/* 1. Boost weight + brightness of all letter-spaced UPPERCASE labels (sidebar nav, page headers, category tags). These were appearing as hairline strokes that disappeared into the background. */
+[style*="letter-spacing"][style*="uppercase"],
+  [style*="text-transform: uppercase"],
+  [style*="textTransform: 'uppercase'"] {
+  font-weight: 600 !important;
+  letter-spacing: 0.18em !important;
+}
+
+/* 2. Sidebar nav items — the UPLOAD RECORDS / HEALTH DASHBOARD / BIOMARKER TRENDS list. Match the small caps style that's used for all sidebar entries. */
+.aellux-nav-item,
+  .aellux-side-item,
+  nav button,
+  nav a {
+    font-weight: 600 !important;
+  letter-spacing: 0.16em !important;
+  color: rgba(0, 220, 175, 0.92) !important;
+}
+
+/* 3. Biomarker / panel card titles (Vitamin D3, Magnesium glycinate, etc) and category tags (NUTRITIONAL, CARDIOVASCULAR). These are key data labels — they need to be obviously readable, not decorative. */
+.aellux-card,
+  .aellux-card-title,
+  [class*="card-title"],
+  [class*="biomarker"] {
+  font-weight: 500 !important;
+  }
+
+  /* 4. Reference range / unit text under values (e.g. 'Ref: 0.45-4.5', 'mg', 'cup cooked'). These are clinical context — must be readable without squinting. */
+  [style*="rgba(0, 160, 130"],
+  [style*="rgba(0,160,130"],
+  [style*="rgba(0, 175, 138"],
+  [style*="rgba(0,175,138"] {
+  color: rgba(0, 200, 160, 0.85) !important;
+  }
+
+  /* 5. Italic 'biography' / paragraph descriptive text (Anthony Kates intro, 'Upload your medical records...'). Italic Garamond at 400 weight is too thin on dark — bump to 500. */
+  em,
+  i,
+  [style*="font-style: italic"],
+  [style*="fontStyle: 'italic'"] {
+  font-weight: 500 !important;
+  }
+
+  /* 6. Force a minimum opacity floor on teal text to prevent washout. Anything below 0.7 alpha on the brand teal becomes effectively unreadable on #020810. */
+  [style*="rgba(0, 120, 100"],
+  [style*="rgba(0,120,100"],
+  [style*="rgba(0, 132, 105"],
+  [style*="rgba(0,132,105"] {
+  color: rgba(0, 175, 140, 0.78) !important;
+  }
+
+  /* 7. Sign Out / secondary action links — make them visible enough to find without making them shout. */
+  a[href="#"],
+  button.secondary,
+  [class*="signout"],
+  [class*="sign-out"] {
+  font-weight: 500 !important;
+  color: rgba(0, 200, 160, 0.7) !important;
+  }
+
+  /* 8. Tooltip / helper text — bump weight without touching color so existing color hierarchy is preserved. */
+  .aellux-rtab,
+  .aellux-tag,
+  [class*="-tag"],
+  [class*="-pill"] {
+  font-weight: 600 !important;
+  }
+
+  /* 9. Make the body base weight 500 across all logged-in app surfaces (everything except landing/auth pages where the elegant thinness is intentional). */
+  body:not(.aellux-landing-active) {
+  font-weight: 500;
+}
+
+/* 10. Health Profile / status text in lower sidebar (53 biomarkers, 9 documents, 11 need attention). Make these obviously readable since they drive user attention. */
+[class*="profile"] li,
+  [class*="profile"] p,
+  [class*="status"] {
+  font-weight: 500 !important;
+  color: rgba(0, 210, 168, 0.88) !important;
+  }
+  
