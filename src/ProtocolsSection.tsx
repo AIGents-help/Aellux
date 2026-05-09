@@ -587,7 +587,7 @@ function AddModal({ onClose, onAdd, existingIds }: any) {
                     <div style={{ ...S, fontSize:22, color:"rgba(0,215,172,.94)", fontWeight:500, marginBottom:4 }}>{preview.name}</div>
                     <div style={{ fontSize:14, color:"rgba(0,175,142,.6)", ...S }}>{preview.tagline}</div>
                   </div>
-                  <span style={{ fontSize:11, padding:"3px 9px", border:`1px solid ${({Strong:"#00d2a5",Moderate:"#64d2ff",Limited:"#ffa040","Weak / Mixed":"#ff6464"})[preview.evidenceVerdict?.split(" ")[0]] || "#64d2ff"}`, borderRadius:2, color:"rgba(0,195,158,.8)", letterSpacing:"0.08em", textTransform:"uppercase", ...S }}>{preview.evidenceVerdict}</span>
+                  <span style={{ fontSize:11, padding:"3px 9px", border:`1px solid ${({"Strong":"#00d2a5","Moderate":"#64d2ff","Limited":"#ffa040","Weak":"#ff6464"} as Record<string,string>)[preview.evidenceVerdict?.split(" ")[0]] || "#64d2ff"}`, borderRadius:2, color:"rgba(0,195,158,.8)", letterSpacing:"0.08em", textTransform:"uppercase", ...S }}>{preview.evidenceVerdict}</span>
                 </div>
                 <div style={{ marginBottom:12 }}>{preview.signals?.map((s: any) => <SignalBar key={s.label} {...s} />)}</div>
                 {preview.researchSummary && <p style={{ fontSize:13, color:"rgba(0,180,145,.7)", lineHeight:1.7, marginTop:10, ...S }}>{preview.researchSummary}</p>}
