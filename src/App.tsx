@@ -955,7 +955,7 @@ export default function App() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
                 {allMarkers
                   .filter(m => trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase())
-                  .sort((a, b) => (b.values?.length || 0) - (a.values?.length || 0))
+                  .sort((a, b) => ((b as any).history?.length || 0) - ((a as any).history?.length || 0))
                   .slice(0, 24)
                   .map(m => {
                     const vals: {value: any; date: string}[] = ((m as any).history) || [{ value: m.value, date: m.date }];
