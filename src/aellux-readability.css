@@ -1,66 +1,83 @@
-/* Aellux Readability v3 */
+/* Aellux Readability v4 - larger brighter text */
 
-/* ── Sidebar scrollable fix ─────────────────────────────────────────────── */
-/* Make the left sidebar scrollable so Profile & Sign Out buttons are reachable */
+body, #root { font-size: 15px !important; -webkit-font-smoothing: antialiased; }
+
+/* Sidebar nav labels */
+[style*="letterSpacing: 2"], [style*="letter-spacing: 2"] {
+  color: rgba(0,220,175,0.88) !important;
+  font-size: 11px !important;
+}
+
+/* Page titles */
+[style*="fontSize: 22"], [style*="fontSize: 24"], [style*="fontSize: 26"],
+[style*="fontSize: 28"], [style*="fontSize: 30"] {
+  color: rgba(0,225,180,0.97) !important;
+}
+
+/* Card category labels */
+[style*="fontSize: 10"][style*="letterSpacing"],
+[style*="fontSize: 11"][style*="letterSpacing"],
+[style*="fontSize: 12"][style*="letterSpacing"] {
+  color: rgba(0,210,165,0.72) !important;
+}
+
+/* Biomarker name on cards */
+[style*="fontSize: 14"], [style*="fontSize: 15"] {
+  color: rgba(0,220,175,0.92) !important;
+}
+
+/* Body copy */
+p, li, [style*="lineHeight: 1.6"], [style*="lineHeight: 1.7"],
+[style*="line-height: 1.6"], [style*="line-height: 1.7"] {
+  color: rgba(0,215,172,0.82) !important;
+}
+
+/* Lift dim teal opacity floor */
+[style*="rgba(0,185,145"], [style*="rgba(0,170,135"],
+[style*="rgba(0,155,125"], [style*="rgba(0,140,110"] {
+  color: rgba(0,205,165,0.78) !important;
+}
+[style*="rgba(0,210,165,.45)"], [style*="rgba(0,210,165,.4)"],
+[style*="rgba(0,210,165,.35)"], [style*="rgba(0,210,165,.3)"] {
+  color: rgba(0,210,165,0.72) !important;
+}
+
+/* Ref range text */
+[style*="fontSize: 12"][style*="color"] {
+  color: rgba(0,205,165,0.68) !important;
+  font-size: 12px !important;
+}
+
+/* Status chips */
+[style*="fontSize: 10"][style*="textTransform"] {
+  font-size: 11px !important;
+}
+
+/* Sidebar health profile */
+[style*="fontSize: 12"][style*="rgba(0,"] {
+  color: rgba(0,205,165,0.75) !important;
+  font-size: 13px !important;
+}
+
+/* Inputs */
+textarea::placeholder, input::placeholder { color: rgba(0,190,155,0.5) !important; }
+textarea, input[type="text"] {
+  color: rgba(0,225,180,0.92) !important;
+  font-size: 13px !important;
+}
+
+/* Biomarker value size */
+[style*="fontSize: 20"] { color: rgba(0,225,180,0.95) !important; }
+[style*="fontSize: 16"] { color: rgba(0,220,175,0.9) !important; }
+
+/* Sidebar scrollable */
 [style*="width: 180px"][style*="position: fixed"],
 [style*="width:180px"][style*="position: fixed"] {
   overflow-y: auto !important;
   overflow-x: hidden !important;
 }
 
-/* ── Global text baseline ────────────────────────────────────────────────── */
-body, #root {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* ── Sidebar nav items ───────────────────────────────────────────────────── */
-[style*="fontSize: 10"][style*="letterSpacing"],
-[style*="font-size: 10"][style*="letter-spacing"] {
-  color: rgba(0, 210, 165, 0.78) !important;
-  font-size: 11px !important;
-}
-
-/* ── Page section headers ────────────────────────────────────────────────── */
-[style*="fontSize: 22"],
-[style*="fontSize: 24"],
-[style*="fontSize: 20"] {
-  color: rgba(0, 220, 175, 0.95) !important;
-}
-
-/* ── Body copy / description text ───────────────────────────────────────── */
-[style*="rgba(0,185,145,.45)"] { color: rgba(0, 200, 160, 0.72) !important; }
-[style*="rgba(0,170,135,.4)"] { color: rgba(0, 200, 160, 0.65) !important; }
-[style*="rgba(0,155,125,.35)"] { color: rgba(0, 195, 158, 0.62) !important; }
-[style*="rgba(0,140,110,.3)"] { color: rgba(0, 195, 158, 0.58) !important; }
-
-/* ── Section sub-headers ─────────────────────────────────────────────────── */
-[style*="fontSize: 11"][style*="letterSpacing"],
-[style*="fontSize: 12"][style*="letterSpacing"] {
-  color: rgba(0, 210, 165, 0.65) !important;
-}
-
-/* ── Card/panel body text ────────────────────────────────────────────────── */
-[style*="lineHeight: 1.7"],
-[style*="lineHeight: 1.6"] {
-  color: rgba(0, 210, 165, 0.78) !important;
-}
-
-/* ── Protocol & plan cards ───────────────────────────────────────────────── */
-[style*="rgba(0,180,145,.5)"] { color: rgba(0, 205, 165, 0.78) !important; }
-[style*="rgba(0,165,130,.4)"] { color: rgba(0, 200, 162, 0.7) !important; }
-
-/* ── Attention / alert items ─────────────────────────────────────────────── */
-[style*="rgba(255,160,50"] { color: rgba(255, 175, 60, 0.92) !important; }
-
-/* ── Trend labels and biomarker sublabels ────────────────────────────────── */
-[style*="fontSize: 13"][style*="rgba(0,"] { color: rgba(0, 210, 165, 0.7) !important; }
-
-/* ── Ask Aellux input ────────────────────────────────────────────────────── */
-textarea, input[type="text"] {
-  color: rgba(0, 220, 175, 0.9) !important;
-  background: rgba(0, 20, 30, 0.6) !important;
-}
-textarea::placeholder, input[type="text"]::placeholder {
-  color: rgba(0, 180, 145, 0.45) !important;
+/* Attention text */
+[style*="rgba(255,160,50"], [style*="rgba(255,150,50"] {
+  color: rgba(255,175,60,0.95) !important;
 }
