@@ -13,12 +13,12 @@ export default async function handler(req) {
   if (!apiKey) return new Response(JSON.stringify({ error: 'No API key' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
 
   const body = await req.json();
-  const { markers, type, maxTokens = 2000 } = body;
+  const { markers, type, maxTokens = 2000, preference = null } = body;
 
   const ms = markers.slice(0, 8).map(m => m.name + ':' + m.value + m.unit + '(' + m.status + ')').join(', ');
 
   const prompts = {
-    meals: `Given biomarkers: ${ms}
+    meals: `Given biomarkers: ${ms}${preference && preference !== 'none' ? `\nDiet style preference: ${preference}. Tailor all meals to this style while respecting the biomarker data.` : ''}
 
 Return ONLY this JSON (no markdown, be concise, max 3 meals):
 {"key_insight":"one sentence","daily_targets":{"calories":2000,"protein":150,"carbs":200,"fat":65},"meals":[{"time":"Breakfast","name":"name","why":"one sentence referencing numbers","items":["item 1","item 2","item 3"],"macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker"]}],"foods_to_avoid":["food — why"]}`,
