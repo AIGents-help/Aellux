@@ -958,16 +958,16 @@ export default function App() {
                   .sort((a, b) => (b.values?.length || 0) - (a.values?.length || 0))
                   .slice(0, 24)
                   .map(m => {
-                    const vals = m.values || [{ value: m.value, date: m.date }];
-                    const nums = vals.map((v: any) => parseFloat(v.value)).filter(n => !isNaN(n));
+                    const vals: {value: any; date: string}[] = ((m as any).history) || [{ value: m.value, date: m.date }];
+                    const nums = vals.map((v: any) => parseFloat(v.value)).filter((n: any) => !isNaN(n));
                     const min = Math.min(...nums), max = Math.max(...nums);
                     const range = max - min || 1;
-                    const pts = nums.map((v, i) => `${(i / Math.max(nums.length - 1, 1)) * 80},${28 - ((v - min) / range) * 24}`).join(' ');
+                    const pts = nums.map((v: number, i: number) => `${(i / Math.max(nums.length - 1, 1)) * 80},${28 - ((v - min) / range) * 24}`).join(' ');
                     const trend = nums.length > 1 ? nums[nums.length-1] - nums[0] : 0;
                     const tColor = trend > 0 ? '#34d399' : trend < 0 ? '#f87171' : 'rgba(0,210,165,.5)';
                     const statusColor = m.status === 'high' || m.status === 'low' ? '#f59e0b' : 'rgba(0,210,165,.6)';
                     return (
-                      <div key={m.id || m.name} style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.1)', borderRadius: 8, padding: '14px 16px' }}>
+                      <div key={m.name} style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.1)', borderRadius: 8, padding: '14px 16px' }}>
                         <div style={{ fontSize: 10, color: 'rgba(0,210,165,.4)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>{m.category}</div>
                         <div style={{ fontSize: 14, color: 'rgba(0,210,165,.85)', fontFamily: 'Georgia,serif', marginBottom: 6 }}>{m.name}</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8 }}>
@@ -978,7 +978,7 @@ export default function App() {
                         {nums.length > 1 ? (
                           <svg viewBox="-2 0 84 32" width="100%" height="32" style={{ display: 'block', overflow: 'visible' }}>
                             <polyline points={pts} fill="none" stroke={tColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
-                            {nums.map((v, i) => <circle key={i} cx={(i / Math.max(nums.length-1,1)) * 80} cy={28-((v-min)/range)*24} r="1.5" fill={tColor} opacity="0.5"/>)}
+                            {nums.map((v: number, i: number) => <circle key={i} cx={(i / Math.max(nums.length-1,1)) * 80} cy={28-((v-min)/range)*24} r="1.5" fill={tColor} opacity="0.5"/>)}
                           </svg>
                         ) : (
                           <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
