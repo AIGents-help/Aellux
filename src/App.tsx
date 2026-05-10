@@ -5,11 +5,13 @@ import AuthPaywall from './AuthPaywall';
 import ProtocolsSection from './ProtocolsSection';
 import ProfilePage from './ProfilePage';
 import BodyHero from './BodyHero';
+import BiomarkerDetail from './BiomarkerDetail';
+import AdminDashboard from './AdminDashboard';
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
 type OrbState = 'dormant' | 'idle' | 'listening' | 'thinking' | 'speaking';
-type Panel = 'upload' | 'dashboard' | 'trends' | 'meals' | 'supps' | 'protocol' | 'protocols' | 'ask' | 'profile';
+type Panel = 'upload' | 'dashboard' | 'trends' | 'meals' | 'supps' | 'protocol' | 'protocols' | 'ask' | 'profile' | 'admin';
 
 interface Marker {
   name: string;
@@ -349,6 +351,8 @@ export default function App() {
   const [personalised, setPersonalised] = useState<PersonalisedData>({});
   const [mealPreference, setMealPreference] = React.useState<string>('none');
   const [showRecords, setShowRecords] = React.useState(false);
+  const [selectedMarker, setSelectedMarker] = React.useState<any>(null);
+  const isAdmin = user?.email === 'contact@aigents.help' || (user as any)?.is_admin === true;
   const [trendsFilter, setTrendsFilter] = React.useState<string>('All');
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
@@ -623,6 +627,7 @@ export default function App() {
     { id: 'supps',     label: 'Supplement Stack'                            },
     { id: 'protocol',  label: 'Daily Protocol'                              },
     { id: 'ask',       label: 'Ask Aellux'                                  },
+    ...(isAdmin ? [{ id: 'admin', label: 'Admin' }] : []),
   ];
 
   const S = {
@@ -667,7 +672,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Ask input */}
         <div style={{ padding: '0 14px', width: '100%', position: 'relative' }}>
           <input className="aellux-speak-input" placeholder="Ask Aellux..."
             value={input} onChange={e => setInput(e.target.value)}
@@ -1305,6 +1309,14 @@ export default function App() {
             personalised={personalised}
             setPanel={setPanel}
           />
+        )}
+
+        {panel === 'admin' && isAdmin && (
+          <AdminDashboard supabaseKey={import.meta.env.VITE_SUPABASE_ANON_KEY || ''} />
+        )}
+
+        {selectedMarker && (
+          <BiomarkerDetail marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
         )}
 
         </div>
