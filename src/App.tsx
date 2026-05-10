@@ -349,6 +349,7 @@ export default function App() {
   const [personalised, setPersonalised] = useState<PersonalisedData>({});
   const [mealPreference, setMealPreference] = React.useState<string>('none');
   const [showRecords, setShowRecords] = React.useState(false);
+  const [trendsFilter, setTrendsFilter] = React.useState<string>('All');
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
@@ -560,7 +561,7 @@ export default function App() {
       const res = await fetch('/api/personalise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ markers: allMarkers, type, maxTokens: 3000 }),
+        body: JSON.stringify({ markers: allMarkers, type, preference: type === 'meals' ? mealPreference : null, maxTokens: 3000 }),
       });
       const data = await res.json();
       const updated = { ...personalised, [type]: data };
@@ -637,7 +638,7 @@ export default function App() {
     <div className="aellux-layout">
       {/* ── LEFT COLUMN ── */}
       <div className="aellux-lc">
-        <div style={{ marginBottom: 10 }}><Orb state={orbState} size={110} /></div>
+        <div onClick={() => setPanel('upload')} style={{ cursor: 'pointer', marginBottom: 10 }}><Orb state={orbState} size={110} /></div>
         <div onClick={() => setPanel('upload')} style={{ cursor: 'pointer', fontSize: 15, letterSpacing: 3.5, textTransform: 'uppercase', color: 'rgba(0,210,165,.78)', marginBottom: 20 }}>Aellux</div>
 
         <div style={{ width: '100%', padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 18 }}>
@@ -939,80 +940,59 @@ export default function App() {
 
           {/* ── TRENDS ── */}
           {panel === 'trends' && (
-            <div>
-              {allMarkers.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 60, color: 'rgba(0,175,142,.6)', fontSize: 17 }}>Upload documents to see trends.</div>
-              ) : (() => {
-                const trendMarkers = allMarkers.filter(m => m.history && m.history.length > 1);
-                const singleMarkers = allMarkers.filter(m => m.history && m.history.length === 1);
-                const allDates = Array.from(new Set(
-                  trendMarkers.flatMap(m => m.history.map((h: any) => h.date))
-                )).sort();
-                const markersWithColor = trendMarkers.map(m => ({ ...m, color: CATEGORY_COLORS[m.category] || '#aaa' }));
-                return (
-                  <>
-                    {trendMarkers.length === 0 ? (
-                      <div style={{ ...S.card, padding: 32, textAlign: 'center', color: 'rgba(0,175,142,.6)', fontSize: 16, marginBottom: 24 }}>
-                        Upload at least 2 documents from different dates to see trends.
-                      </div>
-                    ) : (
-                      <>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                          <div>
-                            <p style={{ ...S.label, marginBottom: 2 }}>Biomarker Trends</p>
-                            <div style={{ fontSize: 13, color: 'rgba(0,165,132,.5)' }}>{allDates.length} time points · normalised overlay</div>
-                          </div>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => setActiveMarkerKeys(new Set(trendMarkers.map(m => m.name)))}
-                              style={{ fontSize: 12, color: 'rgba(0,200,160,.8)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.25)', borderRadius: 4, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>All on</button>
-                            <button onClick={() => setActiveMarkerKeys(new Set())}
-                              style={{ fontSize: 12, color: 'rgba(0,155,125,.5)', background: 'none', border: '1px solid rgba(0,155,125,.2)', borderRadius: 4, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>All off</button>
-                          </div>
+            <div style={{ padding: '24px 0' }}>
+              <div style={{ fontSize: 11, color: 'rgba(0,210,165,.45)', letterSpacing: '0.1em', marginBottom: 20, textTransform: 'uppercase' }}>Biomarker Trends</div>
+              {/* Category filter */}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+                {['All', 'Hormonal', 'Cardiovascular', 'Metabolic', 'Inflammatory', 'Nutritional', 'Fitness', 'Other'].map(cat => (
+                  <button key={cat} onClick={() => setTrendsFilter(cat)}
+                    style={{ padding: '4px 14px', borderRadius: 20, border: trendsFilter === cat ? '1px solid rgba(0,210,165,.7)' : '1px solid rgba(0,210,165,.18)', background: trendsFilter === cat ? 'rgba(0,210,165,.1)' : 'transparent', color: trendsFilter === cat ? 'rgba(0,210,165,.9)' : 'rgba(0,210,165,.45)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em' }}>
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              {/* Biomarker cards with mini trend lines */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                {allMarkers
+                  .filter(m => trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase())
+                  .sort((a, b) => (b.values?.length || 0) - (a.values?.length || 0))
+                  .slice(0, 24)
+                  .map(m => {
+                    const vals = m.values || [{ value: m.value, date: m.date }];
+                    const nums = vals.map((v: any) => parseFloat(v.value)).filter(n => !isNaN(n));
+                    const min = Math.min(...nums), max = Math.max(...nums);
+                    const range = max - min || 1;
+                    const pts = nums.map((v, i) => `${(i / Math.max(nums.length - 1, 1)) * 80},${28 - ((v - min) / range) * 24}`).join(' ');
+                    const trend = nums.length > 1 ? nums[nums.length-1] - nums[0] : 0;
+                    const tColor = trend > 0 ? '#34d399' : trend < 0 ? '#f87171' : 'rgba(0,210,165,.5)';
+                    const statusColor = m.status === 'high' || m.status === 'low' ? '#f59e0b' : 'rgba(0,210,165,.6)';
+                    return (
+                      <div key={m.id || m.name} style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.1)', borderRadius: 8, padding: '14px 16px' }}>
+                        <div style={{ fontSize: 10, color: 'rgba(0,210,165,.4)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>{m.category}</div>
+                        <div style={{ fontSize: 14, color: 'rgba(0,210,165,.85)', fontFamily: 'Georgia,serif', marginBottom: 6 }}>{m.name}</div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8 }}>
+                          <span style={{ fontSize: 20, color: statusColor, fontFamily: 'Georgia,serif' }}>{m.value}</span>
+                          <span style={{ fontSize: 11, color: 'rgba(0,210,165,.4)' }}>{m.unit}</span>
+                          {trend !== 0 && <span style={{ fontSize: 10, color: tColor, marginLeft: 'auto' }}>{trend > 0 ? '+' : ''}{trend.toFixed(1)}</span>}
                         </div>
-                        <MultiTrendChart markers={markersWithColor} activeKeys={activeMarkerKeys} allDates={allDates} />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 16 }}>
-                          {trendMarkers.map(m => {
-                            const color = CATEGORY_COLORS[m.category] || '#aaa';
-                            const sorted = [...m.history].sort((a: any, b: any) => a.date.localeCompare(b.date));
-                            const first = sorted[0]?.value, last = sorted[sorted.length - 1]?.value;
-                            const pct = first ? ((last - first) / first * 100).toFixed(1) : null;
-                            const isActive = activeMarkerKeys.has(m.name);
-                            const improving = pct !== null && Number(pct) <= 0;
-                            return (
-                              <div key={m.name}
-                                onClick={() => setActiveMarkerKeys(prev => { const n = new Set(prev); n.has(m.name) ? n.delete(m.name) : n.add(m.name); return n; })}
-                                style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 6, cursor: 'pointer', background: isActive ? `${color}0d` : 'rgba(0,4,10,.5)', border: `1px solid ${isActive ? `${color}40` : 'rgba(0,165,132,.08)'}`, transition: 'all .15s' }}>
-                                <div style={{ width: 36, height: 20, borderRadius: 10, flexShrink: 0, background: isActive ? color : 'rgba(0,50,40,.6)', position: 'relative', transition: 'background .2s' }}>
-                                  <div style={{ position: 'absolute', top: 3, left: isActive ? 18 : 3, width: 14, height: 14, borderRadius: '50%', background: isActive ? '#020810' : 'rgba(0,165,132,.4)', transition: 'left .2s' }} />
-                                </div>
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0, opacity: isActive ? 1 : 0.3 }} />
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: 15, color: isActive ? 'rgba(0,215,172,.92)' : 'rgba(0,165,132,.45)', fontWeight: 500 }}>{m.name}</div>
-                                  <div style={{ fontSize: 11, color: `${color}66`, letterSpacing: 1, textTransform: 'uppercase' }}>{m.category}</div>
-                                </div>
-                                <div style={{ opacity: isActive ? 1 : 0.25 }}><SparkChart values={sorted.map((h: any) => h.value)} color={color} width={80} /></div>
-                                <div style={{ textAlign: 'right', minWidth: 80 }}>
-                                  <div style={{ fontSize: 20, fontWeight: 500, color: isActive ? (STATUS_COLORS[m.status] || color) : 'rgba(0,165,132,.35)' }}>{last}<span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(0,155,125,.4)', marginLeft: 2 }}>{sorted[0]?.unit}</span></div>
-                                  <div style={{ fontSize: 13, color: 'rgba(0,160,130,.5)' }}>{m.status}</div>
-                                </div>
-                                {pct && <div style={{ minWidth: 60, textAlign: 'right', fontSize: 16, fontWeight: 600, color: improving ? 'rgba(0,210,165,.9)' : 'rgba(255,120,80,.9)', opacity: isActive ? 1 : 0.3 }}>{Number(pct) > 0 ? '+' : ''}{pct}%</div>}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        {singleMarkers.length > 0 && (
-                          <div style={{ marginTop: 20, padding: '12px 16px', borderRadius: 6, background: 'rgba(0,8,16,.5)', border: '1px solid rgba(0,155,122,.1)' }}>
-                            <div style={{ fontSize: 12, color: 'rgba(0,155,125,.45)', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Single data point — no trend yet</div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                              {singleMarkers.map(m => <div key={m.name} style={{ fontSize: 13, color: 'rgba(0,175,140,.5)', padding: '3px 10px', border: '1px solid rgba(0,155,122,.15)', borderRadius: 4 }}>{m.name} · {m.value} {m.unit}</div>)}
-                            </div>
+                        {nums.length > 1 ? (
+                          <svg viewBox="-2 0 84 32" width="100%" height="32" style={{ display: 'block', overflow: 'visible' }}>
+                            <polyline points={pts} fill="none" stroke={tColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
+                            {nums.map((v, i) => <circle key={i} cx={(i / Math.max(nums.length-1,1)) * 80} cy={28-((v-min)/range)*24} r="1.5" fill={tColor} opacity="0.5"/>)}
+                          </svg>
+                        ) : (
+                          <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                            <div style={{ fontSize: 10, color: 'rgba(0,210,165,.3)', letterSpacing: '0.06em' }}>single reading</div>
                           </div>
                         )}
-                      </>
-                    )}
-                  </>
-                );
-              })()}
+                        {m.status && <div style={{ fontSize: 10, color: statusColor, letterSpacing: '0.06em', marginTop: 4, textTransform: 'uppercase' }}>{m.status}</div>}
+                      </div>
+                    );
+                  })}
+              </div>
+              {allMarkers.filter(m => trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase()).length === 0 && (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(0,210,165,.35)', fontSize: 13 }}>No markers in this category</div>
+              )}
             </div>
           )}
 
