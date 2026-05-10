@@ -1,6 +1,4 @@
-
-          <BodyHero personalised={personalised} />
-          import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { saveDocument, getDocuments, deleteDocument, savePersonalised, getPersonalised } from './supabase';
 import AuthPaywall from './AuthPaywall';
@@ -640,7 +638,7 @@ export default function App() {
       {/* ── LEFT COLUMN ── */}
       <div className="aellux-lc">
         <div style={{ marginBottom: 10 }}><Orb state={orbState} size={110} /></div>
-        <div style={{ fontSize: 15, letterSpacing: 3.5, textTransform: 'uppercase', color: 'rgba(0,210,165,.78)', marginBottom: 20 }}>Aellux</div>
+        <div onClick={() => setPanel('upload')} style={{ cursor: 'pointer', fontSize: 15, letterSpacing: 3.5, textTransform: 'uppercase', color: 'rgba(0,210,165,.78)', marginBottom: 20 }}>Aellux</div>
 
         <div style={{ width: '100%', padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 18 }}>
           {NAV.map(({ id, label, count }) => (
@@ -823,6 +821,7 @@ export default function App() {
                 </div>
               ) : (
                 <>
+                  <BodyHero personalised={personalised} />
                   {/* Synthesis banner */}
                   {personalised.synthesis && (
                     <div style={{ ...S.card, padding: '18px 22px', marginBottom: 22, borderColor: 'rgba(0,195,155,.2)' }}>
@@ -1099,17 +1098,17 @@ export default function App() {
                     </div>
                   )}
                   <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: 'rgba(0,210,165,.5)', letterSpacing: '0.08em', marginBottom: 10, textTransform: 'uppercase' }}>Diet Preference</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {[['none','No Preference'],['vegetarian','Vegetarian'],['vegan','Vegan'],['mediterranean','Mediterranean'],['paleo','Paleo'],['keto','Keto'],['indian','Indian'],['mexican','Mexican'],['japanese','Japanese'],['halal','Halal']].map(([val, label]) => (
-                  <button key={val} onClick={() => setMealPreference(val)}
-                    style={{ padding: '5px 14px', borderRadius: 20, border: `1px solid ${mealPreference === val ? 'rgba(0,210,165,.7)' : 'rgba(0,210,165,.2)'}`, background: mealPreference === val ? 'rgba(0,210,165,.12)' : 'transparent', color: mealPreference === val ? 'rgba(0,210,165,.95)' : 'rgba(0,210,165,.5)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button onClick={() => { setPersonalised(p => ({ ...p, meals: undefined })); }} style={{ marginTop: 20, fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
+                    <div style={{ fontSize: 12, color: 'rgba(0,210,165,.5)', letterSpacing: '0.08em', marginBottom: 10, textTransform: 'uppercase' }}>Diet Style</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {[['none','No Preference'],['vegetarian','Vegetarian'],['vegan','Vegan'],['mediterranean','Mediterranean'],['paleo','Paleo'],['keto','Keto'],['indian','Indian'],['mexican','Mexican'],['japanese','Japanese'],['halal','Halal']].map(([val, label]) => (
+                        <button key={val} onClick={() => setMealPreference(val)}
+                          style={{ padding: '5px 14px', borderRadius: 20, border: mealPreference === val ? '1px solid rgba(0,210,165,.7)' : '1px solid rgba(0,210,165,.2)', background: mealPreference === val ? 'rgba(0,210,165,.12)' : 'transparent', color: mealPreference === val ? 'rgba(0,210,165,.95)' : 'rgba(0,210,165,.5)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <button onClick={() => { setPersonalised(p => ({ ...p, meals: undefined })); }} style={{ marginTop: 20, fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
                 </div>
               )}
             </div>
