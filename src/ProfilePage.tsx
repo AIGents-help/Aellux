@@ -4,13 +4,13 @@ interface Props {
   user: any;
   isPro: boolean;
   signOut: () => void;
-  upgradeToPro: () => void;
+  onUpgrade: () => void;
   documents: any[];
   personalised: any;
   setPanel: (panel: any) => void;
 }
 
-export default function ProfilePage({ user, isPro, signOut, upgradeToPro, documents, personalised }: Props) {
+export default function ProfilePage({ user, isPro, signOut, onUpgrade, documents, personalised }: Props) {
   return (
     <div style={{ padding: '32px 28px', maxWidth: 680, margin: '0 auto' }}>
       <h2 style={{ fontFamily: 'Georgia,serif', fontSize: 26, color: 'rgba(0,210,165,.9)', fontWeight: 400, letterSpacing: '0.04em', marginBottom: 6, marginTop: 0 }}>Profile &amp; Settings</h2>
@@ -42,7 +42,7 @@ export default function ProfilePage({ user, isPro, signOut, upgradeToPro, docume
           <div>
             <div style={{ color: 'rgba(0,210,165,.85)', fontSize: 15, marginBottom: 8 }}>Free Plan</div>
             <div style={{ color: 'rgba(0,210,165,.6)', fontSize: 13, lineHeight: 1.6, marginBottom: 16 }}>3 documents · 5 questions/day · Basic dashboard</div>
-            <button onClick={upgradeToPro} style={{ background: 'rgba(0,210,165,.9)', color: '#030d14', border: 'none', borderRadius: 6, padding: '10px 24px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Georgia,serif' }}>Upgrade to Pro →</button>
+            <button onClick={onUpgrade} style={{ background: 'rgba(0,210,165,.9)', color: '#030d14', border: 'none', borderRadius: 6, padding: '10px 24px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Georgia,serif' }}>Upgrade to Pro →</button>
           </div>
         )}
       </div>
