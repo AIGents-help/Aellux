@@ -356,8 +356,7 @@ export default function App() {
   const [trendsFilter, setTrendsFilter] = React.useState<string>('All');
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
-  const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
-  const [generatingType, setGeneratingType] = useState<string | null>(null);
+    const [generatingType, setGeneratingType] = useState<string | null>(null);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
   const [input, setInput] = useState('');
@@ -627,7 +626,7 @@ export default function App() {
     { id: 'supps',     label: 'Supplement Stack'                            },
     { id: 'protocol',  label: 'Daily Protocol'                              },
     { id: 'ask',       label: 'Ask Aellux'                                  },
-    ...(isAdmin ? [{ id: 'admin', label: 'Admin' }] : []),
+    ...(isAdmin ? [{ id: 'admin' as Panel, label: 'Admin' }] : []),
   ];
 
   const S = {
