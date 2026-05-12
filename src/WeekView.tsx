@@ -12,6 +12,7 @@ interface Meal {
   why?: string;
   macros?: { p?: number; c?: number; f?: number; cal?: number };
   targets?: string[];
+  flavor_boost?: string;
   alternatives?: MealAlt[];
 }
 
@@ -67,12 +68,15 @@ function MealRow({ slot, meal, dayIdx, selectedSwap, onSwap }: { slot: 'breakfas
   if (!meal) return null;
   const { displayName, isOriginal } = resolveMeal(meal, selectedSwap);
   const hasAlts = (meal.alternatives && meal.alternatives.length > 0) || false;
+  const hasItems = !!(meal.items && meal.items.length > 0);
+  const hasBoost = !!(meal.flavor_boost && meal.flavor_boost.trim().length > 0);
+  const isExpandable = hasAlts || hasItems || hasBoost;
 
   return (
     <div style={{ marginBottom: 10, border: '1px solid rgba(0,210,165,.14)', borderRadius: 6, overflow: 'hidden', background: 'rgba(0,6,14,.4)' }}>
       <div
-        onClick={() => hasAlts && setOpen(!open)}
-        style={{ padding: '12px 14px', cursor: hasAlts ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 12 }}
+        onClick={() => isExpandable && setOpen(!open)}
+        style={{ padding: '12px 14px', cursor: isExpandable ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 12 }}
       >
         <div style={{ fontSize: 10, color: 'rgba(0,225,180,.65)', letterSpacing: 1.5, textTransform: 'uppercase', width: 70, flexShrink: 0 }}>{slot}</div>
         <div style={{ flex: 1 }}>
@@ -82,37 +86,53 @@ function MealRow({ slot, meal, dayIdx, selectedSwap, onSwap }: { slot: 'breakfas
           </div>
           {meal.macros?.cal && <div style={{ fontSize: 11, color: 'rgba(0,200,160,.55)', marginTop: 2 }}>{meal.macros.cal} cal · P {meal.macros.p}g · C {meal.macros.c}g · F {meal.macros.f}g</div>}
         </div>
-        {hasAlts && (
+        {isExpandable && (
           <div style={{ fontSize: 16, color: 'rgba(0,210,165,.5)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>⌄</div>
         )}
       </div>
-      {open && hasAlts && (
+      {open && isExpandable && (
         <div style={{ padding: '10px 14px 14px', borderTop: '1px solid rgba(0,210,165,.1)' }}>
+          {meal.items && meal.items.length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 10, color: 'rgba(0,210,165,.55)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 5 }}>Ingredients</div>
+              <div style={{ fontSize: 12, color: 'rgba(220,255,235,.82)', lineHeight: 1.7 }}>{meal.items.join(' · ')}</div>
+            </div>
+          )}
+          {meal.flavor_boost && (
+            <div style={{ marginBottom: 10, padding: '8px 12px', background: 'rgba(255,200,80,.06)', border: '1px solid rgba(255,200,80,.22)', borderRadius: 4 }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,210,100,.8)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 3 }}>✨ Doctor it up (optional)</div>
+              <div style={{ fontSize: 12, color: 'rgba(220,255,235,.88)', lineHeight: 1.55 }}>{meal.flavor_boost}</div>
+            </div>
+          )}
           {meal.why && <div style={{ fontSize: 12, color: 'rgba(0,210,165,.65)', fontStyle: 'italic', lineHeight: 1.6, marginBottom: 10, paddingLeft: 10, borderLeft: '2px solid rgba(0,210,165,.25)' }}>{meal.why}</div>}
-          <div style={{ fontSize: 10, color: 'rgba(0,210,165,.55)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Swap to:</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <button
-              onClick={(e) => { e.stopPropagation(); onSwap(''); setOpen(false); }}
-              style={{ textAlign: 'left', padding: '8px 10px', background: isOriginal ? 'rgba(0,210,165,.14)' : 'rgba(0,210,165,.04)', border: `1px solid ${isOriginal ? 'rgba(0,225,180,.55)' : 'rgba(0,210,165,.18)'}`, borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit', color: 'rgba(220,255,235,.92)' }}
-            >
-              <div style={{ fontSize: 10, color: 'rgba(0,225,180,.7)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>Original {isOriginal ? '· active' : ''}</div>
-              <div style={{ fontSize: 13, lineHeight: 1.3 }}>{meal.name}</div>
-            </button>
-            {meal.alternatives?.map((alt) => {
-              const active = selectedSwap === alt.swap;
-              return (
+          {hasAlts && (
+            <>
+              <div style={{ fontSize: 10, color: 'rgba(0,210,165,.55)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Swap to:</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <button
-                  key={alt.swap}
-                  onClick={(e) => { e.stopPropagation(); onSwap(alt.swap); setOpen(false); }}
-                  style={{ textAlign: 'left', padding: '8px 10px', background: active ? 'rgba(0,210,165,.14)' : 'rgba(0,210,165,.04)', border: `1px solid ${active ? SWAP_COLOR[alt.swap] : 'rgba(0,210,165,.18)'}`, borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit', color: 'rgba(220,255,235,.92)' }}
+                  onClick={(e) => { e.stopPropagation(); onSwap(''); setOpen(false); }}
+                  style={{ textAlign: 'left', padding: '8px 10px', background: isOriginal ? 'rgba(0,210,165,.14)' : 'rgba(0,210,165,.04)', border: `1px solid ${isOriginal ? 'rgba(0,225,180,.55)' : 'rgba(0,210,165,.18)'}`, borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit', color: 'rgba(220,255,235,.92)' }}
                 >
-                  <div style={{ fontSize: 10, color: SWAP_COLOR[alt.swap], letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>{SWAP_LABEL[alt.swap]}{active ? ' · active' : ''}</div>
-                  <div style={{ fontSize: 13, lineHeight: 1.3, marginBottom: 3 }}>{alt.name}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(0,200,160,.55)', fontStyle: 'italic', lineHeight: 1.4 }}>{alt.why}</div>
+                  <div style={{ fontSize: 10, color: 'rgba(0,225,180,.7)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>Original {isOriginal ? '· active' : ''}</div>
+                  <div style={{ fontSize: 13, lineHeight: 1.3 }}>{meal.name}</div>
                 </button>
-              );
-            })}
-          </div>
+                {meal.alternatives?.map((alt) => {
+                  const active = selectedSwap === alt.swap;
+                  return (
+                    <button
+                      key={alt.swap}
+                      onClick={(e) => { e.stopPropagation(); onSwap(alt.swap); setOpen(false); }}
+                      style={{ textAlign: 'left', padding: '8px 10px', background: active ? 'rgba(0,210,165,.14)' : 'rgba(0,210,165,.04)', border: `1px solid ${active ? SWAP_COLOR[alt.swap] : 'rgba(0,210,165,.18)'}`, borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit', color: 'rgba(220,255,235,.92)' }}
+                    >
+                      <div style={{ fontSize: 10, color: SWAP_COLOR[alt.swap], letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>{SWAP_LABEL[alt.swap]}{active ? ' · active' : ''}</div>
+                      <div style={{ fontSize: 13, lineHeight: 1.3, marginBottom: 3 }}>{alt.name}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(0,200,160,.55)', fontStyle: 'italic', lineHeight: 1.4 }}>{alt.why}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

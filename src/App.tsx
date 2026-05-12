@@ -879,10 +879,12 @@ export default function App() {
     { id: 'week',      label: 'Biologic Protocol'                           },
     { id: 'trends',    label: 'Biomarker Trends'                            },
     { id: 'protocols', label: 'Protocols & Plans'                           },
-    { id: 'ask',       label: 'Ask Aellux'                                  },
+    // Ask Aellux removed from nav — sidebar input is the entry point. The
+    // /ask panel still works for users who deep-link there.
     // Legacy individual protocols — only visible to admin for QA. Pages still
     // work if navigated to directly; this just hides them from regular users.
     ...(isAdmin ? [
+      { id: 'ask'      as Panel, label: 'Ask Aellux (full)' },
       { id: 'meals'    as Panel, label: 'Meal Protocol (legacy)' },
       { id: 'supps'    as Panel, label: 'Supp Stack (legacy)' },
       { id: 'protocol' as Panel, label: 'Daily Protocol (legacy)' },

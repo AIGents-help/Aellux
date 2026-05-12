@@ -70,14 +70,28 @@ function buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, 
   const styleBlock = mealStyle && mealStyle !== 'none' ? `\nMeal style preference: ${mealStyle}. ALL meals AND alternatives must respect this style.\n` : '';
   const goalBlock = additionalGoal ? `\nAdditional weekly focus from user: "${additionalGoal}". Optimize the week's design toward this goal IN ADDITION to the biomarker-driven priorities. Reflect this in key_insight.\n` : '';
 
-  // dayOnly mode: ONE day only. Otherwise: 7 days.
-  // Each meal gets 2 alternatives (was 4) to keep output under the 60s edge.
   const dayCount = dayOnly ? 1 : 7;
   const dayList = dayOnly ? ['Monday'] : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
   return `${profileBlock}User biomarkers: ${ms}${styleBlock}${goalBlock}${medSafetyBlock}
 
-Design a personalised ${dayCount}-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return EXACTLY ONE day (Monday) — this is a free-tier preview. Do not generate Tuesday through Sunday.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days. Generate ALL 7 days in order: ' + dayList.join(', ') + '.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density. Calorie/protein targets must reflect sex/age/weight/activity. For EACH meal, provide exactly 2 alternatives: one keyed swap="nutrient_match" (same nutrient profile, different food), one keyed swap="diet_pref" (honors any listed dietary_restrictions or the meal style; if none, offer a cheaper or faster version).
+Design a personalised ${dayCount}-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return EXACTLY ONE day (Monday) — this is a free-tier preview. Do not generate Tuesday through Sunday.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days. Generate ALL 7 days in order: ' + dayList.join(', ') + '.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density. Calorie/protein targets must reflect sex/age/weight/activity.
+
+**MEAL DESIGN RULES — STRICT, NO EXCEPTIONS:**
+- This is a busy normal person, not a chef. Meals MUST be 5 ingredients or fewer, recognizable to the average American shopper, and buildable in 15 minutes or less.
+- ALLOWED PROTEINS ONLY: chicken breast, chicken thigh, ground beef, ground turkey, eggs, plain salmon fillet, canned tuna, canned salmon, plain shrimp, tofu, greek yogurt, cottage cheese, peanut butter. (If meal style is vegetarian/vegan, drop animal items.)
+- ALLOWED CARBS ONLY: white rice, brown rice, oatmeal, sweet potato, regular potato, whole wheat bread/toast, regular pasta, whole grain pasta, tortillas, canned beans (black/pinto/chickpeas), bananas, apples, berries.
+- ALLOWED VEG ONLY: broccoli, spinach, kale, carrots, bell peppers, cucumber, tomato, onion, garlic, lettuce/salad mix, frozen mixed vegetables, zucchini, mushrooms, avocado.
+- ALLOWED FATS ONLY: olive oil, butter, avocado, nuts (almonds, walnuts, peanuts, cashews), nut butter, cheese (cheddar, mozzarella, feta), seeds (chia, flax, pumpkin).
+- BANNED ENTIRELY: lamb, duck, veal, game meats, organ meats, scallops, mussels, octopus, ahi tuna steaks, exotic mushrooms (shiitake/maitake okay; everything else no), quinoa unless user style is keto/paleo, farro, bulgur, millet, sorghum, miso (unless Asian dietary restriction), tahini, harissa, gochujang, white bean puree, anything PUREED, COMPOTED, CONFITED, BRAISED for longer than 20 min, or with French/Italian chef terminology.
+- BANNED WORDS in meal names: puree, confit, compote, beurre, jus, reduction, brunoise, julienne, sous vide, charred, blistered, smoked (unless smoked salmon), seared (just say "cooked"), finished with.
+- Meal NAMES must be plain English a 10-year-old would understand: "Chicken & Rice Bowl", "Scrambled Eggs with Toast", "Tuna Sandwich", "Greek Yogurt with Berries". NOT "Pan-seared chicken with herbed rice pilaf".
+- Items array must list raw grocery-store ingredient names ONLY (e.g. "chicken breast 6oz", "cooked white rice 1 cup", "frozen broccoli 1 cup", "olive oil 1 tbsp"). No prep verbs in items.
+
+**FLAVOR BOOST — separate optional field per meal:**
+Each meal includes a "flavor_boost" field (string, max 2 sentences) describing how to make it more interesting if the user wants. THIS is where you can suggest soy sauce, herbs, sriracha, lemon, garlic powder, paprika, hot sauce, parmesan, ranch, salsa, etc. — common condiments only. Example: "Doctor it up: add a splash of soy sauce + sesame seeds + sriracha for a teriyaki feel." Default flavor_boost = pantry condiments. NEVER advanced techniques.
+
+For EACH meal, provide exactly 2 alternatives: one swap="nutrient_match" (different but equally simple protein/carb combo, same allowed list), one swap="diet_pref" (honors any listed dietary_restrictions or the meal style; if none, offer a cheaper version using canned/frozen options). All alternatives follow the SAME meal design rules above.
 
 Schema (return ONLY this JSON, no markdown, no commentary):
 {
@@ -88,12 +102,12 @@ Schema (return ONLY this JSON, no markdown, no commentary):
       "day":"Monday","theme":"Foundation","focus_marker":"marker name",
       "morning":{"wake_time":"6:30am","actions":["action 1","action 2"],"supps_am":["Supp name dose"]},
       "meals":{
-        "breakfast":{"name":"meal name","items":["item 1","item 2","item 3"],"why":"one sentence with user's actual numbers","macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker"],"alternatives":[
-          {"swap":"nutrient_match","name":"alt name","why":"same nutrients"},
-          {"swap":"diet_pref","name":"alt name","why":"honors restriction/style"}
+        "breakfast":{"name":"plain meal name (e.g. Scrambled Eggs with Toast)","items":["raw ingredient + qty","raw ingredient + qty","raw ingredient + qty"],"why":"one sentence with user's actual numbers","macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker"],"flavor_boost":"Doctor it up: add X + Y for flavor.","alternatives":[
+          {"swap":"nutrient_match","name":"alt plain name","why":"same nutrients"},
+          {"swap":"diet_pref","name":"alt plain name","why":"honors restriction/style or cheaper"}
         ]},
-        "lunch":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"alternatives":[...2 items same shape]},
-        "dinner":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"alternatives":[...2 items same shape]}
+        "lunch":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"flavor_boost":"...","alternatives":[...2 items same shape]},
+        "dinner":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"flavor_boost":"...","alternatives":[...2 items same shape]}
       },
       "movement":{"type":"Zone 2 cardio","duration":"45 min","when":"afternoon"},
       "evening":{"supps_pm":["Magnesium glycinate 300mg"],"wind_down":"screens off 9:30pm","sleep_target":"10:30pm"}
@@ -201,7 +215,11 @@ export default async function handler(req, res) {
 
   // Cache lookup (cache key includes mealStyle + additionalGoal so different focuses cache separately)
   const markerHash = await hashMarkers(markers);
-  const cacheKey = await sha256(`week|${mealStyle}|${additionalGoal.toLowerCase().trim()}|${dayOnly ? 'preview' : 'full'}|${profileHash}|${markerHash}`);
+  // Cache key includes PROMPT_VERSION — bump this when the schema/prompt
+  // changes meaningfully so old cached responses (e.g. chef-y meals from
+  // pre-pantry-rules era) don't get served to users on regeneration.
+  const PROMPT_VERSION = 'v2-pantry';
+  const cacheKey = await sha256(`week|${PROMPT_VERSION}|${mealStyle}|${additionalGoal.toLowerCase().trim()}|${dayOnly ? 'preview' : 'full'}|${profileHash}|${markerHash}`);
   const cachedRows = await sbSelect('personalised_cache', `cache_key=eq.${cacheKey}&select=result,hits&limit=1`);
   if (cachedRows && cachedRows.length > 0) {
     const row = cachedRows[0];
@@ -219,9 +237,8 @@ export default async function handler(req, res) {
   }
 
   const prompt = buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly });
-  // Tightened budgets: 2 alts × 3 meals × 7 days = 42 alts vs prior 84.
-  // Day-only: 1 day × 3 meals × 2 alts = 6 alts. ~2000 tokens generous.
-  const maxTokens = dayOnly ? 2200 : 6500;
+  // 2 alts × 3 meals × 7 days + flavor_boost per meal = ~7000 tokens worst case
+  const maxTokens = dayOnly ? 2500 : 7000;
 
   sse(res, 'start', { dayOnly });
 
