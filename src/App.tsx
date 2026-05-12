@@ -344,6 +344,24 @@ function ProGate({ isPro, onUpgrade, feature }: { isPro: boolean; onUpgrade: () 
   );
 }
 
+// Drops cached entries that are error payloads or wrong shape (from buggy older
+// code that stored {error: "..."} responses to the personalised table).
+function sanitisePersonalised(p: any): any {
+  if (!p || typeof p !== 'object') return {};
+  const out: any = {};
+  for (const [type, data] of Object.entries(p)) {
+    if (!data || typeof data !== 'object') continue;
+    if ((data as any).error) continue;
+    const shapeOk =
+      (type === 'meals'     && Array.isArray((data as any).meals)) ||
+      (type === 'supps'     && Array.isArray((data as any).supplements)) ||
+      (type === 'protocol'  && Array.isArray((data as any).protocols)) ||
+      (type === 'synthesis' && ((data as any).aellux_voice || (data as any).focus_priority));
+    if (shapeOk) out[type] = data;
+  }
+  return out;
+}
+
 export default function App() {
   const { user, isPro, signOut } = useAuth();
   const [orbState, setOrbState] = useState<OrbState>('dormant');
@@ -380,7 +398,7 @@ export default function App() {
       const saved = localStorage.getItem('aellux_documents');
       if (saved) { const docs = JSON.parse(saved); setDocuments(docs); if (docs.length > 0) setPanel('dashboard'); }
       const savedP = localStorage.getItem('aellux_personalised');
-      if (savedP) setPersonalised(JSON.parse(savedP));
+      if (savedP) setPersonalised(sanitisePersonalised(JSON.parse(savedP)));
     } catch {}
 
     // Then sync from Supabase if logged in
@@ -398,9 +416,10 @@ export default function App() {
         }
       });
       getPersonalised(user.id).then(p => {
-        if (Object.keys(p).length > 0) {
-          setPersonalised(p);
-          localStorage.setItem('aellux_personalised', JSON.stringify(p));
+        const clean = sanitisePersonalised(p);
+        if (Object.keys(clean).length > 0) {
+          setPersonalised(clean);
+          localStorage.setItem('aellux_personalised', JSON.stringify(clean));
         }
       });
     }
