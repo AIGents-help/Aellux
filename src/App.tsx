@@ -7,6 +7,7 @@ import ProfilePage from './ProfilePage';
 import BodyHero from './BodyHero';
 import BiomarkerDetail from './BiomarkerDetail';
 import AdminDashboard from './AdminDashboard';
+import PrintableReport from './PrintableReport';
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -358,6 +359,7 @@ export default function App() {
   const [uploadStatus, setUploadStatus] = useState('');
     const [generatingType, setGeneratingType] = useState<string | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [printSection, setPrintSection] = useState<'meals' | 'supps' | 'protocol' | 'synthesis' | 'all' | null>(null);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
   const [input, setInput] = useState('');
@@ -561,7 +563,7 @@ export default function App() {
       const res = await fetch('/api/personalise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ markers: allMarkers, type, preference: type === 'meals' ? mealPreference : null, maxTokens: 3000 }),
+        body: JSON.stringify({ markers: allMarkers, type, preference: type === 'meals' ? mealPreference : null, userId: user?.id, plan: isPro ? 'pro' : 'free' }),
       });
       const data = await res.json();
       // Surface API-level errors instead of silently storing a broken payload
@@ -605,6 +607,17 @@ export default function App() {
     }
   };
 
+  // ── PRINT / PDF ──────────────────────────────────────────────────────────
+  const triggerPrint = useCallback((section: 'meals' | 'supps' | 'protocol' | 'synthesis' | 'all') => {
+    setPrintSection(section);
+    // Wait for React to render the PrintableReport before invoking the dialog
+    setTimeout(() => {
+      try { window.print(); } catch (e) { console.error('[print] failed', e); }
+      // Reset after the print dialog closes (best-effort; user may cancel)
+      setTimeout(() => setPrintSection(null), 1500);
+    }, 80);
+  }, []);
+
   // ── ASK AELLUX ───────────────────────────────────────────────────────────
 
   const handleAsk = useCallback(async () => {
@@ -620,9 +633,17 @@ export default function App() {
           systemPrompt: `You are Aellux — an ancient biological intelligence. The user has ${allMarkers.length} biomarkers from ${documents.length} documents. Speak with quiet authority, 3-4 sentences max. Reference specific numbers. Start with "I have observed..." or "Your biology reveals..."`,
           userMessage: `My biomarkers: ${markerContext}\n\nQuestion: ${q}`,
           maxTokens: 250,
+          userId: user?.id,
+          plan: isPro ? 'pro' : 'free',
         }),
       });
       const data = await res.json();
+      if (data?.error) {
+        setResponse(data.code === 'rate_limited' ? data.error : `Aellux: ${data.error}`);
+        setOrbState('idle');
+        setAsking(false);
+        return;
+      }
       setResponse(data.text || 'The signal is quiet.');
       setOrbState('speaking');
       setTimeout(() => setOrbState('idle'), 5000);
@@ -851,7 +872,13 @@ export default function App() {
                   {/* Synthesis banner */}
                   {personalised.synthesis && (
                     <div style={{ ...S.card, padding: '18px 22px', marginBottom: 22, borderColor: 'rgba(0,195,155,.2)' }}>
-                      <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(0,175,140,.6)', marginBottom: 8 }}>Aellux Synthesis</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                        <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(0,175,140,.6)' }}>Aellux Synthesis</div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={() => triggerPrint('synthesis')} style={{ fontSize: 11, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ PDF</button>
+                          <button onClick={() => triggerPrint('all')} style={{ fontSize: 11, color: 'rgba(0,225,180,.85)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Report</button>
+                        </div>
+                      </div>
                       <p style={{ ...S.italic, margin: '0 0 12px', fontSize: 18 }}>{personalised.synthesis.aellux_voice}</p>
                       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                         {personalised.synthesis.biological_age_estimate && (
@@ -1130,7 +1157,11 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-                  <button onClick={() => { setPersonalised(p => ({ ...p, meals: undefined })); }} style={{ marginTop: 20, fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
+                  <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <button onClick={() => triggerPrint('meals')} style={{ fontSize: 13, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
+                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'rgba(0,225,180,.85)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
+                    <button onClick={() => { setPersonalised(p => ({ ...p, meals: undefined })); }} style={{ fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1214,7 +1245,11 @@ export default function App() {
                       </div>
                     </div>
                   )}
-                  <button onClick={() => { setPersonalised(p => ({ ...p, supps: undefined })); }} style={{ marginTop: 20, fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
+                  <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <button onClick={() => triggerPrint('supps')} style={{ fontSize: 13, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
+                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'rgba(0,225,180,.85)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
+                    <button onClick={() => { setPersonalised(p => ({ ...p, supps: undefined })); }} style={{ fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1292,7 +1327,11 @@ export default function App() {
                       ))}
                     </div>
                   )}
-                  <button onClick={() => { setPersonalised(p => ({ ...p, protocol: undefined })); }} style={{ marginTop: 20, fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
+                  <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <button onClick={() => triggerPrint('protocol')} style={{ fontSize: 13, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
+                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'rgba(0,225,180,.85)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
+                    <button onClick={() => { setPersonalised(p => ({ ...p, protocol: undefined })); }} style={{ fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1373,6 +1412,13 @@ export default function App() {
       </div>
 
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+
+      <PrintableReport
+        section={printSection}
+        personalised={personalised}
+        markers={allMarkers}
+        userEmail={user?.email}
+      />
     </div>
   );
 }
