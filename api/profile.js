@@ -7,6 +7,9 @@ const ALLOWED_FIELDS = [
   'pregnancy_status', 'menstrual_status',
   'activity_level', 'conditions', 'medications', 'allergies',
   'dietary_restrictions', 'goal', 'source',
+  // Body composition
+  'body_fat_pct', 'lean_mass_kg', 'waist_cm', 'visceral_fat',
+  'bone_density_tscore', 'vo2_max',
 ];
 
 const SEX_VALUES = ['male', 'female', 'intersex'];
@@ -25,6 +28,10 @@ function sanitize(payload) {
     if (k === 'pregnancy_status' && v && !PREGNANCY_VALUES.includes(v)) continue;
     if (k === 'menstrual_status' && v && !MENSTRUAL_VALUES.includes(v)) continue;
     if (k === 'activity_level' && v && !ACTIVITY_VALUES.includes(v)) continue;
+    if (k === 'visceral_fat' && v != null) {
+      v = parseInt(v, 10);
+      if (Number.isNaN(v) || v < 1 || v > 59) continue;
+    }
     if (k === 'birth_year' && v != null) {
       v = parseInt(v, 10);
       if (Number.isNaN(v) || v < 1900 || v > 2030) continue;

@@ -115,6 +115,12 @@ export function formatProfileForPrompt(p) {
   }
   if (p.activity_level) parts.push(`activity:${p.activity_level}`);
   if (p.goal) parts.push(`goal:${p.goal}`);
+  if (p.body_fat_pct) parts.push(`body_fat:${p.body_fat_pct}%`);
+  if (p.lean_mass_kg) parts.push(`lean_mass:${p.lean_mass_kg}kg`);
+  if (p.waist_cm) parts.push(`waist:${p.waist_cm}cm`);
+  if (p.visceral_fat) parts.push(`visceral_fat:${p.visceral_fat}`);
+  if (p.bone_density_tscore != null) parts.push(`bone_density_tscore:${p.bone_density_tscore}`);
+  if (p.vo2_max) parts.push(`vo2_max:${p.vo2_max}ml/kg/min`);
   if (p.conditions && p.conditions.length > 0) parts.push(`conditions:[${p.conditions.join(', ')}]`);
   if (p.medications && p.medications.length > 0) parts.push(`medications:[${p.medications.join(', ')}]`);
   if (p.allergies && p.allergies.length > 0) parts.push(`allergies:[${p.allergies.join(', ')}]`);
@@ -135,6 +141,12 @@ export async function hashProfile(p) {
     p.menstrual_status || '',
     p.activity_level || '',
     p.goal || '',
+    p.body_fat_pct != null ? Math.round(p.body_fat_pct * 10) / 10 : '',
+    p.lean_mass_kg != null ? Math.round(p.lean_mass_kg * 10) / 10 : '',
+    p.waist_cm || '',
+    p.visceral_fat || '',
+    p.bone_density_tscore != null ? p.bone_density_tscore : '',
+    p.vo2_max != null ? Math.round(p.vo2_max) : '',
     (p.conditions || []).map(c => c.toLowerCase().trim()).sort().join('|'),
     (p.medications || []).map(c => c.toLowerCase().trim()).sort().join('|'),
     (p.allergies || []).map(c => c.toLowerCase().trim()).sort().join('|'),

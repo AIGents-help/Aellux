@@ -443,6 +443,7 @@ export default function App() {
   const [bpAdditionalGoal, setBpAdditionalGoal] = useState<string>('');
   const [bpCycleLengthDays, setBpCycleLengthDays] = useState<number>(30);
   const [bpMealPrep, setBpMealPrep] = useState<boolean>(false);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [bpGoalExpanded, setBpGoalExpanded] = useState(false);
 
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
@@ -533,7 +534,15 @@ export default function App() {
       // Load user profile (sex, age, weight, conditions, meds — used by all generators)
       fetch(`/api/profile?userId=${user.id}`)
         .then(r => r.json())
-        .then(d => { setProfile(d?.profile || null); setProfileLoaded(true); })
+        .then(d => {
+          const p = d?.profile || null;
+          setProfile(p);
+          setProfileLoaded(true);
+          // Show onboarding if profile is incomplete and user has no documents yet
+          if (!p?.biological_sex && !localStorage.getItem('aellux_onboarded')) {
+            setShowOnboarding(true);
+          }
+        })
         .catch(() => { setProfile(null); setProfileLoaded(true); });
     }
   }, [user?.id]);
@@ -580,7 +589,11 @@ export default function App() {
     return cats;
   }, [allMarkers]);
 
-  const flaggedMarkers = useMemo(() => allMarkers.filter(m => m.status === 'elevated' || m.status === 'low'), [allMarkers]);
+  // Filter out wearable signal-quality metrics (GPS accuracy, signal strength etc.)
+  // These are device readings, not health biomarkers — showing them as health flags destroys trust.
+  const WEARABLE_NOISE = /horizontal.accu|vertical.accu|gps.accu|signal.qual|hdop|pdop|gps.sat|speed.accu/i;
+  const healthMarkers = useMemo(() => allMarkers.filter(m => !WEARABLE_NOISE.test(m.name)), [allMarkers]);
+  const flaggedMarkers = useMemo(() => healthMarkers.filter(m => m.status === 'elevated' || m.status === 'low'), [healthMarkers]);
 
   // Keep activeMarkerKeys in sync
   useEffect(() => {
@@ -2007,6 +2020,44 @@ export default function App() {
           }}
           onSkip={() => setShowProfileSetup(false)}
         />
+      )}
+
+      {/* ── ONBOARDING MODAL ── */}
+      {showOnboarding && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,8,18,0.96)', backdropFilter: 'blur(12px)', padding: 20 }}>
+          <div style={{ background: 'rgba(2,12,22,0.99)', border: '1px solid rgba(0,210,165,.3)', borderRadius: 14, padding: '36px 40px', maxWidth: 520, width: '100%', textAlign: 'center' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%)', margin: '0 auto 20px' }} />
+            <h2 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 28, color: 'rgba(220,255,235,1)', fontWeight: 500, margin: '0 0 10px' }}>Welcome to Aellux</h2>
+            <p style={{ fontSize: 16, color: 'rgba(0,210,165,.8)', lineHeight: 1.7, margin: '0 0 28px' }}>
+              Ancient intelligence, built around your biology. Here's how to get started in 3 steps:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28, textAlign: 'left' }}>
+              {[
+                { n: '1', title: 'Upload your health records', desc: 'Blood panels, wearable exports, DEXA scans, physician notes — any format. Aellux reads and extracts your biomarkers automatically.' },
+                { n: '2', title: 'Set your health profile', desc: 'Age, weight, goals, medications. Takes 2 minutes and makes every recommendation 10× more accurate.' },
+                { n: '3', title: 'Generate your Biologic Protocol', desc: 'A full 7-day operating system — meals, supplements, training and recovery — designed from your actual biology.' },
+              ].map(step => (
+                <div key={step.n} style={{ display: 'flex', gap: 14, padding: '14px 16px', background: 'rgba(0,210,165,.05)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 8 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,225,180,.15)', border: '1px solid rgba(0,225,180,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 14, color: 'rgba(0,255,200,1)', fontFamily: 'EB Garamond, Georgia, serif' }}>{step.n}</div>
+                  <div>
+                    <div style={{ fontSize: 16, color: 'rgba(220,255,235,.95)', fontWeight: 500, marginBottom: 4 }}>{step.title}</div>
+                    <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', lineHeight: 1.6 }}>{step.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => { setShowOnboarding(false); localStorage.setItem('aellux_onboarded', '1'); setPanel('upload'); }}
+                style={{ flex: 1, fontSize: 16, color: 'rgba(0,20,14,1)', background: 'rgba(0,225,180,.9)', border: 'none', borderRadius: 7, padding: '13px 0', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                Upload my first record →
+              </button>
+              <button onClick={() => { setShowOnboarding(false); localStorage.setItem('aellux_onboarded', '1'); }}
+                style={{ fontSize: 14, color: 'rgba(0,210,165,.6)', background: 'none', border: '1px solid rgba(0,210,165,.2)', borderRadius: 7, padding: '13px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                Explore first
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {showRegenConfirm && (

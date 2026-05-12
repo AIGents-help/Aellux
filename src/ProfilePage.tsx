@@ -15,17 +15,17 @@ const fieldStyle: React.CSSProperties = {
   border: '1px solid rgba(0,210,165,.22)',
   borderRadius: 5,
   color: 'rgba(220,255,235,.95)',
-  fontSize: 14,
+  fontSize: 15,
   fontFamily: 'inherit',
-  padding: '9px 12px',
+  padding: '10px 13px',
   outline: 'none',
 };
 const labelStyle: React.CSSProperties = {
-  fontSize: 10,
+  fontSize: 12,
   letterSpacing: '0.1em',
   textTransform: 'uppercase' as const,
-  color: 'rgba(0,210,165,.6)',
-  marginBottom: 5,
+  color: 'rgba(0,210,165,.75)',
+  marginBottom: 6,
   display: 'block',
 };
 
@@ -66,7 +66,7 @@ function ChipInput({ label, values, onChange, placeholder, helpText }: { label: 
   return (
     <div style={{ marginBottom: 16 }}>
       <label style={labelStyle}>{label}</label>
-      {helpText && <div style={{ fontSize: 11, color: 'rgba(0,210,165,.55)', marginBottom: 6, lineHeight: 1.5 }}>{helpText}</div>}
+      {helpText && <div style={{ fontSize: 13, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.55 }}>{helpText}</div>}
       <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
         <input
           value={draft}
@@ -80,9 +80,9 @@ function ChipInput({ label, values, onChange, placeholder, helpText }: { label: 
       {values.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {values.map((v, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '4px 8px 4px 10px', background: 'rgba(0,210,165,.08)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 14, color: 'rgba(220,255,235,.9)' }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, padding: '5px 10px 5px 12px', background: 'rgba(0,210,165,.08)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 14, color: 'rgba(220,255,235,.9)' }}>
               {v}
-              <button type="button" onClick={() => remove(i)} style={{ background: 'none', border: 'none', color: 'rgba(0,210,165,.5)', cursor: 'pointer', fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
+              <button type="button" onClick={() => remove(i)} style={{ background: 'none', border: 'none', color: 'rgba(0,210,165,.5)', cursor: 'pointer', fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
             </div>
           ))}
         </div>
@@ -138,11 +138,11 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
   return (
     <div style={{ padding: '24px 28px', maxWidth: 760, margin: '0 auto' }}>
       <h2 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 28, color: 'rgba(220,255,235,1)', fontWeight: 500, marginBottom: 6, marginTop: 0 }}>Profile &amp; Settings</h2>
-      <p style={{ color: 'rgba(0,210,165,.55)', fontSize: 12, letterSpacing: '0.1em', marginBottom: 28, marginTop: 0, textTransform: 'uppercase' }}>Your account &amp; biological context</p>
+      <p style={{ color: 'rgba(0,210,165,.7)', fontSize: 13, letterSpacing: '0.1em', marginBottom: 28, marginTop: 0, textTransform: 'uppercase' }}>Your account &amp; biological context</p>
 
       {/* Account */}
       <div style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 8, padding: '20px 24px', marginBottom: 18 }}>
-        <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 12, color: 'rgba(0,210,165,.55)', letterSpacing: '0.1em', marginBottom: 12, textTransform: 'uppercase' }}>Account</div>
+        <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 13, color: 'rgba(0,210,165,.8)', letterSpacing: '0.1em', marginBottom: 12, textTransform: 'uppercase' }}>Account</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%)', flexShrink: 0 }} />
           <div>
@@ -157,10 +157,10 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
       {/* HEALTH PROFILE */}
       <div style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 8, padding: '22px 26px', marginBottom: 18 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-          <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 12, color: 'rgba(0,225,180,.7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Health Profile</div>
-          {saveStatus && <div style={{ fontSize: 11, color: saveStatus.startsWith('Saved') ? 'rgba(0,255,200,.9)' : 'rgba(255,160,100,.9)', letterSpacing: '0.06em' }}>{saveStatus}</div>}
+          <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 13, color: 'rgba(0,225,180,.85)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Health Profile</div>
+          {saveStatus && <div style={{ fontSize: 13, color: saveStatus.startsWith('Saved') ? 'rgba(0,255,200,.9)' : 'rgba(255,160,100,.9)', letterSpacing: '0.06em' }}>{saveStatus}</div>}
         </div>
-        <p style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', lineHeight: 1.6, margin: '0 0 18px' }}>
+        <p style={{ fontSize: 14, color: 'rgba(0,210,165,.75)', lineHeight: 1.7, margin: '0 0 18px' }}>
           The more context you give Aellux, the more accurate your protocols. Required fields shape every recommendation. Medications are checked for interactions with any supplement Aellux recommends.
         </p>
 
@@ -190,6 +190,37 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
               <div>
                 <label style={labelStyle}>Weight (kg) *</label>
                 <input type="number" step="0.1" value={profile?.weight_kg || ''} onChange={e => update('weight_kg', e.target.value ? parseFloat(e.target.value) : null)} placeholder="72" style={fieldStyle} />
+              </div>
+            </div>
+
+            {/* Body composition (optional) */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: 'rgba(0,225,180,.75)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10, paddingTop: 6, borderTop: '1px solid rgba(0,210,165,.1)' }}>Body Composition <span style={{ fontSize: 12, color: 'rgba(0,210,165,.45)', letterSpacing: 0, textTransform: 'none' }}>(optional — improves protocol accuracy)</span></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>Body fat % <span style={{ color: 'rgba(0,210,165,.4)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>from DEXA or calipers</span></label>
+                  <input type="number" step="0.1" min="3" max="60" value={profile?.body_fat_pct || ''} onChange={e => update('body_fat_pct', e.target.value ? parseFloat(e.target.value) : null)} placeholder="e.g. 22.5" style={fieldStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Lean mass (kg) <span style={{ color: 'rgba(0,210,165,.4)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>from DEXA</span></label>
+                  <input type="number" step="0.1" value={profile?.lean_mass_kg || ''} onChange={e => update('lean_mass_kg', e.target.value ? parseFloat(e.target.value) : null)} placeholder="e.g. 65.2" style={fieldStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Waist circumference (cm)</label>
+                  <input type="number" step="0.1" value={profile?.waist_cm || ''} onChange={e => update('waist_cm', e.target.value ? parseFloat(e.target.value) : null)} placeholder="e.g. 88" style={fieldStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Visceral fat rating <span style={{ color: 'rgba(0,210,165,.4)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>1–59 scale</span></label>
+                  <input type="number" step="1" min="1" max="59" value={profile?.visceral_fat || ''} onChange={e => update('visceral_fat', e.target.value ? parseInt(e.target.value) : null)} placeholder="e.g. 8" style={fieldStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Bone density T-score <span style={{ color: 'rgba(0,210,165,.4)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>from DEXA</span></label>
+                  <input type="number" step="0.1" min="-4" max="4" value={profile?.bone_density_tscore || ''} onChange={e => update('bone_density_tscore', e.target.value ? parseFloat(e.target.value) : null)} placeholder="e.g. -0.5" style={fieldStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>VO₂ max <span style={{ color: 'rgba(0,210,165,.4)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>ml/kg/min</span></label>
+                  <input type="number" step="0.1" value={profile?.vo2_max || ''} onChange={e => update('vo2_max', e.target.value ? parseFloat(e.target.value) : null)} placeholder="e.g. 42.5" style={fieldStyle} />
+                </div>
               </div>
             </div>
 
@@ -269,8 +300,8 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
 
             {hasMeds && (
               <div style={{ marginTop: 8, marginBottom: 16, padding: '10px 14px', background: 'rgba(255,200,80,.06)', border: '1px solid rgba(255,200,80,.3)', borderRadius: 5 }}>
-                <div style={{ fontSize: 10, color: 'rgba(255,210,100,.9)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>⚠ Medication interaction safety</div>
-                <p style={{ fontSize: 12, color: 'rgba(220,255,235,.78)', lineHeight: 1.55, margin: 0 }}>
+                <div style={{ fontSize: 12, color: 'rgba(255,210,100,.9)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>⚠ Medication interaction safety</div>
+                <p style={{ fontSize: 14, color: 'rgba(220,255,235,.85)', lineHeight: 1.55, margin: 0 }}>
                   Aellux will flag known interactions between your medications and any recommended supplement, food, or protocol. This is not a substitute for clinical pharmacist review. <strong style={{ color: 'rgba(255,210,100,.9)' }}>Always clear new supplements or significant dietary changes with your prescribing physician.</strong>
                 </p>
               </div>
@@ -294,8 +325,8 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
             { label: 'Status', value: 'Active' },
           ].map(({ label, value }) => (
             <div key={label} style={{ textAlign: 'center', background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.1)', borderRadius: 6, padding: '14px 8px' }}>
-              <div style={{ color: 'rgba(220,255,235,.95)', fontSize: 22, fontFamily: 'EB Garamond, Georgia, serif', marginBottom: 4 }}>{value}</div>
-              <div style={{ color: 'rgba(0,210,165,.5)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</div>
+              <div style={{ color: 'rgba(220,255,235,.95)', fontSize: 24, fontFamily: 'EB Garamond, Georgia, serif', marginBottom: 4 }}>{value}</div>
+              <div style={{ color: 'rgba(0,210,165,.65)', fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</div>
             </div>
           ))}
         </div>

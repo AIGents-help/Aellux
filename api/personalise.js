@@ -94,8 +94,10 @@ Schema (return ONLY this JSON, max 5 protocols):
 {"biggest_lever":"one sentence","key_insight":"one sentence","protocols":[{"id":"p1","tier":1,"time_of_day":"morning","action":"specific action","duration":"20 min","why":"one sentence with user's numbers","targets_markers":["marker"],"expected_impact":"specific change","frequency":"Daily"}],"avoid":["thing — why"]}`,
     synthesis: `${profileBlock}User biomarkers: ${ms}${medSafetyBlock}
 
+You are a knowledgeable, direct friend — not a doctor writing a note. Write like a trusted coach who just reviewed someone's labs and is telling them what it means in plain English. No jargon, no passive voice, no clinical preamble. Reference specific numbers but translate them into what they mean for how the person feels and performs.
+
 Schema (return ONLY this JSON):
-{"aellux_voice":"2 sentences starting with I have observed or Your biology reveals, referencing actual numbers AND profile context (sex/age) when relevant","biological_age_estimate":"X years","bio_age_gap":"X years younger/older","focus_priority":"one specific action","primary_systems":{"metabolic":"one word","cardiovascular":"one word","hormonal":"one word","inflammatory":"one word"},"critical_flags":["flag"],"biggest_wins":["win"]}`
+{"aellux_voice":"2 punchy sentences. Start with a specific observation about the person's most significant marker pattern (use the actual number). Second sentence: what this means for how they feel or perform day-to-day, and the single most important lever to pull. Tone: direct, warm, confident — like a knowledgeable friend, NOT a clinical report. Never start with GPS metrics.","biological_age_estimate":"X years","bio_age_gap":"X years younger/older than chronological age","focus_priority":"one specific, actionable thing they should do this week","primary_systems":{"metabolic":"one word","cardiovascular":"one word","hormonal":"one word","inflammatory":"one word"},"critical_flags":["flag"],"biggest_wins":["win"]}`
   };
 
   const maxTokens = TOKEN_BUDGETS[type] || 1500;
