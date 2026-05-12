@@ -357,6 +357,7 @@ export default function App() {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
     const [generatingType, setGeneratingType] = useState<string | null>(null);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
   const [input, setInput] = useState('');
@@ -446,11 +447,6 @@ export default function App() {
   }, [allMarkers]);
 
   const flaggedMarkers = useMemo(() => allMarkers.filter(m => m.status === 'elevated' || m.status === 'low'), [allMarkers]);
-
-  const selectedMarkerData = useMemo(() => {
-    if (!selectedMarker) return null;
-    return allMarkers.find(m => m.name.toLowerCase() === selectedMarker.toLowerCase()) || null;
-  }, [selectedMarker, allMarkers]);
 
   // Keep activeMarkerKeys in sync
   useEffect(() => {
@@ -559,6 +555,7 @@ export default function App() {
   const generatePersonalised = async (type: 'meals' | 'supps' | 'protocol' | 'synthesis') => {
     if (allMarkers.length === 0) { alert('Upload health documents first.'); return; }
     setGeneratingType(type);
+    setGenerationError(null);
     setOrbState('thinking');
     try {
       const res = await fetch('/api/personalise', {
@@ -567,6 +564,29 @@ export default function App() {
         body: JSON.stringify({ markers: allMarkers, type, preference: type === 'meals' ? mealPreference : null, maxTokens: 3000 }),
       });
       const data = await res.json();
+      // Surface API-level errors instead of silently storing a broken payload
+      if (data && data.error) {
+        console.error('[personalise] API error', data);
+        const msg = `Generation failed: ${data.error}${data.raw ? ` — raw: ${String(data.raw).slice(0, 140)}` : ''}`;
+        setGenerationError(msg);
+        setResponse(msg);
+        setOrbState('idle');
+        return;
+      }
+      // Validate shape per-type so we never render a broken object
+      const shapeOk =
+        (type === 'meals' && Array.isArray(data.meals)) ||
+        (type === 'supps' && Array.isArray(data.supplements)) ||
+        (type === 'protocol' && Array.isArray(data.protocols)) ||
+        (type === 'synthesis' && (data.aellux_voice || data.focus_priority));
+      if (!shapeOk) {
+        console.warn('[personalise] unexpected shape', { type, data });
+        const msg = 'Aellux returned an unexpected response shape. Tap regenerate.';
+        setGenerationError(msg);
+        setResponse(msg);
+        setOrbState('idle');
+        return;
+      }
       const updated = { ...personalised, [type]: data };
       setPersonalised(updated);
       try { localStorage.setItem('aellux_personalised', JSON.stringify(updated)); } catch {}
@@ -575,7 +595,10 @@ export default function App() {
       setResponse(data.key_insight || data.aellux_voice || 'Your personalised protocol has been generated from your health data.');
       setTimeout(() => setOrbState('idle'), 4000);
     } catch (err: any) {
-      setResponse(`Generation failed: ${err.message}`);
+      console.error('[personalise] fetch failed', err);
+      const msg = `Generation failed: ${err?.message || 'network error'}`;
+      setGenerationError(msg);
+      setResponse(msg);
       setOrbState('idle');
     } finally {
       setGeneratingType(null);
@@ -642,8 +665,7 @@ export default function App() {
     <div className="aellux-layout">
       {/* ── LEFT COLUMN ── */}
       <div className="aellux-lc">
-        <div onClick={() => setPanel('upload')} style={{ cursor: 'pointer', marginBottom: 10 }}><Orb state={orbState} size={110} /></div>
-        <div onClick={() => setPanel('upload')} style={{ cursor: 'pointer', fontSize: 15, letterSpacing: 3.5, textTransform: 'uppercase', color: 'rgba(0,210,165,.78)', marginBottom: 20 }}>Aellux</div>
+        <div onClick={() => setPanel('upload')} style={{ cursor: 'pointer', marginBottom: 22 }}><Orb state={orbState} size={110} /></div>
 
         <div style={{ width: '100%', padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 18 }}>
           {NAV.map(({ id, label, count }) => (
@@ -848,9 +870,9 @@ export default function App() {
                       <div style={{ ...S.label, marginBottom: 12, color: 'rgba(255,160,60,.7)' }}>⚠ Needs Attention ({flaggedMarkers.length})</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                         {flaggedMarkers.map(m => (
-                          <div key={m.name} onClick={() => { setSelectedMarker(m.name); setPanel('trends'); }} style={{ ...S.card, padding: '14px 16px', cursor: 'pointer', borderColor: 'rgba(255,130,60,.22)', transition: 'border-color .2s' }}>
-                            <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,150,70,.6)', marginBottom: 5 }}>{m.category}</div>
-                            <div style={{ fontSize: 16, color: 'rgba(255,160,80,.88)', fontWeight: 500, marginBottom: 4 }}>{m.name}</div>
+                          <div key={m.name} onClick={() => setSelectedMarker(m)} style={{ ...S.card, padding: '14px 16px', cursor: 'pointer', borderColor: 'rgba(255,130,60,.32)', transition: 'border-color .2s' }}>
+                            <div style={{ fontSize: 18, color: 'rgba(255,205,140,1)', fontWeight: 500, marginBottom: 6, lineHeight: 1.2 }}>{m.name}</div>
+                            <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,170,90,.65)', marginBottom: 6 }}>{m.category}</div>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                               <span style={{ fontSize: 26, color: STATUS_COLORS[m.status] || 'rgba(255,140,60,.9)', fontWeight: 500 }}>{m.value}</span>
                               <span style={{ fontSize: 13, color: 'rgba(0,160,130,.5)' }}>{m.unit}</span>
@@ -881,13 +903,15 @@ export default function App() {
                       const statusColor = STATUS_COLORS[m.status] || 'rgba(0,210,165,.85)';
                       const inRange = m.status === 'optimal' || m.status === 'normal';
                       return (
-                        <div key={m.name} onClick={() => { setSelectedMarker(m.name); setPanel('trends'); }}
-                          style={{ ...S.card, padding: '14px 16px', cursor: 'pointer', transition: 'border-color .2s', borderTop: `2px solid ${color}40` }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                            <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: `${color}99` }}>{m.category}</div>
-                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: statusColor, flexShrink: 0, marginTop: 2 }} />
+                        <div key={m.name} onClick={() => setSelectedMarker(m)}
+                          style={{ ...S.card, padding: '14px 16px', cursor: 'pointer', transition: 'border-color .2s, transform .15s', borderTop: `2px solid ${color}55` }}
+                          onMouseEnter={e => (e.currentTarget.style.borderColor = `${color}99`)}
+                          onMouseLeave={e => (e.currentTarget.style.borderColor = '')}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                            <div style={{ fontSize: 20, color: 'rgba(220,255,235,1)', fontWeight: 500, lineHeight: 1.2, flex: 1, paddingRight: 8 }}>{m.name}</div>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: statusColor, flexShrink: 0, marginTop: 6, boxShadow: `0 0 8px ${statusColor}` }} />
                           </div>
-                          <div style={{ fontSize: 15, color: 'rgba(0,210,170,.88)', fontWeight: 500, marginBottom: 6, lineHeight: 1.3 }}>{m.name}</div>
+                          <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: `${color}aa`, marginBottom: 8 }}>{m.category}</div>
                           <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
                             <span style={{ fontSize: 28, color: statusColor, fontWeight: 500 }}>{m.value}</span>
                             <span style={{ fontSize: 13, color: 'rgba(0,160,130,.5)' }}>{m.unit}</span>
@@ -930,6 +954,12 @@ export default function App() {
                   {/* Generate synthesis */}
                   {!personalised.synthesis && allMarkers.length > 0 && (
                     <div style={{ marginTop: 24, textAlign: 'center' }}>
+                      {generationError && (
+                        <div style={{ marginBottom: 16, padding: '12px 18px', background: 'rgba(80,12,12,.4)', border: '1px solid rgba(255,120,80,.45)', borderRadius: 6, color: 'rgba(255,200,180,1)', fontSize: 14, textAlign: 'left', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
+                          <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,160,100,.85)', marginBottom: 4 }}>⚠ Generation Error</div>
+                          {generationError}
+                        </div>
+                      )}
                       <button onClick={() => generatePersonalised('synthesis')} disabled={generatingType === 'synthesis'}
                         style={{ fontSize: 16, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '12px 28px', cursor: 'pointer', fontFamily: 'inherit' }}>
                         {generatingType === 'synthesis' ? 'Aellux is synthesising...' : 'Generate full health synthesis →'}
@@ -970,9 +1000,12 @@ export default function App() {
                     const tColor = trend > 0 ? '#34d399' : trend < 0 ? '#f87171' : 'rgba(0,210,165,.5)';
                     const statusColor = m.status === 'high' || m.status === 'low' ? '#f59e0b' : 'rgba(0,210,165,.6)';
                     return (
-                      <div key={m.name} style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.1)', borderRadius: 8, padding: '14px 16px' }}>
-                        <div style={{ fontSize: 10, color: 'rgba(0,210,165,.4)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>{m.category}</div>
-                        <div style={{ fontSize: 14, color: 'rgba(0,210,165,.85)', fontFamily: 'Georgia,serif', marginBottom: 6 }}>{m.name}</div>
+                      <div key={m.name} onClick={() => setSelectedMarker(m)}
+                        style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 8, padding: '14px 16px', cursor: 'pointer', transition: 'border-color .2s, background .2s' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,225,180,.5)'; e.currentTarget.style.background = 'rgba(0,210,165,.09)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,210,165,.18)'; e.currentTarget.style.background = 'rgba(0,210,165,.04)'; }}>
+                        <div style={{ fontSize: 17, color: 'rgba(220,255,235,1)', fontFamily: 'Georgia,serif', marginBottom: 4, fontWeight: 500, lineHeight: 1.25 }}>{m.name}</div>
+                        <div style={{ fontSize: 10, color: 'rgba(0,210,165,.55)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>{m.category}</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8 }}>
                           <span style={{ fontSize: 20, color: statusColor, fontFamily: 'Georgia,serif' }}>{m.value}</span>
                           <span style={{ fontSize: 11, color: 'rgba(0,210,165,.4)' }}>{m.unit}</span>
@@ -1012,6 +1045,12 @@ export default function App() {
                   <p style={{ fontSize: 15, color: 'rgba(0,165,132,.5)', marginBottom: 28, lineHeight: 1.7 }}>
                     Every meal will be specifically engineered to address your actual results — not a generic template.
                   </p>
+                  {generationError && (
+                    <div style={{ marginBottom: 20, padding: '12px 18px', background: 'rgba(80,12,12,.4)', border: '1px solid rgba(255,120,80,.45)', borderRadius: 6, color: 'rgba(255,200,180,1)', fontSize: 14, textAlign: 'left', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
+                      <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,160,100,.85)', marginBottom: 4 }}>⚠ Generation Error</div>
+                      {generationError}
+                    </div>
+                  )}
                   <button onClick={() => generatePersonalised('meals')} disabled={generatingType === 'meals' || allMarkers.length === 0}
                     style={{ fontSize: 17, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {generatingType === 'meals' ? '⟳ Aellux is designing your meals...' : 'Generate my personalised meal protocol →'}
@@ -1106,6 +1145,12 @@ export default function App() {
                     {allMarkers.length === 0 ? 'Upload your health documents first.' : `Aellux will build your supplement stack from your ${allMarkers.length} biomarkers.`}
                   </p>
                   <p style={{ fontSize: 15, color: 'rgba(0,165,132,.5)', marginBottom: 28, lineHeight: 1.7 }}>No generic recommendations. Only what your actual biology requires.</p>
+                  {generationError && (
+                    <div style={{ marginBottom: 20, padding: '12px 18px', background: 'rgba(80,12,12,.4)', border: '1px solid rgba(255,120,80,.45)', borderRadius: 6, color: 'rgba(255,200,180,1)', fontSize: 14, textAlign: 'left', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
+                      <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,160,100,.85)', marginBottom: 4 }}>⚠ Generation Error</div>
+                      {generationError}
+                    </div>
+                  )}
                   <button onClick={() => generatePersonalised('supps')} disabled={generatingType === 'supps' || allMarkers.length === 0}
                     style={{ fontSize: 17, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {generatingType === 'supps' ? '⟳ Aellux is building your stack...' : 'Generate my personalised supplement stack →'}
@@ -1184,6 +1229,12 @@ export default function App() {
                     {allMarkers.length === 0 ? 'Upload your health documents first.' : `Aellux will design your daily protocol from your ${allMarkers.length} biomarkers.`}
                   </p>
                   <p style={{ fontSize: 15, color: 'rgba(0,165,132,.5)', marginBottom: 28, lineHeight: 1.7 }}>What you should actually do every day — ranked by impact on your specific biology.</p>
+                  {generationError && (
+                    <div style={{ marginBottom: 20, padding: '12px 18px', background: 'rgba(80,12,12,.4)', border: '1px solid rgba(255,120,80,.45)', borderRadius: 6, color: 'rgba(255,200,180,1)', fontSize: 14, textAlign: 'left', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
+                      <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,160,100,.85)', marginBottom: 4 }}>⚠ Generation Error</div>
+                      {generationError}
+                    </div>
+                  )}
                   <button onClick={() => generatePersonalised('protocol')} disabled={generatingType === 'protocol' || allMarkers.length === 0}
                     style={{ fontSize: 17, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {generatingType === 'protocol' ? '⟳ Aellux is designing your protocol...' : 'Generate my daily protocol →'}
