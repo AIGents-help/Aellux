@@ -9,6 +9,7 @@ import BiomarkerDetail from './BiomarkerDetail';
 import AdminDashboard from './AdminDashboard';
 import PrintableReport from './PrintableReport';
 import WeekView from './WeekView';
+import ProfileSetup from './ProfileSetup';
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -346,6 +347,11 @@ function ProGate({ isPro, onUpgrade, feature }: { isPro: boolean; onUpgrade: () 
   );
 }
 
+function isProfileComplete(p: any): boolean {
+  // Tier 1 essentials required before generation
+  return !!(p && p.biological_sex && p.birth_year && p.height_cm && p.weight_kg);
+}
+
 // Drops cached entries that are error payloads or wrong shape (from buggy older
 // code that stored {error: "..."} responses to the personalised table).
 function sanitisePersonalised(p: any): any {
@@ -431,6 +437,9 @@ export default function App() {
   const [response, setResponse] = useState('');
   const [asking, setAsking] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [profile, setProfile] = useState<any | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [awakened, setAwakened] = useState(false);
   const [awakePhase, setAwakePhase] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -469,6 +478,11 @@ export default function App() {
           localStorage.setItem('aellux_personalised', JSON.stringify(clean));
         }
       });
+      // Load user profile (sex, age, weight, conditions, meds — used by all generators)
+      fetch(`/api/profile?userId=${user.id}`)
+        .then(r => r.json())
+        .then(d => { setProfile(d?.profile || null); setProfileLoaded(true); })
+        .catch(() => { setProfile(null); setProfileLoaded(true); });
     }
   }, [user?.id]);
 
@@ -622,6 +636,11 @@ export default function App() {
 
   const generatePersonalised = async (type: 'meals' | 'supps' | 'protocol' | 'synthesis' | 'week') => {
     if (allMarkers.length === 0) { alert('Upload health documents first.'); return; }
+    // Profile gate — Aellux can't generate calibrated recommendations without sex/age/weight
+    if (profileLoaded && !isProfileComplete(profile)) {
+      setShowProfileSetup(true);
+      return;
+    }
     setGeneratingType(type);
     setGenerationError(null);
     setOrbState('thinking');
@@ -788,6 +807,13 @@ export default function App() {
               <div style={{ fontSize: 14, color: 'rgba(0,185,150,.6)', marginBottom: 3 }}>{documents.length} documents</div>
               {flaggedMarkers.length > 0 && <div style={{ fontSize: 14, color: 'rgba(255,160,60,.8)' }}>⚠ {flaggedMarkers.length} need attention</div>}
             </div>
+            {profileLoaded && !isProfileComplete(profile) && (
+              <button onClick={() => setShowProfileSetup(true)}
+                style={{ width: '100%', marginTop: 8, fontSize: 11, letterSpacing: '0.06em', color: 'rgba(255,210,100,1)', background: 'rgba(255,200,80,.08)', border: '1px solid rgba(255,200,80,.4)', borderRadius: 4, padding: '8px 10px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                ⚠ Complete your profile →<br />
+                <span style={{ fontSize: 10, color: 'rgba(255,210,100,.65)', letterSpacing: 0 }}>Aellux needs sex, age, weight</span>
+              </button>
+            )}
           </div>
         )}
 
@@ -1550,6 +1576,24 @@ export default function App() {
       </div>
 
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+
+      {showProfileSetup && (
+        <ProfileSetup
+          initial={profile}
+          onSave={async (patch) => {
+            const res = await fetch(`/api/profile?userId=${user?.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(patch),
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || 'Save failed');
+            setProfile(data.profile);
+            setShowProfileSetup(false);
+          }}
+          onSkip={() => setShowProfileSetup(false)}
+        />
+      )}
 
       <PrintableReport
         section={printSection}

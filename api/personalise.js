@@ -1,4 +1,4 @@
-import { sha256, hashMarkers, sbSelect, sbUpsert, sbUpdate, rateLimit, logUsage, json } from './_lib.js';
+import { sha256, hashMarkers, sbSelect, sbUpsert, sbUpdate, rateLimit, logUsage, json, getProfile, formatProfileForPrompt, hashProfile, hasMedications } from './_lib.js';
 
 export const config = { runtime: 'edge' };
 
@@ -62,9 +62,15 @@ export default async function handler(req) {
   const lim = await checkLimits({ userId, plan, type });
   if (!lim.ok) return json({ error: lim.msg, code: 'rate_limited' }, { status: 429 });
 
+  // ── Load profile ───────────────────────────────────────────────────────────
+  const profile = await getProfile(userId);
+  const profileStr = formatProfileForPrompt(profile);
+  const profileHash = await hashProfile(profile);
+  const medFlag = hasMedications(profile);
+
   // ── Cache lookup ───────────────────────────────────────────────────────────
   const markerHash = await hashMarkers(markers);
-  const cacheKey = await sha256(`${type}|${preference || 'none'}|${dayOnly ? 'preview' : 'full'}|${markerHash}`);
+  const cacheKey = await sha256(`${type}|${preference || 'none'}|${dayOnly ? 'preview' : 'full'}|${profileHash}|${markerHash}`);
 
   const cachedRows = await sbSelect('personalised_cache', `cache_key=eq.${cacheKey}&select=result,hits&limit=1`);
   if (cachedRows && cachedRows.length > 0) {
@@ -76,27 +82,32 @@ export default async function handler(req) {
 
   // ── Build prompt ──────────────────────────────────────────────────────────
   const ms = markers.slice(0, 20).map(m => `${m.name}:${m.value}${m.unit || ''}(${m.status || 'unknown'})`).join(', ');
+  const profileBlock = profileStr ? `User profile: ${profileStr}\n` : '';
+  const medSafetyBlock = medFlag
+    ? '\nCRITICAL SAFETY: The user is on medications listed above. Before recommending any supplement, food, or protocol, check for known interactions with those medications. If a recommendation could interact (e.g. vitamin K with warfarin, calcium with levothyroxine, grapefruit with statins), either omit it or include a "contraindications" note explaining the interaction. Never recommend stopping or adjusting a prescription medication.\n'
+    : '';
 
   const prompts = {
-    meals: `User biomarkers: ${ms}${preference && preference !== 'none' ? `\nDiet style: ${preference}. Tailor meals to this style while respecting biomarkers.` : ''}
+    meals: `${profileBlock}User biomarkers: ${ms}${preference && preference !== 'none' ? `\nDiet style: ${preference}. Tailor meals to this style while respecting biomarkers.` : ''}${medSafetyBlock}
 
+Calibrate calorie/macro targets to the user's profile (sex, age, weight, activity, goal) — not generic 2000 cal. If profile is absent, use generic targets but note the limitation in key_insight.
 Schema (return ONLY this JSON, max 3 meals):
 {"key_insight":"one sentence","daily_targets":{"calories":2000,"protein":150,"carbs":200,"fat":65},"meals":[{"time":"Breakfast","name":"name","why":"one sentence referencing the user's actual numbers","items":["item 1","item 2","item 3"],"macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker name"]}],"foods_to_avoid":["food — why"]}`,
-    supps: `User biomarkers: ${ms}
+    supps: `${profileBlock}User biomarkers: ${ms}${medSafetyBlock}
 
 Schema (return ONLY this JSON, max 5 supplements):
 {"key_insight":"one sentence","supplements":[{"name":"name","dose":"dose","timing":"when","why":"one sentence with user's numbers","targets_markers":["marker"],"expected_impact":"specific change","evidence_level":"strong","priority":1,"status":"active","cost_monthly":"$20","synergies":[],"contraindications":[]}],"total_foundation_cost":"$X/mo"}`,
-    protocol: `User biomarkers: ${ms}
+    protocol: `${profileBlock}User biomarkers: ${ms}${medSafetyBlock}
 
 Schema (return ONLY this JSON, max 5 protocols):
 {"biggest_lever":"one sentence","key_insight":"one sentence","protocols":[{"id":"p1","tier":1,"time_of_day":"morning","action":"specific action","duration":"20 min","why":"one sentence with user's numbers","targets_markers":["marker"],"expected_impact":"specific change","frequency":"Daily"}],"avoid":["thing — why"]}`,
-    synthesis: `User biomarkers: ${ms}
+    synthesis: `${profileBlock}User biomarkers: ${ms}${medSafetyBlock}
 
 Schema (return ONLY this JSON):
-{"aellux_voice":"2 sentences starting with I have observed or Your biology reveals, referencing actual numbers","biological_age_estimate":"X years","bio_age_gap":"X years younger/older","focus_priority":"one specific action","primary_systems":{"metabolic":"one word","cardiovascular":"one word","hormonal":"one word","inflammatory":"one word"},"critical_flags":["flag"],"biggest_wins":["win"]}`,
-    week: `User biomarkers: ${ms}${preference && preference !== 'none' ? `\nDiet style: ${preference}. Tailor all meal options accordingly while respecting biomarker data.` : ''}
+{"aellux_voice":"2 sentences starting with I have observed or Your biology reveals, referencing actual numbers AND profile context (sex/age) when relevant","biological_age_estimate":"X years","bio_age_gap":"X years younger/older","focus_priority":"one specific action","primary_systems":{"metabolic":"one word","cardiovascular":"one word","hormonal":"one word","inflammatory":"one word"},"critical_flags":["flag"],"biggest_wins":["win"]}`,
+    week: `${profileBlock}User biomarkers: ${ms}${preference && preference !== 'none' ? `\nDiet style: ${preference}. Tailor all meal options accordingly while respecting biomarker data.` : ''}${medSafetyBlock}
 
-Design a personalised 7-day Aellux Week. ${dayOnly ? 'Return ONLY Monday (Day 1) — this is a free-tier preview.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days.'} For EACH meal, provide 4 alternatives keyed by swap reason: same nutrient profile, cheaper, faster (<10 min prep), and a diet-style swap that honors common restrictions (vegetarian/dairy-free/no-fish, pick whichever is most relevant).
+Design a personalised 7-day Aellux Week calibrated to the user's profile. ${dayOnly ? 'Return ONLY Monday (Day 1) — this is a free-tier preview.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density. Calorie/protein targets must reflect sex, age, weight, and activity level. For EACH meal, provide 4 alternatives keyed by swap reason: same nutrient profile, cheaper, faster (<10 min prep), and a diet-style swap that honors common restrictions (vegetarian/dairy-free/no-fish, pick whichever is most relevant or matches the user's dietary_restrictions if listed).
 
 Schema (return ONLY this JSON, no markdown):
 {
