@@ -441,6 +441,7 @@ export default function App() {
     try { return localStorage.getItem('aellux_bp_meal_style') || 'none'; } catch { return 'none'; }
   });
   const [bpAdditionalGoal, setBpAdditionalGoal] = useState<string>('');
+  const [bpCycleLengthDays, setBpCycleLengthDays] = useState<number>(30);
   const [bpGoalExpanded, setBpGoalExpanded] = useState(false);
 
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
@@ -503,6 +504,28 @@ export default function App() {
           localStorage.setItem('aellux_personalised', JSON.stringify(clean));
         }
       });
+      // Load saved Biologic Protocol from meal_plans (persists across sessions)
+      fetch(`/api/protocol-load?userId=${user.id}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d?.protocol?.weekData) {
+            setPersonalised(prev => {
+              // Only set if we don't already have a week (localStorage may have beaten us here)
+              if (prev.week && Array.isArray(prev.week.days) && prev.week.days.length > 0) return prev;
+              const updated = { ...prev, week: d.protocol.weekData };
+              try { localStorage.setItem('aellux_personalised', JSON.stringify(updated)); } catch {}
+              return updated;
+            });
+            // Restore meal style preference from saved protocol
+            if (d.protocol.mealStyle && d.protocol.mealStyle !== 'none') {
+              setBpMealStyle(d.protocol.mealStyle);
+            }
+            if (d.protocol.cycleLengthDays) {
+              setBpCycleLengthDays(d.protocol.cycleLengthDays);
+            }
+          }
+        })
+        .catch(() => {/* non-fatal */});
       // Load user profile (sex, age, weight, conditions, meds — used by all generators)
       fetch(`/api/profile?userId=${user.id}`)
         .then(r => r.json())
@@ -753,6 +776,8 @@ export default function App() {
           mealStyle: bpMealStyle,
           additionalGoal: bpAdditionalGoal.trim().slice(0, 240),
           dayOnly,
+          isRegenerate: !!(personalised.week && Array.isArray(personalised.week.days) && personalised.week.days.length > 0),
+          cycleLengthDays: bpCycleLengthDays,
         }),
       });
 
@@ -1705,10 +1730,27 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* Pro user: warn that hitting generate burns the weekly slot */}
+                  {/* Cycle commitment selector */}
                   {isPro && allMarkers.length > 0 && (
-                    <div style={{ marginBottom: 18, padding: '11px 16px', background: 'rgba(255,200,80,.06)', border: '1px solid rgba(255,200,80,.3)', borderRadius: 6, fontSize: 12, color: 'rgba(255,220,160,.92)', lineHeight: 1.55 }}>
-                      <strong style={{ color: 'rgba(255,210,100,1)' }}>Heads up:</strong> Generating uses your weekly Biologic Protocol slot. You can regenerate once every 7 days. Within that week, swap individual meals freely — no slot used.
+                    <div style={{ marginBottom: 18, padding: '14px 18px', background: 'rgba(0,8,18,.5)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 6 }}>
+                      <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(0,210,165,.7)', marginBottom: 10 }}>How long will you run this protocol?</div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {[30, 60, 90].map(days => (
+                          <button key={days} type="button" onClick={() => setBpCycleLengthDays(days)}
+                            style={{
+                              flex: 1, padding: '10px 0', fontSize: 15, fontFamily: 'EB Garamond, Georgia, serif',
+                              background: bpCycleLengthDays === days ? 'rgba(0,225,180,.14)' : 'rgba(0,8,18,.5)',
+                              border: `1px solid ${bpCycleLengthDays === days ? 'rgba(0,225,180,.6)' : 'rgba(0,210,165,.2)'}`,
+                              borderRadius: 6, color: bpCycleLengthDays === days ? 'rgba(0,255,200,1)' : 'rgba(0,210,165,.55)',
+                              cursor: 'pointer',
+                            }}>
+                            {days} days
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'rgba(0,210,165,.45)', marginTop: 8, lineHeight: 1.5 }}>
+                        Your protocol is yours to keep. Regenerate when your cycle completes or when you upload new medical records.
+                      </div>
                     </div>
                   )}
 
@@ -1930,23 +1972,23 @@ export default function App() {
 
       {showRegenConfirm && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,10,20,0.92)', backdropFilter: 'blur(8px)', padding: 16 }}>
-          <div style={{ background: 'rgba(2,12,22,0.98)', border: '1px solid rgba(255,200,80,.4)', borderRadius: 12, padding: '28px 32px', maxWidth: 480, width: '100%' }}>
-            <div style={{ fontSize: 11, color: 'rgba(255,210,100,.85)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>⚠ Confirm regeneration</div>
-            <h3 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'rgba(220,255,235,1)', margin: '0 0 12px', fontWeight: 500 }}>Use your weekly slot?</h3>
-            <p style={{ fontSize: 14, color: 'rgba(0,210,165,.78)', lineHeight: 1.6, margin: '0 0 18px' }}>
-              Regenerating your Biologic Protocol uses your <strong style={{ color: 'rgba(255,210,100,1)' }}>weekly generation slot</strong>. You can only regenerate once every 7 days.
+          <div style={{ background: 'rgba(2,12,22,0.98)', border: '1px solid rgba(0,210,165,.3)', borderRadius: 12, padding: '28px 32px', maxWidth: 480, width: '100%' }}>
+            <div style={{ fontSize: 11, color: 'rgba(0,225,180,.75)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Start a new cycle</div>
+            <h3 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'rgba(220,255,235,1)', margin: '0 0 12px', fontWeight: 500 }}>Regenerate your Biologic Protocol?</h3>
+            <p style={{ fontSize: 14, color: 'rgba(0,210,165,.78)', lineHeight: 1.6, margin: '0 0 12px' }}>
+              Protocols are designed to run <strong style={{ color: 'rgba(220,255,235,.95)' }}>30–90 days</strong>. Deep biological adaptation takes time — the same protocol, consistently applied, produces better results than frequent changes.
             </p>
             <p style={{ fontSize: 13, color: 'rgba(0,210,165,.62)', lineHeight: 1.6, margin: '0 0 20px' }}>
-              If you just want different meals, use the swap dropdowns inside each day — that's free and unlimited.
+              If you just want different meals, use the swap options inside each day — free and unlimited, no regeneration needed.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => { setShowRegenConfirm(false); generateBiologicProtocol(); }}
-                style={{ flex: 1, fontSize: 14, color: 'rgba(255,210,100,1)', background: 'rgba(255,200,80,.1)', border: '1px solid rgba(255,200,80,.5)', borderRadius: 5, padding: '11px 18px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
-                Yes, regenerate
+                style={{ flex: 1, fontSize: 14, color: 'rgba(0,255,200,1)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,225,180,.5)', borderRadius: 5, padding: '11px 18px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
+                Yes, start a new cycle
               </button>
               <button onClick={() => setShowRegenConfirm(false)}
                 style={{ fontSize: 13, color: 'rgba(0,180,140,.7)', background: 'none', border: '1px solid rgba(0,180,140,.25)', borderRadius: 5, padding: '11px 18px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                Cancel
+                Keep current protocol
               </button>
             </div>
           </div>

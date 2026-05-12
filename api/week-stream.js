@@ -10,14 +10,9 @@ function parseJSON(raw) {
   if (start === -1 || end === -1) throw new Error('No JSON found in model output');
   const candidate = text.slice(start, end + 1);
 
-  // Strategy 1: as-is
   try { return JSON.parse(candidate); } catch {}
-  // Strategy 2: strip trailing commas before } or ]
   try { return JSON.parse(candidate.replace(/,\s*([}\]])/g, '$1')); } catch {}
-  // Strategy 3: if the JSON appears truncated (no closing }), try to close the days array gracefully
-  // and the outer object. Walk back from end to find the last complete day object's }, then close.
   const tryRepair = (s) => {
-    // Find "days":[ and walk through complete day objects, then truncate after the last one
     const daysMatch = s.match(/"days"\s*:\s*\[/);
     if (!daysMatch) throw new Error('no days array');
     const arrStart = daysMatch.index + daysMatch[0].length;
@@ -29,13 +24,9 @@ function parseJSON(raw) {
       if (ch === '"') { inString = !inString; continue; }
       if (inString) continue;
       if (ch === '{') depth++;
-      else if (ch === '}') {
-        depth--;
-        if (depth === 0) lastCloseIdx = i;
-      }
+      else if (ch === '}') { depth--; if (depth === 0) lastCloseIdx = i; }
     }
     if (lastCloseIdx === -1) throw new Error('no complete day');
-    // Truncate after last complete day, close array and object
     const repaired = s.slice(0, lastCloseIdx + 1) + ']}';
     return JSON.parse(repaired.replace(/,\s*([}\]])/g, '$1'));
   };
@@ -43,22 +34,56 @@ function parseJSON(raw) {
   throw new Error('All JSON repair strategies failed');
 }
 
-// Streaming progress events sent to the client over SSE.
-// Phases: starting, generating, parsing, days_extracted, complete, error
 function sse(res, event, data) {
   res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
 
-async function checkLimits({ userId, plan }) {
+// FIX: Rate limit only applies when isRegenerate=true (user already has a protocol).
+// Never block viewing an existing protocol. Never block first-time generation.
+async function checkLimits({ userId, plan, isRegenerate }) {
   if (!userId) return { ok: true };
   if (plan === 'pro') {
-    const r = await rateLimit({ userId, endpoint: 'personalise-week', limit: 1, windowHours: 24 * 7 });
-    return r.ok ? { ok: true } : { ok: false, msg: 'Your Biologic Protocol refreshes every 7 days. Tap regenerate next week, or swap meals/goals individually right now.' };
+    if (isRegenerate) {
+      const r = await rateLimit({ userId, endpoint: 'personalise-week', limit: 1, windowHours: 24 * 7 });
+      if (!r.ok) {
+        return {
+          ok: false,
+          msg: 'Your Biologic Protocol was recently generated. Protocols are designed to run 30–90 days. Come back after your cycle completes, or upload updated medical records to unlock an early refresh.',
+          code: 'regenerate_too_soon'
+        };
+      }
+    }
+    return { ok: true };
   }
   // Free tier: 1 Day-1 preview ever
   const rows = await sbSelect('usage_log', `user_id=eq.${userId}&endpoint=eq.personalise-week-preview&select=id&limit=1`);
   if (rows && rows.length > 0) return { ok: false, msg: 'Your Day 1 preview has been generated. Upgrade to Pro to unlock all 7 days.' };
   return { ok: true };
+}
+
+// Persist the generated protocol to meal_plans so it survives logout/login.
+// Upserts on user_id — one active protocol per user at a time.
+async function saveProtocol({ userId, result, mealStyle, additionalGoal, cycleLengthDays, isPreview }) {
+  if (!userId || !result) return;
+  try {
+    await sbUpsert('meal_plans', {
+      user_id: userId,
+      title: 'Biologic Protocol',
+      goal: additionalGoal || null,
+      duration_days: 7,
+      dietary_preferences: mealStyle ? { mealStyle } : null,
+      meals: result,
+      meal_style: mealStyle || 'none',
+      additional_goal: additionalGoal || null,
+      cycle_length_days: cycleLengthDays || 30,
+      cycle_started_at: new Date().toISOString(),
+      is_preview: !!isPreview,
+      generated_by_model: 'claude-haiku-4-5-20251001',
+      updated_at: new Date().toISOString(),
+    }, 'user_id');
+  } catch (e) {
+    console.error('[week-stream] saveProtocol failed:', e?.message);
+  }
 }
 
 function buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly }) {
@@ -95,54 +120,44 @@ For EACH meal, provide exactly 2 alternatives: one swap="nutrient_match" (differ
 
 Schema (return ONLY this JSON, no markdown, no commentary):
 {
-  "key_insight":"one sentence describing the design${additionalGoal ? ' AND how it addresses the user\'s stated focus' : ''}",
-  "principles":["3-5 short guiding rules"],
-  "days":[
-    {
-      "day":"Monday","theme":"Foundation","focus_marker":"marker name",
-      "morning":{"wake_time":"6:30am","actions":["action 1","action 2"],"supps_am":["Supp name dose"]},
-      "meals":{
-        "breakfast":{"name":"plain meal name (e.g. Scrambled Eggs with Toast)","items":["raw ingredient + qty","raw ingredient + qty","raw ingredient + qty"],"why":"one sentence with user's actual numbers","macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker"],"flavor_boost":"Doctor it up: add X + Y for flavor.","alternatives":[
-          {"swap":"nutrient_match","name":"alt plain name","why":"same nutrients"},
-          {"swap":"diet_pref","name":"alt plain name","why":"honors restriction/style or cheaper"}
-        ]},
-        "lunch":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"flavor_boost":"...","alternatives":[...2 items same shape]},
-        "dinner":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"flavor_boost":"...","alternatives":[...2 items same shape]}
-      },
-      "movement":{"type":"Zone 2 cardio","duration":"45 min","when":"afternoon"},
-      "evening":{"supps_pm":["Magnesium glycinate 300mg"],"wind_down":"screens off 9:30pm","sleep_target":"10:30pm"}
-    }${dayOnly ? '' : `,\n    { ...same shape for Tuesday Strength },\n    { ...Wednesday Recovery },\n    { ...Thursday Metabolic },\n    { ...Friday Hormonal },\n    { ...Saturday Long Movement },\n    { ...Sunday Restoration }\n    [must include all 7 days]`}
-  ],
-  "weekly_summary":{"training_load":"e.g. 3 heavy + 2 zone 2 + 2 recovery","total_supp_cost":"$X/week","estimated_calorie_target":${dayCount * 2000}}
+"key_insight":"one sentence describing the design${additionalGoal ? ' AND how it addresses the user\'s stated focus' : ''}",
+"principles":["3-5 short guiding rules"],
+"days":[
+{
+"day":"Monday","theme":"Foundation","focus_marker":"marker name",
+"morning":{"wake_time":"6:30am","actions":["action 1","action 2"],"supps_am":["Supp name dose"]},
+"meals":{
+"breakfast":{"name":"plain meal name (e.g. Scrambled Eggs with Toast)","items":["raw ingredient + qty","raw ingredient + qty","raw ingredient + qty"],"why":"one sentence with user's actual numbers","macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker"],"flavor_boost":"Doctor it up: add X + Y for flavor.","alternatives":[
+{"swap":"nutrient_match","name":"alt plain name","why":"same nutrients"},
+{"swap":"diet_pref","name":"alt plain name","why":"honors restriction/style or cheaper"}
+]},
+"lunch":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"flavor_boost":"...","alternatives":[...2 items same shape]},
+"dinner":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"flavor_boost":"...","alternatives":[...2 items same shape]}
+},
+"movement":{"type":"Zone 2 cardio","duration":"45 min","when":"afternoon"},
+"evening":{"supps_pm":["Magnesium glycinate 300mg"],"wind_down":"screens off 9:30pm","sleep_target":"10:30pm"}
+}${dayOnly ? '' : `,\n { ...same shape for Tuesday Strength },\n { ...Wednesday Recovery },\n { ...Thursday Metabolic },\n { ...Friday Hormonal },\n { ...Saturday Long Movement },\n { ...Sunday Restoration }\n [must include all 7 days]`}
+],
+"weekly_summary":{"training_load":"e.g. 3 heavy + 2 zone 2 + 2 recovery","total_supp_cost":"$X/week","estimated_calorie_target":${dayCount * 2000}}
 }`;
 }
 
-// Heuristic: progressively try to parse the partial JSON. As Claude streams,
-// we look for completed "day" objects inside the days array and emit them.
-// Returns { days: [extracted day objects so far] } or null if nothing parseable yet.
 function tryExtractProgress(accumulatedText) {
-  // Find the start of the days array
   const daysIdx = accumulatedText.indexOf('"days"');
   if (daysIdx === -1) return null;
   const arrayStart = accumulatedText.indexOf('[', daysIdx);
   if (arrayStart === -1) return null;
 
-  // Scan for balanced day objects (each is a top-level {...} inside the array)
   const extracted = [];
   let i = arrayStart + 1;
   while (i < accumulatedText.length) {
-    // Skip whitespace and commas
     while (i < accumulatedText.length && /[\s,]/.test(accumulatedText[i])) i++;
     if (i >= accumulatedText.length) break;
-    if (accumulatedText[i] === ']') break; // end of days array
-    if (accumulatedText[i] !== '{') break; // unexpected
+    if (accumulatedText[i] === ']') break;
+    if (accumulatedText[i] !== '{') break;
 
-    // Find matching closing brace
     const objStart = i;
-    let depth = 0;
-    let inString = false;
-    let escape = false;
-    let objEnd = -1;
+    let depth = 0, inString = false, escape = false, objEnd = -1;
     for (let j = objStart; j < accumulatedText.length; j++) {
       const ch = accumulatedText[j];
       if (escape) { escape = false; continue; }
@@ -152,15 +167,13 @@ function tryExtractProgress(accumulatedText) {
       if (ch === '{') depth++;
       else if (ch === '}') { depth--; if (depth === 0) { objEnd = j; break; } }
     }
-    if (objEnd === -1) break; // day object incomplete
+    if (objEnd === -1) break;
 
     const dayText = accumulatedText.slice(objStart, objEnd + 1);
     try {
       const parsed = JSON.parse(dayText.replace(/,\s*([}\]])/g, '$1'));
       extracted.push(parsed);
-    } catch {
-      break; // malformed; stop here, will retry on next chunk
-    }
+    } catch { break; }
     i = objEnd + 1;
   }
   return extracted.length > 0 ? { days: extracted } : null;
@@ -178,7 +191,6 @@ export default async function handler(req, res) {
     return res.end(JSON.stringify({ error: 'No API key configured' }));
   }
 
-  // Parse body (Node runtime needs explicit body parsing)
   let body = '';
   for await (const chunk of req) body += chunk;
   let parsed;
@@ -187,37 +199,32 @@ export default async function handler(req, res) {
     return res.end(JSON.stringify({ error: 'Invalid JSON body' }));
   }
 
-  const { markers, userId = null, plan = 'free', mealStyle = 'none', additionalGoal = '', dayOnly = false } = parsed || {};
+  // FIX: accept isRegenerate and cycleLengthDays from client
+  const { markers, userId = null, plan = 'free', mealStyle = 'none', additionalGoal = '', dayOnly = false, isRegenerate = false, cycleLengthDays = 30 } = parsed || {};
   if (!Array.isArray(markers) || markers.length === 0) {
     res.statusCode = 400;
     return res.end(JSON.stringify({ error: 'No markers provided' }));
   }
 
-  // Set up SSE
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
-  res.setHeader('X-Accel-Buffering', 'no'); // disable proxy buffering
+  res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders?.();
 
-  // Rate limit
-  const lim = await checkLimits({ userId, plan });
+  // FIX: pass isRegenerate so first-time generation is never blocked
+  const lim = await checkLimits({ userId, plan, isRegenerate });
   if (!lim.ok) {
-    sse(res, 'error', { message: lim.msg, code: 'rate_limited' });
+    sse(res, 'error', { message: lim.msg, code: lim.code || 'rate_limited' });
     return res.end();
   }
 
-  // Load profile
   const profile = await getProfile(userId);
   const profileStr = formatProfileForPrompt(profile);
   const profileHash = await hashProfile(profile);
   const medFlag = hasMedications(profile);
 
-  // Cache lookup (cache key includes mealStyle + additionalGoal so different focuses cache separately)
   const markerHash = await hashMarkers(markers);
-  // Cache key includes PROMPT_VERSION — bump this when the schema/prompt
-  // changes meaningfully so old cached responses (e.g. chef-y meals from
-  // pre-pantry-rules era) don't get served to users on regeneration.
   const PROMPT_VERSION = 'v2-pantry';
   const cacheKey = await sha256(`week|${PROMPT_VERSION}|${mealStyle}|${additionalGoal.toLowerCase().trim()}|${dayOnly ? 'preview' : 'full'}|${profileHash}|${markerHash}`);
   const cachedRows = await sbSelect('personalised_cache', `cache_key=eq.${cacheKey}&select=result,hits&limit=1`);
@@ -225,8 +232,9 @@ export default async function handler(req, res) {
     const row = cachedRows[0];
     sbUpdate('personalised_cache', `cache_key=eq.${cacheKey}`, { hits: (row.hits || 0) + 1, last_hit_at: new Date().toISOString() }).catch(() => {});
     logUsage(userId, 'personalise-week-cached').catch(() => {});
+    // FIX: also save cached result to meal_plans for persistence
+    saveProtocol({ userId, result: row.result, mealStyle, additionalGoal, cycleLengthDays, isPreview: dayOnly }).catch(() => {});
     sse(res, 'cached', { cache: 'HIT' });
-    // Emit each day as a progress event so the UI animates the same way
     if (row.result?.days) {
       for (let i = 0; i < row.result.days.length; i++) {
         sse(res, 'day', { index: i, day: row.result.days[i] });
@@ -237,15 +245,13 @@ export default async function handler(req, res) {
   }
 
   const prompt = buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly });
-  // 2 alts × 3 meals × 7 days + flavor_boost per meal = ~7000 tokens worst case
   const maxTokens = dayOnly ? 2500 : 7000;
 
   sse(res, 'start', { dayOnly });
 
-  // Stream from Anthropic
   let accumulated = '';
   let emittedDayCount = 0;
-  let lastProgressDays = [];   // Hold onto last successful progressive extraction for fallback
+  let lastProgressDays = [];
   let anthropicRes;
   try {
     anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -274,7 +280,6 @@ export default async function handler(req, res) {
     return res.end();
   }
 
-  // Process Anthropic SSE stream
   const reader = anthropicRes.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -285,7 +290,6 @@ export default async function handler(req, res) {
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
 
-      // Anthropic SSE: each event is "event: <name>\ndata: <json>\n\n"
       const events = buffer.split('\n\n');
       buffer = events.pop() || '';
 
@@ -296,8 +300,6 @@ export default async function handler(req, res) {
           const data = JSON.parse(dataMatch[1]);
           if (data.type === 'content_block_delta' && data.delta?.type === 'text_delta') {
             accumulated += data.delta.text;
-
-            // Try to emit any newly-completed day objects
             const progress = tryExtractProgress(accumulated);
             if (progress && progress.days.length > emittedDayCount) {
               for (let i = emittedDayCount; i < progress.days.length; i++) {
@@ -315,16 +317,13 @@ export default async function handler(req, res) {
     return res.end();
   }
 
-  // Final parse of complete output
   sse(res, 'parsing', {});
   let result;
   try {
     result = parseJSON(accumulated);
   } catch (e) {
-    // Fallback: if we extracted any complete days during streaming, use those
     if (lastProgressDays.length > 0) {
       console.warn('[week-stream] final parse failed, using progressive extraction:', e.message);
-      // Try to also extract key_insight from the accumulated text
       const keyMatch = accumulated.match(/"key_insight"\s*:\s*"([^"]+)"/);
       const principlesMatch = accumulated.match(/"principles"\s*:\s*\[([^\]]+)\]/);
       result = {
@@ -344,10 +343,14 @@ export default async function handler(req, res) {
     return res.end();
   }
 
-  // Persist + log usage — must await on Node runtime, fire-and-forget would be killed when res.end() returns
+  // Persist to cache and to user's meal_plans for session-persistent access
   try {
     await sbUpsert('personalised_cache', { cache_key: cacheKey, type: 'week', result, hits: 0, created_at: new Date().toISOString() }, 'cache_key');
   } catch (e) { console.error('[week-stream] cache write failed:', e?.message); }
+
+  // FIX: Save to meal_plans so user sees their protocol on next login
+  await saveProtocol({ userId, result, mealStyle, additionalGoal, cycleLengthDays, isPreview: dayOnly });
+
   const logEndpoint = dayOnly ? 'personalise-week-preview' : 'personalise-week';
   try { await logUsage(userId, logEndpoint); } catch (e) { console.error('[week-stream] usage log failed:', e?.message); }
 
