@@ -35,14 +35,21 @@ interface WeekData {
 
 interface Props {
   data: WeekData;
-  selectedMealKeys: Record<string, string>; // "day|slot" → swap key OR "" for original
+  selectedMealKeys: Record<string, string>;
   onSwap: (dayIdx: number, slot: 'breakfast' | 'lunch' | 'dinner', swapKey: string) => void;
   isPreview?: boolean;
   onUpgrade?: () => void;
 }
 
+// ── Type scale (never go below these) ───────────────────────────────────────
+// label/eyebrow : 12px  (uppercase, tracked)
+// body-sm       : 14px
+// body          : 16px
+// meal-name     : 18px  (serif)
+// day-name      : 26px  (serif)
+
 const SWAP_LABEL: Record<string, string> = {
-  nutrient_match: 'Same nutrient profile',
+  nutrient_match: 'Same nutrients',
   cheaper: 'Cheaper',
   faster: 'Faster (<10 min)',
   diet_pref: 'Diet preference',
@@ -55,7 +62,7 @@ const SWAP_COLOR: Record<string, string> = {
   diet_pref: 'rgba(200, 160, 255, .85)',
 };
 
-function resolveMeal(meal: Meal | undefined, selectedSwap: string | undefined): { displayName: string; current: Meal | MealAlt; isOriginal: boolean } {
+function resolveMeal(meal: Meal | undefined, selectedSwap: string | undefined) {
   if (!meal) return { displayName: '', current: { name: '' } as any, isOriginal: true };
   if (!selectedSwap || selectedSwap === '') return { displayName: meal.name, current: meal, isOriginal: true };
   const alt = meal.alternatives?.find(a => a.swap === selectedSwap);
@@ -63,70 +70,101 @@ function resolveMeal(meal: Meal | undefined, selectedSwap: string | undefined): 
   return { displayName: alt.name, current: alt, isOriginal: false };
 }
 
-function MealRow({ slot, meal, dayIdx, selectedSwap, onSwap }: { slot: 'breakfast' | 'lunch' | 'dinner'; meal: Meal | undefined; dayIdx: number; selectedSwap: string | undefined; onSwap: (s: string) => void; }) {
+function MealRow({ slot, meal, dayIdx, selectedSwap, onSwap }: {
+  slot: 'breakfast' | 'lunch' | 'dinner';
+  meal: Meal | undefined;
+  dayIdx: number;
+  selectedSwap: string | undefined;
+  onSwap: (s: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   if (!meal) return null;
   const { displayName, isOriginal } = resolveMeal(meal, selectedSwap);
-  const hasAlts = (meal.alternatives && meal.alternatives.length > 0) || false;
+  const hasAlts = !!(meal.alternatives && meal.alternatives.length > 0);
   const hasItems = !!(meal.items && meal.items.length > 0);
   const hasBoost = !!(meal.flavor_boost && meal.flavor_boost.trim().length > 0);
   const isExpandable = hasAlts || hasItems || hasBoost;
 
   return (
-    <div style={{ marginBottom: 10, border: '1px solid rgba(0,210,165,.14)', borderRadius: 6, overflow: 'hidden', background: 'rgba(0,6,14,.4)' }}>
+    <div style={{ marginBottom: 12, border: '1px solid rgba(0,210,165,.14)', borderRadius: 8, overflow: 'hidden', background: 'rgba(0,6,14,.4)' }}>
       <div
         onClick={() => isExpandable && setOpen(!open)}
-        style={{ padding: '12px 14px', cursor: isExpandable ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 12 }}
+        style={{ padding: '16px 18px', cursor: isExpandable ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 14 }}
       >
-        <div style={{ fontSize: 10, color: 'rgba(0,225,180,.65)', letterSpacing: 1.5, textTransform: 'uppercase', width: 70, flexShrink: 0 }}>{slot}</div>
+        {/* Slot label */}
+        <div style={{ fontSize: 12, color: 'rgba(0,225,180,.65)', letterSpacing: 1.5, textTransform: 'uppercase', width: 80, flexShrink: 0 }}>{slot}</div>
+
+        {/* Meal name + macros */}
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 15, color: 'rgba(220,255,235,1)', fontFamily: 'EB Garamond, Georgia, serif', lineHeight: 1.3 }}>
+          <div style={{ fontSize: 18, color: 'rgba(220,255,235,1)', fontFamily: 'EB Garamond, Georgia, serif', lineHeight: 1.3 }}>
             {displayName}
-            {!isOriginal && <span style={{ fontSize: 10, marginLeft: 8, padding: '2px 6px', background: 'rgba(0,210,165,.15)', borderRadius: 3, color: 'rgba(0,225,180,.85)', letterSpacing: '0.06em' }}>SWAPPED</span>}
+            {!isOriginal && (
+              <span style={{ fontSize: 11, marginLeft: 10, padding: '2px 8px', background: 'rgba(0,210,165,.15)', borderRadius: 3, color: 'rgba(0,225,180,.85)', letterSpacing: '0.06em' }}>SWAPPED</span>
+            )}
           </div>
-          {meal.macros?.cal && <div style={{ fontSize: 11, color: 'rgba(0,200,160,.55)', marginTop: 2 }}>{meal.macros.cal} cal · P {meal.macros.p}g · C {meal.macros.c}g · F {meal.macros.f}g</div>}
+          {meal.macros?.cal && (
+            <div style={{ fontSize: 13, color: 'rgba(0,200,160,.65)', marginTop: 4 }}>
+              {meal.macros.cal} cal · P {meal.macros.p}g · C {meal.macros.c}g · F {meal.macros.f}g
+            </div>
+          )}
         </div>
+
         {isExpandable && (
-          <div style={{ fontSize: 16, color: 'rgba(0,210,165,.5)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>⌄</div>
+          <div style={{ fontSize: 20, color: 'rgba(0,210,165,.5)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s', flexShrink: 0 }}>⌄</div>
         )}
       </div>
+
       {open && isExpandable && (
-        <div style={{ padding: '10px 14px 14px', borderTop: '1px solid rgba(0,210,165,.1)' }}>
+        <div style={{ padding: '12px 18px 18px', borderTop: '1px solid rgba(0,210,165,.1)' }}>
+
+          {/* Ingredients */}
           {meal.items && meal.items.length > 0 && (
-            <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 10, color: 'rgba(0,210,165,.55)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 5 }}>Ingredients</div>
-              <div style={{ fontSize: 12, color: 'rgba(220,255,235,.82)', lineHeight: 1.7 }}>{meal.items.join(' · ')}</div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Ingredients</div>
+              <div style={{ fontSize: 15, color: 'rgba(220,255,235,.85)', lineHeight: 1.7 }}>{meal.items.join(' · ')}</div>
             </div>
           )}
+
+          {/* Flavor boost */}
           {meal.flavor_boost && (
-            <div style={{ marginBottom: 10, padding: '8px 12px', background: 'rgba(255,200,80,.06)', border: '1px solid rgba(255,200,80,.22)', borderRadius: 4 }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,210,100,.8)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 3 }}>✨ Doctor it up (optional)</div>
-              <div style={{ fontSize: 12, color: 'rgba(220,255,235,.88)', lineHeight: 1.55 }}>{meal.flavor_boost}</div>
+            <div style={{ marginBottom: 14, padding: '10px 14px', background: 'rgba(255,200,80,.06)', border: '1px solid rgba(255,200,80,.22)', borderRadius: 6 }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,210,100,.8)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>✨ Doctor it up (optional)</div>
+              <div style={{ fontSize: 15, color: 'rgba(220,255,235,.9)', lineHeight: 1.6 }}>{meal.flavor_boost}</div>
             </div>
           )}
-          {meal.why && <div style={{ fontSize: 12, color: 'rgba(0,210,165,.65)', fontStyle: 'italic', lineHeight: 1.6, marginBottom: 10, paddingLeft: 10, borderLeft: '2px solid rgba(0,210,165,.25)' }}>{meal.why}</div>}
+
+          {/* Why */}
+          {meal.why && (
+            <div style={{ fontSize: 14, color: 'rgba(0,210,165,.75)', fontStyle: 'italic', lineHeight: 1.65, marginBottom: 14, paddingLeft: 12, borderLeft: '2px solid rgba(0,210,165,.25)' }}>
+              {meal.why}
+            </div>
+          )}
+
+          {/* Swaps */}
           {hasAlts && (
             <>
-              <div style={{ fontSize: 10, color: 'rgba(0,210,165,.55)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Swap to:</div>
+              <div style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 }}>Swap to:</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {/* Original option */}
                 <button
                   onClick={(e) => { e.stopPropagation(); onSwap(''); setOpen(false); }}
-                  style={{ textAlign: 'left', padding: '8px 10px', background: isOriginal ? 'rgba(0,210,165,.14)' : 'rgba(0,210,165,.04)', border: `1px solid ${isOriginal ? 'rgba(0,225,180,.55)' : 'rgba(0,210,165,.18)'}`, borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit', color: 'rgba(220,255,235,.92)' }}
+                  style={{ textAlign: 'left', padding: '10px 12px', background: isOriginal ? 'rgba(0,210,165,.14)' : 'rgba(0,210,165,.04)', border: `1px solid ${isOriginal ? 'rgba(0,225,180,.55)' : 'rgba(0,210,165,.18)'}`, borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', color: 'rgba(220,255,235,.92)' }}
                 >
-                  <div style={{ fontSize: 10, color: 'rgba(0,225,180,.7)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>Original {isOriginal ? '· active' : ''}</div>
-                  <div style={{ fontSize: 13, lineHeight: 1.3 }}>{meal.name}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(0,225,180,.7)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>Original {isOriginal ? '· active' : ''}</div>
+                  <div style={{ fontSize: 14, lineHeight: 1.3 }}>{meal.name}</div>
                 </button>
+
                 {meal.alternatives?.map((alt) => {
                   const active = selectedSwap === alt.swap;
                   return (
                     <button
                       key={alt.swap}
                       onClick={(e) => { e.stopPropagation(); onSwap(alt.swap); setOpen(false); }}
-                      style={{ textAlign: 'left', padding: '8px 10px', background: active ? 'rgba(0,210,165,.14)' : 'rgba(0,210,165,.04)', border: `1px solid ${active ? SWAP_COLOR[alt.swap] : 'rgba(0,210,165,.18)'}`, borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit', color: 'rgba(220,255,235,.92)' }}
+                      style={{ textAlign: 'left', padding: '10px 12px', background: active ? 'rgba(0,210,165,.14)' : 'rgba(0,210,165,.04)', border: `1px solid ${active ? SWAP_COLOR[alt.swap] : 'rgba(0,210,165,.18)'}`, borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', color: 'rgba(220,255,235,.92)' }}
                     >
-                      <div style={{ fontSize: 10, color: SWAP_COLOR[alt.swap], letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>{SWAP_LABEL[alt.swap]}{active ? ' · active' : ''}</div>
-                      <div style={{ fontSize: 13, lineHeight: 1.3, marginBottom: 3 }}>{alt.name}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(0,200,160,.55)', fontStyle: 'italic', lineHeight: 1.4 }}>{alt.why}</div>
+                      <div style={{ fontSize: 11, color: SWAP_COLOR[alt.swap], letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>{SWAP_LABEL[alt.swap]}{active ? ' · active' : ''}</div>
+                      <div style={{ fontSize: 14, lineHeight: 1.3, marginBottom: 4 }}>{alt.name}</div>
+                      <div style={{ fontSize: 13, color: 'rgba(0,200,160,.65)', fontStyle: 'italic', lineHeight: 1.4 }}>{alt.why}</div>
                     </button>
                   );
                 })}
@@ -139,63 +177,102 @@ function MealRow({ slot, meal, dayIdx, selectedSwap, onSwap }: { slot: 'breakfas
   );
 }
 
-function DayCard({ day, dayIdx, isToday, selected, onSwap }: { day: Day; dayIdx: number; isToday: boolean; selected: Record<string, string>; onSwap: Props['onSwap']; }) {
+function DayCard({ day, dayIdx, isToday, selected, onSwap }: {
+  day: Day;
+  dayIdx: number;
+  isToday: boolean;
+  selected: Record<string, string>;
+  onSwap: Props['onSwap'];
+}) {
   const [expanded, setExpanded] = useState(isToday);
 
   return (
-    <div style={{ marginBottom: 14, border: `1px solid ${isToday ? 'rgba(0,225,180,.55)' : 'rgba(0,210,165,.18)'}`, borderRadius: 8, overflow: 'hidden', background: isToday ? 'rgba(0,32,50,.4)' : 'rgba(0,8,18,.5)' }}>
-      <div onClick={() => setExpanded(!expanded)} style={{ padding: '14px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
+    <div style={{ marginBottom: 16, border: `1px solid ${isToday ? 'rgba(0,225,180,.55)' : 'rgba(0,210,165,.18)'}`, borderRadius: 10, overflow: 'hidden', background: isToday ? 'rgba(0,32,50,.4)' : 'rgba(0,8,18,.5)' }}>
+
+      {/* Day header — always visible */}
+      <div onClick={() => setExpanded(!expanded)} style={{ padding: '18px 22px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'rgba(220,255,235,1)', fontWeight: 500 }}>{day.day}</div>
-            {day.theme && <div style={{ fontSize: 12, color: 'rgba(0,225,180,.7)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{day.theme}</div>}
-            {isToday && <div style={{ fontSize: 10, padding: '2px 8px', background: 'rgba(0,225,180,.18)', border: '1px solid rgba(0,225,180,.5)', borderRadius: 10, color: 'rgba(0,255,200,1)', letterSpacing: '0.08em' }}>TODAY</div>}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 26, color: 'rgba(220,255,235,1)', fontWeight: 500 }}>{day.day}</div>
+            {day.theme && (
+              <div style={{ fontSize: 13, color: 'rgba(0,225,180,.7)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{day.theme}</div>
+            )}
+            {isToday && (
+              <div style={{ fontSize: 11, padding: '3px 10px', background: 'rgba(0,225,180,.18)', border: '1px solid rgba(0,225,180,.5)', borderRadius: 10, color: 'rgba(0,255,200,1)', letterSpacing: '0.08em' }}>TODAY</div>
+            )}
           </div>
-          {day.focus_marker && <div style={{ fontSize: 11, color: 'rgba(0,200,160,.6)', marginTop: 4, letterSpacing: '0.04em' }}>Focus: {day.focus_marker}</div>}
+          {day.focus_marker && (
+            <div style={{ fontSize: 13, color: 'rgba(0,200,160,.7)', marginTop: 5, letterSpacing: '0.03em' }}>Focus: {day.focus_marker}</div>
+          )}
         </div>
-        <div style={{ display: 'flex', gap: 14, fontSize: 11, color: 'rgba(0,210,165,.55)' }}>
+
+        {/* Quick stats */}
+        <div style={{ display: 'flex', gap: 16, fontSize: 13, color: 'rgba(0,210,165,.6)', flexShrink: 0 }}>
           {day.movement?.type && <span>{day.movement.type}</span>}
           {day.morning?.wake_time && <span>↑ {day.morning.wake_time}</span>}
           {day.evening?.sleep_target && <span>↓ {day.evening.sleep_target}</span>}
         </div>
-        <div style={{ fontSize: 18, color: 'rgba(0,210,165,.5)', transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>⌄</div>
+
+        <div style={{ fontSize: 20, color: 'rgba(0,210,165,.5)', transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .2s', flexShrink: 0 }}>⌄</div>
       </div>
 
+      {/* Expanded body */}
       {expanded && (
-        <div style={{ padding: '0 18px 18px', borderTop: '1px solid rgba(0,210,165,.12)' }}>
+        <div style={{ padding: '0 22px 22px', borderTop: '1px solid rgba(0,210,165,.12)' }}>
+
+          {/* Morning */}
           {day.morning && (
-            <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,200,80,.7)', marginBottom: 6 }}>Morning {day.morning.wake_time ? `· ${day.morning.wake_time}` : ''}</div>
-              {day.morning.actions?.map((a, i) => <div key={i} style={{ fontSize: 13, color: 'rgba(220,255,235,.88)', marginBottom: 3, lineHeight: 1.5 }}>• {a}</div>)}
+            <div style={{ marginTop: 18 }}>
+              <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,200,80,.8)', marginBottom: 10 }}>
+                Morning {day.morning.wake_time ? `· ${day.morning.wake_time}` : ''}
+              </div>
+              {day.morning.actions?.map((a, i) => (
+                <div key={i} style={{ fontSize: 15, color: 'rgba(220,255,235,.9)', marginBottom: 5, lineHeight: 1.55 }}>• {a}</div>
+              ))}
               {day.morning.supps_am && day.morning.supps_am.length > 0 && (
-                <div style={{ fontSize: 12, color: 'rgba(0,210,165,.7)', marginTop: 4 }}><strong style={{ color: 'rgba(0,225,180,.85)' }}>AM supps:</strong> {day.morning.supps_am.join(', ')}</div>
+                <div style={{ fontSize: 14, color: 'rgba(0,210,165,.8)', marginTop: 8, lineHeight: 1.6 }}>
+                  <strong style={{ color: 'rgba(0,225,180,.9)' }}>AM supps:</strong> {day.morning.supps_am.join(', ')}
+                </div>
               )}
             </div>
           )}
 
+          {/* Meals */}
           {day.meals && (
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(0,225,180,.7)', marginBottom: 8 }}>Meals · tap any meal to see alternatives</div>
+            <div style={{ marginTop: 20 }}>
+              <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(0,225,180,.7)', marginBottom: 10 }}>Meals · tap any meal to see alternatives</div>
               <MealRow slot="breakfast" meal={day.meals.breakfast} dayIdx={dayIdx} selectedSwap={selected[`${dayIdx}|breakfast`]} onSwap={(s) => onSwap(dayIdx, 'breakfast', s)} />
-              <MealRow slot="lunch"     meal={day.meals.lunch}     dayIdx={dayIdx} selectedSwap={selected[`${dayIdx}|lunch`]}     onSwap={(s) => onSwap(dayIdx, 'lunch', s)} />
-              <MealRow slot="dinner"    meal={day.meals.dinner}    dayIdx={dayIdx} selectedSwap={selected[`${dayIdx}|dinner`]}    onSwap={(s) => onSwap(dayIdx, 'dinner', s)} />
+              <MealRow slot="lunch"     meal={day.meals.lunch}     dayIdx={dayIdx} selectedSwap={selected[`${dayIdx}|lunch`]}     onSwap={(s) => onSwap(dayIdx, 'lunch', s)}     />
+              <MealRow slot="dinner"    meal={day.meals.dinner}    dayIdx={dayIdx} selectedSwap={selected[`${dayIdx}|dinner`]}    onSwap={(s) => onSwap(dayIdx, 'dinner', s)}    />
             </div>
           )}
 
+          {/* Movement */}
           {day.movement && (
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(100,210,255,.7)', marginBottom: 6 }}>Movement</div>
-              <div style={{ fontSize: 14, color: 'rgba(220,255,235,.92)' }}>{day.movement.type}{day.movement.duration ? ` · ${day.movement.duration}` : ''}{day.movement.when ? ` · ${day.movement.when}` : ''}</div>
+            <div style={{ marginTop: 20 }}>
+              <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(100,210,255,.7)', marginBottom: 8 }}>Movement</div>
+              <div style={{ fontSize: 16, color: 'rgba(220,255,235,.92)', lineHeight: 1.5 }}>
+                {day.movement.type}
+                {day.movement.duration ? ` · ${day.movement.duration}` : ''}
+                {day.movement.when ? ` · ${day.movement.when}` : ''}
+              </div>
             </div>
           )}
 
+          {/* Evening */}
           {day.evening && (
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(200,160,255,.7)', marginBottom: 6 }}>Evening {day.evening.sleep_target ? `· sleep ${day.evening.sleep_target}` : ''}</div>
+            <div style={{ marginTop: 20 }}>
+              <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(200,160,255,.7)', marginBottom: 8 }}>
+                Evening {day.evening.sleep_target ? `· sleep ${day.evening.sleep_target}` : ''}
+              </div>
               {day.evening.supps_pm && day.evening.supps_pm.length > 0 && (
-                <div style={{ fontSize: 13, color: 'rgba(220,255,235,.88)', marginBottom: 3 }}><strong style={{ color: 'rgba(0,225,180,.85)' }}>PM supps:</strong> {day.evening.supps_pm.join(', ')}</div>
+                <div style={{ fontSize: 15, color: 'rgba(220,255,235,.9)', marginBottom: 5, lineHeight: 1.6 }}>
+                  <strong style={{ color: 'rgba(0,225,180,.9)' }}>PM supps:</strong> {day.evening.supps_pm.join(', ')}
+                </div>
               )}
-              {day.evening.wind_down && <div style={{ fontSize: 13, color: 'rgba(220,255,235,.85)' }}>{day.evening.wind_down}</div>}
+              {day.evening.wind_down && (
+                <div style={{ fontSize: 15, color: 'rgba(220,255,235,.85)', lineHeight: 1.6 }}>{day.evening.wind_down}</div>
+              )}
             </div>
           )}
         </div>
@@ -215,39 +292,52 @@ export default function WeekView({ data, selectedMealKeys, onSwap, isPreview = f
 
   return (
     <div>
+      {/* Key insight */}
       {data.key_insight && (
-        <div style={{ padding: '14px 18px', marginBottom: 14, background: 'rgba(0,210,165,.06)', border: '1px solid rgba(0,225,180,.2)', borderRadius: 6 }}>
-          <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(0,225,180,.7)', marginBottom: 6 }}>Week design</div>
-          <div style={{ fontSize: 15, color: 'rgba(220,255,235,.95)', fontStyle: 'italic', lineHeight: 1.6 }}>{data.key_insight}</div>
+        <div style={{ padding: '16px 20px', marginBottom: 16, background: 'rgba(0,210,165,.06)', border: '1px solid rgba(0,225,180,.2)', borderRadius: 8 }}>
+          <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(0,225,180,.7)', marginBottom: 8 }}>Week design</div>
+          <div style={{ fontSize: 16, color: 'rgba(220,255,235,.95)', fontStyle: 'italic', lineHeight: 1.7 }}>{data.key_insight}</div>
         </div>
       )}
 
+      {/* Principles */}
       {data.principles && data.principles.length > 0 && (
-        <div style={{ padding: '12px 16px', marginBottom: 14, background: 'rgba(0,8,18,.5)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 6 }}>
-          <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(0,210,165,.65)', marginBottom: 8 }}>Guiding principles</div>
-          {data.principles.map((p, i) => <div key={i} style={{ fontSize: 13, color: 'rgba(220,255,235,.88)', marginBottom: 4, lineHeight: 1.5 }}>• {p}</div>)}
+        <div style={{ padding: '14px 18px', marginBottom: 16, background: 'rgba(0,8,18,.5)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 8 }}>
+          <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(0,210,165,.65)', marginBottom: 10 }}>Guiding principles</div>
+          {data.principles.map((p, i) => (
+            <div key={i} style={{ fontSize: 15, color: 'rgba(220,255,235,.9)', marginBottom: 6, lineHeight: 1.6 }}>• {p}</div>
+          ))}
         </div>
       )}
 
+      {/* Day cards */}
       {data.days.map((d, i) => (
         <DayCard key={i} day={d} dayIdx={i} isToday={i === todayIdx} selected={selectedMealKeys} onSwap={onSwap} />
       ))}
 
+      {/* Free preview upsell */}
       {isPreview && (
-        <div style={{ padding: '20px 22px', marginTop: 18, background: 'rgba(0,8,18,.7)', border: '1px solid rgba(0,225,180,.45)', borderRadius: 8, textAlign: 'center' }}>
-          <div style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(0,225,180,.7)', marginBottom: 10 }}>Free preview — Day 1 only</div>
-          <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 20, color: 'rgba(220,255,235,1)', marginBottom: 8, lineHeight: 1.4 }}>Unlock the full 7-day Aellux Week</div>
-          <div style={{ fontSize: 13, color: 'rgba(0,210,165,.75)', marginBottom: 16, lineHeight: 1.6 }}>Six more biologically distinct days, meal swaps, training rotation, supplement timing, and a printable weekly PDF.</div>
-          <button onClick={onUpgrade} style={{ fontSize: 14, color: 'rgba(0,225,180,1)', background: 'rgba(0,195,155,.16)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 5, padding: '10px 24px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Upgrade to Aellux Pro — $29/mo →</button>
+        <div style={{ padding: '24px 28px', marginTop: 20, background: 'rgba(0,8,18,.7)', border: '1px solid rgba(0,225,180,.45)', borderRadius: 10, textAlign: 'center' }}>
+          <div style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(0,225,180,.7)', marginBottom: 12 }}>Free preview — Day 1 only</div>
+          <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'rgba(220,255,235,1)', marginBottom: 10, lineHeight: 1.4 }}>Unlock the full 7-day Aellux Protocol</div>
+          <div style={{ fontSize: 15, color: 'rgba(0,210,165,.75)', marginBottom: 20, lineHeight: 1.65 }}>Six more biologically distinct days, meal swaps, training rotation, supplement timing, and a printable weekly PDF.</div>
+          <button onClick={onUpgrade} style={{ fontSize: 15, color: 'rgba(0,225,180,1)', background: 'rgba(0,195,155,.16)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 6, padding: '12px 28px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Upgrade to Aellux Pro — $29/mo →</button>
         </div>
       )}
 
+      {/* Weekly summary */}
       {data.weekly_summary && !isPreview && (
-        <div style={{ padding: '12px 16px', marginTop: 14, background: 'rgba(255,200,80,.06)', border: '1px solid rgba(255,200,80,.25)', borderRadius: 6 }}>
-          <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,200,80,.75)', marginBottom: 8 }}>Weekly summary</div>
-          {data.weekly_summary.training_load && <div style={{ fontSize: 13, color: 'rgba(220,255,235,.88)', marginBottom: 3 }}><strong>Training:</strong> {data.weekly_summary.training_load}</div>}
-          {data.weekly_summary.total_supp_cost && <div style={{ fontSize: 13, color: 'rgba(220,255,235,.88)', marginBottom: 3 }}><strong>Supp cost:</strong> {data.weekly_summary.total_supp_cost}</div>}
-          {data.weekly_summary.estimated_calorie_target && <div style={{ fontSize: 13, color: 'rgba(220,255,235,.88)' }}><strong>Weekly calorie target:</strong> ~{data.weekly_summary.estimated_calorie_target.toLocaleString()}</div>}
+        <div style={{ padding: '16px 20px', marginTop: 16, background: 'rgba(255,200,80,.06)', border: '1px solid rgba(255,200,80,.25)', borderRadius: 8 }}>
+          <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,200,80,.75)', marginBottom: 10 }}>Weekly summary</div>
+          {data.weekly_summary.training_load && (
+            <div style={{ fontSize: 15, color: 'rgba(220,255,235,.9)', marginBottom: 5 }}><strong>Training:</strong> {data.weekly_summary.training_load}</div>
+          )}
+          {data.weekly_summary.total_supp_cost && (
+            <div style={{ fontSize: 15, color: 'rgba(220,255,235,.9)', marginBottom: 5 }}><strong>Supp cost:</strong> {data.weekly_summary.total_supp_cost}</div>
+          )}
+          {data.weekly_summary.estimated_calorie_target && (
+            <div style={{ fontSize: 15, color: 'rgba(220,255,235,.9)' }}><strong>Weekly calorie target:</strong> ~{data.weekly_summary.estimated_calorie_target.toLocaleString()}</div>
+          )}
         </div>
       )}
     </div>

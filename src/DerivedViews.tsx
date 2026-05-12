@@ -109,18 +109,18 @@ function SuppStack({ weekData }: { weekData: any }) {
   if (supps.length === 0) return <div style={{ padding: '20px', color: 'rgba(0,210,165,.55)' }}>No supplements listed in this week's protocol.</div>;
   return (
     <div>
-      <div style={{ fontSize: 12, color: 'rgba(0,210,165,.6)', lineHeight: 1.6, marginBottom: 14 }}>
+      <div style={{ fontSize: 16, color: 'rgba(0,210,165,.6)', lineHeight: 1.6, marginBottom: 14 }}>
         Every unique supplement across your 7-day Biologic Protocol, deduplicated. {supps.length} total · {supps.filter(s => s.everyDay).length} every-day staples.
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
         {supps.map((s, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.14)', borderRadius: 6 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, color: 'rgba(220,255,235,1)', fontFamily: 'EB Garamond, Georgia, serif' }}>{s.name}</div>
-              {s.dose && <div style={{ fontSize: 11, color: 'rgba(0,210,165,.65)', marginTop: 2 }}>{s.dose}</div>}
+              <div style={{ fontSize: 16, color: 'rgba(220,255,235,1)', fontFamily: 'EB Garamond, Georgia, serif' }}>{s.name}</div>
+              {s.dose && <div style={{ fontSize: 16, color: 'rgba(0,210,165,.65)', marginTop: 2 }}>{s.dose}</div>}
             </div>
-            <div style={{ fontSize: 10, color: 'rgba(0,225,180,.75)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', background: 'rgba(0,210,165,.08)', borderRadius: 10 }}>{s.ampm}</div>
-            <div style={{ fontSize: 10, color: 'rgba(0,210,165,.55)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 12, color: 'rgba(0,225,180,.75)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', background: 'rgba(0,210,165,.08)', borderRadius: 10 }}>{s.ampm}</div>
+            <div style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               {s.everyDay ? 'Daily' : `${s.days.length}×/wk`}
             </div>
           </div>
@@ -136,15 +136,15 @@ function GroceryList({ weekData, selectedMealKeys }: { weekData: any; selectedMe
   const order = ['Proteins', 'Vegetables', 'Fruit', 'Grains & starches', 'Legumes', 'Dairy', 'Fats, nuts & seeds', 'Pantry / seasoning', 'Other'];
   return (
     <div>
-      <div style={{ fontSize: 12, color: 'rgba(0,210,165,.6)', lineHeight: 1.6, marginBottom: 14 }}>
+      <div style={{ fontSize: 16, color: 'rgba(0,210,165,.6)', lineHeight: 1.6, marginBottom: 14 }}>
         Every unique food item across your week's meals. {total} items in {Object.keys(byCategory).length} categories. Reflects your current meal selections — change a swap and this list updates.
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
         {order.filter(c => byCategory[c]).map(category => (
           <div key={category} style={{ padding: '14px 16px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.14)', borderRadius: 6 }}>
-            <div style={{ fontSize: 10, color: 'rgba(0,225,180,.7)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>{category} · {byCategory[category].length}</div>
+            <div style={{ fontSize: 12, color: 'rgba(0,225,180,.7)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>{category} · {byCategory[category].length}</div>
             {byCategory[category].map((item: string, i: number) => (
-              <div key={i} style={{ fontSize: 13, color: 'rgba(220,255,235,.85)', padding: '4px 0', lineHeight: 1.4 }}>• {item}</div>
+              <div key={i} style={{ fontSize: 16, color: 'rgba(220,255,235,.85)', padding: '4px 0', lineHeight: 1.4 }}>• {item}</div>
             ))}
           </div>
         ))}
@@ -171,29 +171,29 @@ function TodayChecklist({ weekData, selectedMealKeys }: { weekData: any; selecte
 
   return (
     <div>
-      <div style={{ fontSize: 12, color: 'rgba(0,210,165,.6)', lineHeight: 1.6, marginBottom: 14 }}>
+      <div style={{ fontSize: 16, color: 'rgba(0,210,165,.6)', lineHeight: 1.6, marginBottom: 14 }}>
         Today is <strong style={{ color: 'rgba(0,225,180,.95)' }}>{day.day} · {day.theme}</strong>
         {day.focus_marker && <> · Focus: {day.focus_marker}</>}
       </div>
 
       {day.morning && (
         <div style={{ marginBottom: 16, padding: '14px 18px', background: 'rgba(255,200,80,.04)', border: '1px solid rgba(255,200,80,.18)', borderRadius: 6 }}>
-          <div style={{ fontSize: 10, color: 'rgba(255,210,100,.8)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>☀ Morning {day.morning.wake_time ? `· ${day.morning.wake_time}` : ''}</div>
-          {day.morning.actions?.map((a: string, i: number) => <div key={i} style={{ fontSize: 14, color: 'rgba(220,255,235,.92)', padding: '3px 0' }}>☐ {a}</div>)}
-          {day.morning.supps_am?.map((s: string, i: number) => <div key={`s${i}`} style={{ fontSize: 13, color: 'rgba(220,255,235,.85)', padding: '3px 0' }}>☐ Take {s}</div>)}
+          <div style={{ fontSize: 12, color: 'rgba(255,210,100,.8)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>☀ Morning {day.morning.wake_time ? `· ${day.morning.wake_time}` : ''}</div>
+          {day.morning.actions?.map((a: string, i: number) => <div key={i} style={{ fontSize: 16, color: 'rgba(220,255,235,.92)', padding: '3px 0' }}>☐ {a}</div>)}
+          {day.morning.supps_am?.map((s: string, i: number) => <div key={`s${i}`} style={{ fontSize: 16, color: 'rgba(220,255,235,.85)', padding: '3px 0' }}>☐ Take {s}</div>)}
         </div>
       )}
 
       {day.meals && (
         <div style={{ marginBottom: 16, padding: '14px 18px', background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,225,180,.2)', borderRadius: 6 }}>
-          <div style={{ fontSize: 10, color: 'rgba(0,225,180,.85)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>🍽 Meals</div>
+          <div style={{ fontSize: 12, color: 'rgba(0,225,180,.85)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>🍽 Meals</div>
           {['breakfast', 'lunch', 'dinner'].map(slot => {
             const m = resolveMeal(slot);
             if (!m) return null;
             return (
-              <div key={slot} style={{ fontSize: 14, color: 'rgba(220,255,235,.92)', padding: '4px 0' }}>
+              <div key={slot} style={{ fontSize: 16, color: 'rgba(220,255,235,.92)', padding: '4px 0' }}>
                 ☐ <strong style={{ textTransform: 'capitalize', color: 'rgba(0,225,180,.85)' }}>{slot}:</strong> {m.name}
-                {m.swapped && <span style={{ marginLeft: 6, fontSize: 9, padding: '1px 6px', background: 'rgba(0,210,165,.14)', borderRadius: 3, color: 'rgba(0,225,180,.85)', letterSpacing: '0.06em' }}>SWAPPED</span>}
+                {m.swapped && <span style={{ marginLeft: 6, fontSize: 11, padding: '1px 6px', background: 'rgba(0,210,165,.14)', borderRadius: 3, color: 'rgba(0,225,180,.85)', letterSpacing: '0.06em' }}>SWAPPED</span>}
               </div>
             );
           })}
@@ -202,16 +202,16 @@ function TodayChecklist({ weekData, selectedMealKeys }: { weekData: any; selecte
 
       {day.movement && (
         <div style={{ marginBottom: 16, padding: '14px 18px', background: 'rgba(100,210,255,.04)', border: '1px solid rgba(100,210,255,.2)', borderRadius: 6 }}>
-          <div style={{ fontSize: 10, color: 'rgba(100,210,255,.85)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>⚡ Movement</div>
-          <div style={{ fontSize: 14, color: 'rgba(220,255,235,.92)' }}>☐ {day.movement.type}{day.movement.duration ? ` · ${day.movement.duration}` : ''}{day.movement.when ? ` · ${day.movement.when}` : ''}</div>
+          <div style={{ fontSize: 12, color: 'rgba(100,210,255,.85)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>⚡ Movement</div>
+          <div style={{ fontSize: 16, color: 'rgba(220,255,235,.92)' }}>☐ {day.movement.type}{day.movement.duration ? ` · ${day.movement.duration}` : ''}{day.movement.when ? ` · ${day.movement.when}` : ''}</div>
         </div>
       )}
 
       {day.evening && (
         <div style={{ padding: '14px 18px', background: 'rgba(200,160,255,.04)', border: '1px solid rgba(200,160,255,.2)', borderRadius: 6 }}>
-          <div style={{ fontSize: 10, color: 'rgba(200,160,255,.85)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>🌙 Evening {day.evening.sleep_target ? `· sleep ${day.evening.sleep_target}` : ''}</div>
-          {day.evening.supps_pm?.map((s: string, i: number) => <div key={i} style={{ fontSize: 14, color: 'rgba(220,255,235,.92)', padding: '3px 0' }}>☐ Take {s}</div>)}
-          {day.evening.wind_down && <div style={{ fontSize: 14, color: 'rgba(220,255,235,.92)', padding: '3px 0' }}>☐ {day.evening.wind_down}</div>}
+          <div style={{ fontSize: 12, color: 'rgba(200,160,255,.85)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>🌙 Evening {day.evening.sleep_target ? `· sleep ${day.evening.sleep_target}` : ''}</div>
+          {day.evening.supps_pm?.map((s: string, i: number) => <div key={i} style={{ fontSize: 16, color: 'rgba(220,255,235,.92)', padding: '3px 0' }}>☐ Take {s}</div>)}
+          {day.evening.wind_down && <div style={{ fontSize: 16, color: 'rgba(220,255,235,.92)', padding: '3px 0' }}>☐ {day.evening.wind_down}</div>}
         </div>
       )}
     </div>
@@ -239,7 +239,7 @@ export default function DerivedViews({ weekData, selectedMealKeys, weekView, onP
               border: 'none',
               borderBottom: `2px solid ${tab === t.id ? 'rgba(0,225,180,.9)' : 'transparent'}`,
               color: tab === t.id ? 'rgba(0,255,200,1)' : 'rgba(0,210,165,.55)',
-              fontSize: 13,
+              fontSize: 16,
               fontFamily: 'inherit',
               cursor: 'pointer',
               letterSpacing: '0.04em',
