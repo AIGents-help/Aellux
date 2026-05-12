@@ -8,11 +8,12 @@ import BodyHero from './BodyHero';
 import BiomarkerDetail from './BiomarkerDetail';
 import AdminDashboard from './AdminDashboard';
 import PrintableReport from './PrintableReport';
+import WeekView from './WeekView';
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
 type OrbState = 'dormant' | 'idle' | 'listening' | 'thinking' | 'speaking';
-type Panel = 'upload' | 'dashboard' | 'trends' | 'meals' | 'supps' | 'protocol' | 'protocols' | 'ask' | 'profile' | 'admin';
+type Panel = 'upload' | 'dashboard' | 'trends' | 'meals' | 'supps' | 'protocol' | 'protocols' | 'week' | 'ask' | 'profile' | 'admin';
 
 interface Marker {
   name: string;
@@ -44,6 +45,7 @@ interface PersonalisedData {
   supps?: any;
   protocol?: any;
   synthesis?: any;
+  week?: any;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -356,10 +358,41 @@ function sanitisePersonalised(p: any): any {
       (type === 'meals'     && Array.isArray((data as any).meals)) ||
       (type === 'supps'     && Array.isArray((data as any).supplements)) ||
       (type === 'protocol'  && Array.isArray((data as any).protocols)) ||
-      (type === 'synthesis' && ((data as any).aellux_voice || (data as any).focus_priority));
+      (type === 'synthesis' && ((data as any).aellux_voice || (data as any).focus_priority)) ||
+      (type === 'week'      && Array.isArray((data as any).days) && (data as any).days.length > 0);
     if (shapeOk) out[type] = data;
   }
   return out;
+}
+
+// Materializes the user's meal swap selections into a new personalised payload.
+// Each swap key is "dayIdx|slot" → swap reason ('nutrient_match' | 'cheaper' | etc.) or ''
+function applyMealSwaps(p: any, swaps: Record<string, string>): any {
+  if (!p?.week || !Array.isArray(p.week.days)) return p;
+  if (!swaps || Object.keys(swaps).length === 0) return p;
+  const week = {
+    ...p.week,
+    days: p.week.days.map((day: any, dayIdx: number) => {
+      if (!day?.meals) return day;
+      const meals = { ...day.meals };
+      for (const slot of ['breakfast', 'lunch', 'dinner']) {
+        const swapKey = swaps[`${dayIdx}|${slot}`];
+        const original = meals[slot];
+        if (!swapKey || !original) continue;
+        const alt = original.alternatives?.find((a: any) => a.swap === swapKey);
+        if (!alt) continue;
+        meals[slot] = {
+          ...original,
+          name: alt.name,
+          // tag so the PDF can mark it as swapped if desired (no UI change for now)
+          _swapped_from: original.name,
+          _swap_reason: alt.why,
+        };
+      }
+      return { ...day, meals };
+    }),
+  };
+  return { ...p, week };
 }
 
 export default function App() {
@@ -377,7 +410,21 @@ export default function App() {
   const [uploadStatus, setUploadStatus] = useState('');
     const [generatingType, setGeneratingType] = useState<string | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
-  const [printSection, setPrintSection] = useState<'meals' | 'supps' | 'protocol' | 'synthesis' | 'all' | null>(null);
+  const [printSection, setPrintSection] = useState<'meals' | 'supps' | 'protocol' | 'synthesis' | 'week' | 'all' | null>(null);
+  const [mealSwaps, setMealSwaps] = useState<Record<string, string>>(() => {
+    try {
+      const raw = localStorage.getItem('aellux_meal_swaps');
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  });
+
+  const handleMealSwap = useCallback((dayIdx: number, slot: 'breakfast' | 'lunch' | 'dinner', swapKey: string) => {
+    setMealSwaps(prev => {
+      const next = { ...prev, [`${dayIdx}|${slot}`]: swapKey };
+      try { localStorage.setItem('aellux_meal_swaps', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, []);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
   const [input, setInput] = useState('');
@@ -573,16 +620,25 @@ export default function App() {
 
   // ── PERSONALISATION GENERATION ────────────────────────────────────────────
 
-  const generatePersonalised = async (type: 'meals' | 'supps' | 'protocol' | 'synthesis') => {
+  const generatePersonalised = async (type: 'meals' | 'supps' | 'protocol' | 'synthesis' | 'week') => {
     if (allMarkers.length === 0) { alert('Upload health documents first.'); return; }
     setGeneratingType(type);
     setGenerationError(null);
     setOrbState('thinking');
     try {
+      // For week generation, free users get a Day 1 preview only
+      const dayOnly = type === 'week' && !isPro;
       const res = await fetch('/api/personalise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ markers: allMarkers, type, preference: type === 'meals' ? mealPreference : null, userId: user?.id, plan: isPro ? 'pro' : 'free' }),
+        body: JSON.stringify({
+          markers: allMarkers,
+          type,
+          preference: (type === 'meals' || type === 'week') ? mealPreference : null,
+          userId: user?.id,
+          plan: isPro ? 'pro' : 'free',
+          dayOnly,
+        }),
       });
       const data = await res.json();
       // Surface API-level errors instead of silently storing a broken payload
@@ -599,7 +655,8 @@ export default function App() {
         (type === 'meals' && Array.isArray(data.meals)) ||
         (type === 'supps' && Array.isArray(data.supplements)) ||
         (type === 'protocol' && Array.isArray(data.protocols)) ||
-        (type === 'synthesis' && (data.aellux_voice || data.focus_priority));
+        (type === 'synthesis' && (data.aellux_voice || data.focus_priority)) ||
+        (type === 'week' && Array.isArray(data.days) && data.days.length > 0);
       if (!shapeOk) {
         console.warn('[personalise] unexpected shape', { type, data });
         const msg = 'Aellux returned an unexpected response shape. Tap regenerate.';
@@ -627,14 +684,14 @@ export default function App() {
   };
 
   // ── PRINT / PDF ──────────────────────────────────────────────────────────
-  const triggerPrint = useCallback((section: 'meals' | 'supps' | 'protocol' | 'synthesis' | 'all') => {
+  const triggerPrint = useCallback((section: 'meals' | 'supps' | 'protocol' | 'synthesis' | 'week' | 'all') => {
     setPrintSection(section);
-    // Wait for React to render the PrintableReport before invoking the dialog
+    // Portal needs a tick to mount, plus give browser a moment to apply @media print rules
     setTimeout(() => {
       try { window.print(); } catch (e) { console.error('[print] failed', e); }
-      // Reset after the print dialog closes (best-effort; user may cancel)
+      // Reset after dialog closes (user may cancel; either way clear state)
       setTimeout(() => setPrintSection(null), 1500);
-    }, 80);
+    }, 200);
   }, []);
 
   // ── ASK AELLUX ───────────────────────────────────────────────────────────
@@ -683,6 +740,7 @@ export default function App() {
   const NAV: Array<{ id: Panel; label: string; count?: number }> = [
     { id: 'upload',    label: '+ Upload Records',  count: documents.length },
     { id: 'dashboard', label: 'Health Dashboard',  count: allMarkers.length },
+    { id: 'week',      label: 'My Aellux Week'                              },
     { id: 'trends',    label: 'Biomarker Trends'                            },
     { id: 'protocols', label: 'Protocols & Plans'                           },
     { id: 'meals',     label: 'Meal Protocol'                               },
@@ -1363,6 +1421,67 @@ export default function App() {
             </div>
           )}
 
+          {/* ── WEEK ── */}
+          {panel === 'week' && (
+            <div>
+              {!personalised.week ? (
+                <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+                  <p style={{ fontSize: 18, color: 'rgba(0,225,180,.92)', marginBottom: 10, lineHeight: 1.7 }}>
+                    {allMarkers.length === 0
+                      ? 'Upload your health documents first.'
+                      : `Aellux will design 7 biologically distinct days from your ${allMarkers.length} biomarkers.`}
+                  </p>
+                  <p style={{ fontSize: 14, color: 'rgba(0,210,165,.65)', marginBottom: 26, lineHeight: 1.7, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
+                    Each day is engineered around a different lever in your biology. Meals come with 4 swap options so you can adapt to constraints — cheaper, faster, dietary restrictions — while still hitting the same nutrient targets.
+                    {!isPro && ' Free plan generates Day 1 as a preview; Pro unlocks all 7 days plus the printable weekly PDF.'}
+                  </p>
+                  {generationError && (
+                    <div style={{ marginBottom: 20, padding: '12px 18px', background: 'rgba(80,12,12,.4)', border: '1px solid rgba(255,120,80,.45)', borderRadius: 6, color: 'rgba(255,200,180,1)', fontSize: 14, textAlign: 'left', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
+                      <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,160,100,.85)', marginBottom: 4 }}>⚠ Generation Error</div>
+                      {generationError}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => generatePersonalised('week')}
+                    disabled={generatingType === 'week' || allMarkers.length === 0}
+                    style={{ fontSize: 17, color: 'rgba(0,225,180,1)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
+                  >
+                    {generatingType === 'week'
+                      ? (isPro ? '⟳ Aellux is designing your week…' : '⟳ Aellux is designing Day 1…')
+                      : (isPro ? 'Generate my 7-day Aellux Week →' : 'Generate my Day 1 preview →')}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
+                    <div>
+                      <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 26, color: 'rgba(220,255,235,1)', fontWeight: 500, lineHeight: 1.1 }}>{isPro ? 'Your Aellux Week' : 'Your Aellux Week — Day 1 Preview'}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(0,210,165,.65)', marginTop: 4, letterSpacing: '0.04em' }}>Designed from your {allMarkers.length} biomarkers · Tap any meal for alternatives</div>
+                    </div>
+                    {isPro && (
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => triggerPrint('week')} style={{ fontSize: 13, color: 'rgba(0,225,180,1)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
+                        <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'rgba(0,225,180,.85)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Report</button>
+                        <button
+                          onClick={() => { if (confirm('Regenerate your week? This uses one of your weekly generations.')) { setPersonalised(p => ({ ...p, week: undefined })); setMealSwaps({}); try { localStorage.removeItem('aellux_meal_swaps'); } catch {} } }}
+                          style={{ fontSize: 13, color: 'rgba(0,150,120,.65)', background: 'none', border: '1px solid rgba(0,150,120,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}
+                        >Regenerate</button>
+                      </div>
+                    )}
+                  </div>
+
+                  <WeekView
+                    data={personalised.week}
+                    selectedMealKeys={mealSwaps}
+                    onSwap={handleMealSwap}
+                    isPreview={!isPro}
+                    onUpgrade={() => setShowUpgrade(true)}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ── ASK ── */}
           {panel === 'ask' && (
             <div>
@@ -1434,7 +1553,7 @@ export default function App() {
 
       <PrintableReport
         section={printSection}
-        personalised={personalised}
+        personalised={applyMealSwaps(personalised, mealSwaps)}
         markers={allMarkers}
         userEmail={user?.email}
       />

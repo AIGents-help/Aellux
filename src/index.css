@@ -159,8 +159,10 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   PRINT / PDF EXPORT (v1.2)
-   PrintableReport is hidden on screen, only revealed in @media print.
+   PRINT / PDF EXPORT (v1.3)
+   PrintableReport is portaled to document.body so it is a SIBLING of #root.
+   On screen: hidden via display:none.
+   In print: #root is hidden, .aellux-print-root is shown.
    ───────────────────────────────────────────────────────────────────────────── */
 .aellux-print-root {
   display: none;
@@ -171,31 +173,22 @@
     size: letter;
     margin: 14mm 12mm 18mm 12mm;
   }
-  /* Hide entire app */
-  body > #root > * { display: none !important; }
-  /* Hide everything inside #root except our print root */
-  #root > .aellux-print-root,
-  body > .aellux-print-root,
-  .aellux-print-root { display: block !important; }
-  /* Some bundlers wrap differently — be aggressive */
-  body * { visibility: hidden; }
-  .aellux-print-root,
-  .aellux-print-root * { visibility: visible; }
+  html, body {
+    background: #ffffff !important;
+    color: #1a3a30 !important;
+  }
+  /* Hide the live app */
+  #root { display: none !important; }
+  /* Reveal the portaled print root */
   .aellux-print-root {
-    position: absolute;
-    left: 0; top: 0; right: 0;
-    width: 100%;
+    display: block !important;
     background: #ffffff !important;
     color: #1a3a30 !important;
     font-family: "EB Garamond", Georgia, serif !important;
   }
-  /* Light-on-paper colour reset for nested rgba tokens */
-  .aellux-print-root * { color: inherit !important; background-color: transparent !important; }
-  .aellux-print-root [style*="background: rgba"] { background: transparent !important; }
-  /* Hide animation-only star dots etc */
+  /* Animations off (orb sparkle dots etc.) */
   .aellux-print-root [style*="animation:"] { animation: none !important; }
-  /* Prevent breaks inside cards */
-  .aellux-print-root section { break-inside: auto; }
-  /* Default page breaks for SECTION wrappers */
-  .aellux-print-page { background: #ffffff; }
+  /* Section wrappers print white */
+  .aellux-print-page { background: #ffffff !important; }
 }
+

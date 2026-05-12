@@ -13,20 +13,33 @@ function parseJSON(raw) {
 }
 
 // Tuned per call type — was 3000 across the board, wasteful for synthesis
-const TOKEN_BUDGETS = { synthesis: 900, meals: 2500, supps: 2500, protocol: 2500 };
+const TOKEN_BUDGETS = { synthesis: 900, meals: 2500, supps: 2500, protocol: 2500, week: 7000 };
 
-// Rate limits: free=1 synthesis ever (lifetime), pro=100/30d for any type
+// Rate limits scoped per type:
+//   - free: 1 synthesis lifetime; 1 week generation lifetime (Day 1 preview only — gated UI-side); no meals/supps/protocol
+//   - pro: 100/30d for any single-shot type; week capped to 1 per 7 days (to control $)
 async function checkLimits({ userId, plan, type }) {
   if (!userId) return { ok: true }; // anonymous unlikely; skip
   if (plan === 'pro') {
+    if (type === 'week') {
+      const r = await rateLimit({ userId, endpoint: 'personalise-week', limit: 1, windowHours: 24 * 7 });
+      return r.ok ? { ok: true } : { ok: false, msg: 'Your Aellux Week refreshes every 7 days. Tap regenerate next week, or swap meals individually right now.' };
+    }
     const r = await rateLimit({ userId, endpoint: 'personalise', limit: 100, windowHours: 24 * 30 });
     return r.ok ? { ok: true } : { ok: false, msg: `Pro limit reached: ${r.count}/${r.limit} generations in 30d.` };
   }
-  // Free tier: only synthesis allowed, and only once lifetime
-  if (type !== 'synthesis') return { ok: false, msg: 'Generation requires Aellux Pro.' };
-  const rows = await sbSelect('usage_log', `user_id=eq.${userId}&endpoint=eq.personalise-synthesis&select=id&limit=1`);
-  if (rows && rows.length > 0) return { ok: false, msg: 'Free plan allows one synthesis. Upgrade to Pro for unlimited generation.' };
-  return { ok: true };
+  // Free tier
+  if (type === 'synthesis') {
+    const rows = await sbSelect('usage_log', `user_id=eq.${userId}&endpoint=eq.personalise-synthesis&select=id&limit=1`);
+    if (rows && rows.length > 0) return { ok: false, msg: 'Free plan allows one synthesis. Upgrade to Pro for unlimited generation.' };
+    return { ok: true };
+  }
+  if (type === 'week') {
+    const rows = await sbSelect('usage_log', `user_id=eq.${userId}&endpoint=eq.personalise-week-preview&select=id&limit=1`);
+    if (rows && rows.length > 0) return { ok: false, msg: 'Your Day 1 preview has been generated. Upgrade to Pro to unlock all 7 days, alternatives, and weekly PDF.' };
+    return { ok: true };
+  }
+  return { ok: false, msg: 'Generation requires Aellux Pro.' };
 }
 
 const SYSTEM = 'You are Aellux, a precision health intelligence. You MUST respond with ONLY a single valid JSON object matching the schema given. No prose, no explanation, no markdown fences, no preamble. Start your response with { and end with }.';
@@ -41,9 +54,9 @@ export default async function handler(req) {
   try { body = await req.json(); }
   catch { return json({ error: 'Invalid JSON body' }, { status: 400 }); }
 
-  const { markers, type, preference = null, userId = null, plan = 'free' } = body || {};
+  const { markers, type, preference = null, userId = null, plan = 'free', dayOnly = false } = body || {};
   if (!Array.isArray(markers) || markers.length === 0) return json({ error: 'No markers provided' }, { status: 400 });
-  if (!['meals', 'supps', 'protocol', 'synthesis'].includes(type)) return json({ error: 'Invalid type' }, { status: 400 });
+  if (!['meals', 'supps', 'protocol', 'synthesis', 'week'].includes(type)) return json({ error: 'Invalid type' }, { status: 400 });
 
   // ── Rate limit ─────────────────────────────────────────────────────────────
   const lim = await checkLimits({ userId, plan, type });
@@ -51,7 +64,7 @@ export default async function handler(req) {
 
   // ── Cache lookup ───────────────────────────────────────────────────────────
   const markerHash = await hashMarkers(markers);
-  const cacheKey = await sha256(`${type}|${preference || 'none'}|${markerHash}`);
+  const cacheKey = await sha256(`${type}|${preference || 'none'}|${dayOnly ? 'preview' : 'full'}|${markerHash}`);
 
   const cachedRows = await sbSelect('personalised_cache', `cache_key=eq.${cacheKey}&select=result,hits&limit=1`);
   if (cachedRows && cachedRows.length > 0) {
@@ -80,10 +93,38 @@ Schema (return ONLY this JSON, max 5 protocols):
     synthesis: `User biomarkers: ${ms}
 
 Schema (return ONLY this JSON):
-{"aellux_voice":"2 sentences starting with I have observed or Your biology reveals, referencing actual numbers","biological_age_estimate":"X years","bio_age_gap":"X years younger/older","focus_priority":"one specific action","primary_systems":{"metabolic":"one word","cardiovascular":"one word","hormonal":"one word","inflammatory":"one word"},"critical_flags":["flag"],"biggest_wins":["win"]}`
+{"aellux_voice":"2 sentences starting with I have observed or Your biology reveals, referencing actual numbers","biological_age_estimate":"X years","bio_age_gap":"X years younger/older","focus_priority":"one specific action","primary_systems":{"metabolic":"one word","cardiovascular":"one word","hormonal":"one word","inflammatory":"one word"},"critical_flags":["flag"],"biggest_wins":["win"]}`,
+    week: `User biomarkers: ${ms}${preference && preference !== 'none' ? `\nDiet style: ${preference}. Tailor all meal options accordingly while respecting biomarker data.` : ''}
+
+Design a personalised 7-day Aellux Week. ${dayOnly ? 'Return ONLY Monday (Day 1) — this is a free-tier preview.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days.'} For EACH meal, provide 4 alternatives keyed by swap reason: same nutrient profile, cheaper, faster (<10 min prep), and a diet-style swap that honors common restrictions (vegetarian/dairy-free/no-fish, pick whichever is most relevant).
+
+Schema (return ONLY this JSON, no markdown):
+{
+  "key_insight":"one sentence describing the week's overall design",
+  "principles":["3-5 short guiding rules across the week"],
+  "days":[
+    {
+      "day":"Monday","theme":"Foundation","focus_marker":"marker name",
+      "morning":{"wake_time":"6:30am","actions":["short action 1","short action 2"],"supps_am":["Supp name dose"]},
+      "meals":{
+        "breakfast":{"name":"meal name","items":["item 1","item 2","item 3"],"why":"one sentence referencing user's actual numbers","macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker"],"alternatives":[
+          {"swap":"nutrient_match","name":"alt name","why":"hits same nutrient profile"},
+          {"swap":"cheaper","name":"alt name","why":"$X vs $Y, same goal"},
+          {"swap":"faster","name":"alt name","why":"5 min prep, same nutrient hit"},
+          {"swap":"diet_pref","name":"alt name","why":"vegetarian/dairy-free version of same nutrient profile"}
+        ]},
+        "lunch":{ "name":"...","items":[],"why":"...","macros":{},"targets":[],"alternatives":[...4 items same shape] },
+        "dinner":{ "name":"...","items":[],"why":"...","macros":{},"targets":[],"alternatives":[...4 items same shape] }
+      },
+      "movement":{"type":"Zone 2 cardio","duration":"45 min","when":"afternoon"},
+      "evening":{"supps_pm":["Magnesium glycinate 300mg"],"wind_down":"screens off 9:30pm","sleep_target":"10:30pm"}
+    }${dayOnly ? '' : ',\n    { ...same shape for Tuesday Strength },\n    { ...Wednesday Recovery },\n    { ...Thursday Metabolic },\n    { ...Friday Hormonal },\n    { ...Saturday Long Movement },\n    { ...Sunday Restoration }'}
+  ],
+  "weekly_summary":{"training_load":"e.g. 3 heavy days + 2 zone 2 + 2 recovery","total_supp_cost":"$X/week","estimated_calorie_target":14000}
+}`
   };
 
-  const maxTokens = TOKEN_BUDGETS[type] || 1500;
+  const maxTokens = type === 'week' && dayOnly ? 1800 : (TOKEN_BUDGETS[type] || 1500);
 
   // ── Anthropic call ─────────────────────────────────────────────────────────
   try {
@@ -117,7 +158,8 @@ Schema (return ONLY this JSON):
 
     // ── Persist to cache + log usage (fire-and-forget) ──────────────────────
     sbUpsert('personalised_cache', { cache_key: cacheKey, type, result, hits: 0, created_at: new Date().toISOString() }, 'cache_key').catch(() => {});
-    logUsage(userId, `personalise-${type}`).catch(() => {});
+    const logEndpoint = type === 'week' && dayOnly ? 'personalise-week-preview' : `personalise-${type}`;
+    logUsage(userId, logEndpoint).catch(() => {});
 
     return json(result, { headers: { 'x-cache': 'MISS' } });
   } catch (err) {

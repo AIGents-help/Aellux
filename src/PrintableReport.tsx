@@ -1,9 +1,10 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 interface Marker { name: string; value: any; unit?: string; status?: string; category?: string; }
 
 interface PrintProps {
-  section: 'meals' | 'supps' | 'protocol' | 'synthesis' | 'all' | null;
+  section: 'meals' | 'supps' | 'protocol' | 'synthesis' | 'week' | 'all' | null;
   personalised: any;
   markers: Marker[];
   userEmail?: string;
@@ -259,6 +260,76 @@ function BiomarkerTable({ markers }: { markers: Marker[] }) {
   );
 }
 
+function WeekSection({ data }: { data: any }) {
+  if (!data || !Array.isArray(data.days)) return null;
+  return (
+    <section style={{ marginBottom: 24 }}>
+      <SectionHeader title="Your Aellux Week" />
+      {data.key_insight && <Para italic size={14}>{data.key_insight}</Para>}
+      {data.principles && data.principles.length > 0 && (
+        <div style={{ marginBottom: 14, padding: '10px 14px', background: '#eef7f3', border: '1px solid #b8d8cd', borderRadius: 4 }}>
+          <Label>Guiding principles</Label>
+          {data.principles.map((p: string, i: number) => (
+            <Para key={i} size={12}>• {p}</Para>
+          ))}
+        </div>
+      )}
+      {data.days.map((d: any, i: number) => (
+        <div key={i} style={{ marginBottom: 14, padding: '14px 16px', border: '1px solid #d4e5dc', borderRadius: 4, pageBreakInside: 'avoid', pageBreakBefore: i > 0 && i % 2 === 0 ? 'always' : 'auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+            <div>
+              <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 20, color: '#003d2e', fontWeight: 500 }}>{d.day}{d.theme ? ` · ${d.theme}` : ''}</div>
+              {d.focus_marker && <div style={{ fontSize: 10, color: '#5a7a6d', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>Focus marker: {d.focus_marker}</div>}
+            </div>
+          </div>
+          {d.morning && (
+            <div style={{ marginBottom: 6 }}>
+              <Label>Morning {d.morning.wake_time ? `· ${d.morning.wake_time}` : ''}</Label>
+              {d.morning.actions && d.morning.actions.map((a: string, j: number) => <Para key={j} size={12}>• {a}</Para>)}
+              {d.morning.supps_am && d.morning.supps_am.length > 0 && <Para size={11}><strong>AM supps:</strong> {d.morning.supps_am.join(', ')}</Para>}
+            </div>
+          )}
+          {d.meals && (
+            <div style={{ marginBottom: 6 }}>
+              <Label>Meals</Label>
+              {['breakfast', 'lunch', 'dinner'].map(slot => {
+                const meal = d.meals[slot];
+                if (!meal) return null;
+                return (
+                  <div key={slot} style={{ marginBottom: 4 }}>
+                    <Para size={12}><strong>{slot.charAt(0).toUpperCase() + slot.slice(1)}:</strong> {meal.name}{meal.macros?.cal ? ` (${meal.macros.cal} cal)` : ''}</Para>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {d.movement && (
+            <div style={{ marginBottom: 6 }}>
+              <Label>Movement</Label>
+              <Para size={12}>{d.movement.type}{d.movement.duration ? ` · ${d.movement.duration}` : ''}{d.movement.when ? ` · ${d.movement.when}` : ''}</Para>
+            </div>
+          )}
+          {d.evening && (
+            <div>
+              <Label>Evening {d.evening.sleep_target ? `· sleep ${d.evening.sleep_target}` : ''}</Label>
+              {d.evening.supps_pm && d.evening.supps_pm.length > 0 && <Para size={11}><strong>PM supps:</strong> {d.evening.supps_pm.join(', ')}</Para>}
+              {d.evening.wind_down && <Para size={11}>{d.evening.wind_down}</Para>}
+            </div>
+          )}
+        </div>
+      ))}
+      {data.weekly_summary && (
+        <div style={{ padding: '10px 14px', background: '#fdf6ea', border: '1px solid #d8c0a0', borderRadius: 4 }}>
+          <Label>Weekly summary</Label>
+          {data.weekly_summary.training_load && <Para size={12}><strong>Training load:</strong> {data.weekly_summary.training_load}</Para>}
+          {data.weekly_summary.total_supp_cost && <Para size={12}><strong>Supp cost:</strong> {data.weekly_summary.total_supp_cost}</Para>}
+          {data.weekly_summary.estimated_calorie_target && <Para size={12}><strong>Weekly calorie target:</strong> ~{data.weekly_summary.estimated_calorie_target}</Para>}
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ── Main component ──────────────────────────────────────────────────────────
 export default function PrintableReport({ section, personalised, markers, userEmail, generatedAt }: PrintProps) {
   if (!section) return null;
@@ -269,10 +340,13 @@ export default function PrintableReport({ section, personalised, markers, userEm
     supps: 'Your Personalised Supplement Stack',
     protocol: 'Your Daily Protocol',
     synthesis: 'Your Health Synthesis',
+    week: 'Your Aellux Week',
     all: 'Your Complete Aellux Protocol Report',
   };
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div id="aellux-print-root" className="aellux-print-root">
       <CoverPage title={titles[section]} generatedAt={date} />
 
@@ -289,6 +363,7 @@ export default function PrintableReport({ section, personalised, markers, userEm
         </div>
 
         {(section === 'synthesis' || section === 'all') && <SynthesisSection data={personalised?.synthesis} />}
+        {(section === 'week' || section === 'all') && <WeekSection data={personalised?.week} />}
         {(section === 'meals' || section === 'all') && <MealsSection data={personalised?.meals} />}
         {(section === 'supps' || section === 'all') && <SuppsSection data={personalised?.supps} />}
         {(section === 'protocol' || section === 'all') && <ProtocolSection data={personalised?.protocol} />}
@@ -305,6 +380,7 @@ export default function PrintableReport({ section, personalised, markers, userEm
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
