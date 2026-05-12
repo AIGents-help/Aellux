@@ -9,9 +9,38 @@ function parseJSON(raw) {
   const start = text.indexOf('{'), end = text.lastIndexOf('}');
   if (start === -1 || end === -1) throw new Error('No JSON found in model output');
   const candidate = text.slice(start, end + 1);
-  try { return JSON.parse(candidate); } catch {
-    return JSON.parse(candidate.replace(/,\s*([}\]])/g, '$1'));
-  }
+
+  // Strategy 1: as-is
+  try { return JSON.parse(candidate); } catch {}
+  // Strategy 2: strip trailing commas before } or ]
+  try { return JSON.parse(candidate.replace(/,\s*([}\]])/g, '$1')); } catch {}
+  // Strategy 3: if the JSON appears truncated (no closing }), try to close the days array gracefully
+  // and the outer object. Walk back from end to find the last complete day object's }, then close.
+  const tryRepair = (s) => {
+    // Find "days":[ and walk through complete day objects, then truncate after the last one
+    const daysMatch = s.match(/"days"\s*:\s*\[/);
+    if (!daysMatch) throw new Error('no days array');
+    const arrStart = daysMatch.index + daysMatch[0].length;
+    let depth = 0, inString = false, escape = false, lastCloseIdx = -1;
+    for (let i = arrStart; i < s.length; i++) {
+      const ch = s[i];
+      if (escape) { escape = false; continue; }
+      if (ch === '\\') { escape = true; continue; }
+      if (ch === '"') { inString = !inString; continue; }
+      if (inString) continue;
+      if (ch === '{') depth++;
+      else if (ch === '}') {
+        depth--;
+        if (depth === 0) lastCloseIdx = i;
+      }
+    }
+    if (lastCloseIdx === -1) throw new Error('no complete day');
+    // Truncate after last complete day, close array and object
+    const repaired = s.slice(0, lastCloseIdx + 1) + ']}';
+    return JSON.parse(repaired.replace(/,\s*([}\]])/g, '$1'));
+  };
+  try { return tryRepair(candidate); } catch {}
+  throw new Error('All JSON repair strategies failed');
 }
 
 // Streaming progress events sent to the client over SSE.
@@ -187,13 +216,14 @@ export default async function handler(req, res) {
   }
 
   const prompt = buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly });
-  const maxTokens = dayOnly ? 1800 : 7000;
+  const maxTokens = dayOnly ? 3500 : 9000;
 
   sse(res, 'start', { dayOnly });
 
   // Stream from Anthropic
   let accumulated = '';
   let emittedDayCount = 0;
+  let lastProgressDays = [];   // Hold onto last successful progressive extraction for fallback
   let anthropicRes;
   try {
     anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -252,6 +282,7 @@ export default async function handler(req, res) {
                 sse(res, 'day', { index: i, day: progress.days[i] });
               }
               emittedDayCount = progress.days.length;
+              lastProgressDays = progress.days;
             }
           }
         } catch { /* ignore malformed events */ }
@@ -268,8 +299,22 @@ export default async function handler(req, res) {
   try {
     result = parseJSON(accumulated);
   } catch (e) {
-    sse(res, 'error', { message: `Parse failed: ${e.message}`, raw: accumulated.slice(0, 400) });
-    return res.end();
+    // Fallback: if we extracted any complete days during streaming, use those
+    if (lastProgressDays.length > 0) {
+      console.warn('[week-stream] final parse failed, using progressive extraction:', e.message);
+      // Try to also extract key_insight from the accumulated text
+      const keyMatch = accumulated.match(/"key_insight"\s*:\s*"([^"]+)"/);
+      const principlesMatch = accumulated.match(/"principles"\s*:\s*\[([^\]]+)\]/);
+      result = {
+        key_insight: keyMatch ? keyMatch[1] : 'Your protocol has been designed from your biology.',
+        principles: principlesMatch ? principlesMatch[1].split(',').map(s => s.trim().replace(/^"|"$/g, '')).filter(Boolean) : [],
+        days: lastProgressDays,
+        _recovered: true,
+      };
+    } else {
+      sse(res, 'error', { message: `Parse failed: ${e.message}`, raw: accumulated.slice(0, 400) });
+      return res.end();
+    }
   }
 
   if (!result.days || !Array.isArray(result.days) || result.days.length === 0) {
