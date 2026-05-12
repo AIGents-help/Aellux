@@ -53,48 +53,85 @@ function aggregateSupps(weekData: any) {
 }
 
 // Aggregate every grocery item across all selected meals, categorized.
+// Extract the base ingredient name by stripping quantities, prep notes, and punctuation.
+// "chicken breast 5oz grilled" → "chicken breast"
+// "frozen broccoli 1 cup" → "broccoli"
+// "olive oil 1.5 tbsp + lemon juice" → "olive oil"  (stops at + combos)
+function extractIngredientName(raw: string): string {
+  let s = raw.toLowerCase().trim();
+  // Stop at additive combos (e.g. "olive oil + lemon juice" → just "olive oil")
+  s = s.split(/\s*[+&]\s*/)[0].trim();
+  // Strip leading "frozen", "canned", "cooked", "fresh", "raw", "dried", "plain"
+  s = s.replace(/^(frozen|canned|cooked|fresh|raw|dried|plain|sliced|diced|minced|roasted|baked|grilled|boiled|whole|large|medium|small)\s+/g, '');
+  // Strip trailing quantity patterns: "5oz", "1 cup", "2 slices", "0.75 cup drained", etc.
+  s = s.replace(/\s+[\d./]+\s*(oz|g|lb|kg|cup|cups|tbsp|tsp|ml|l|slice|slices|piece|pieces|clove|cloves|medium|large|small|serving|scoop|handful)[\w\s]*/i, '');
+  // Strip trailing prep descriptors
+  s = s.replace(/\s+(grilled|cooked|soft-boiled|hard-boiled|lean|dry|drained|chopped|minced|roasted|baked|sliced|sautéed)$/i, '');
+  return s.trim();
+}
+
+// Categorize by ingredient name — check fats/oils BEFORE fruit to avoid
+// "olive oil + lemon" being classified as Fruit
+function categorize(name: string): string {
+  const lc = name.toLowerCase();
+  if (/(olive oil|avocado oil|coconut oil|ghee|nut butter|peanut butter|almond butter|tahini|nut|seed|chia|flax|almond|walnut|pumpkin seed|sunflower|avocado)/i.test(lc)) return 'Fats, nuts & seeds';
+  if (/(chicken|beef|ground beef|ground turkey|pork|turkey|salmon|tuna|cod|halibut|shrimp|tofu|tempeh|egg|cottage cheese|greek yogurt|casein|whey)/i.test(lc)) return 'Proteins';
+  if (/(milk|butter|cheese|cream|kefir|feta|mozzarella|cheddar|parmesan)/i.test(lc)) return 'Dairy';
+  if (/(bean|lentil|chickpea|black bean|kidney|pinto|navy)/i.test(lc)) return 'Legumes';
+  if (/(rice|oat|oatmeal|quinoa|barley|pasta|bread|tortilla|noodle|farro|bulgur|millet|potato|sweet potato|couscous)/i.test(lc)) return 'Grains & starches';
+  if (/(spinach|kale|broccoli|cauliflower|carrot|tomato|cucumber|pepper|onion|garlic|lettuce|arugula|cabbage|asparagus|zucchini|squash|beet|mushroom|salad mix)/i.test(lc)) return 'Vegetables';
+  if (/(berr|apple|banana|orange|lemon|lime|peach|pear|grape|melon|kiwi|mango|pineapple|blueberr|strawberr)/i.test(lc)) return 'Fruit';
+  if (/(salt|pepper|spice|herb|cumin|turmeric|cinnamon|ginger|paprika|oregano|basil|thyme|rosemary|soy sauce|tamari|vinegar|mustard|honey|sriracha|hot sauce)/i.test(lc)) return 'Pantry / seasoning';
+  return 'Other';
+}
+
 function aggregateGrocery(weekData: any, selectedMealKeys: Record<string, string>) {
   if (!weekData?.days) return { byCategory: {}, total: 0 };
+
+  // Collect all raw item strings
   const allItems: string[] = [];
   for (let i = 0; i < weekData.days.length; i++) {
     const day = weekData.days[i];
     if (!day.meals) continue;
     for (const slot of ['breakfast', 'lunch', 'dinner']) {
       const meal = day.meals[slot];
-      if (!meal) continue;
-      const swapKey = selectedMealKeys[`${i}|${slot}`];
-      // If the user picked a swap, items from the original may not match — but we don't have items
-      // listed on the swap alternative typically; fall back to the original items in that case.
-      // (Future: ask AI to include items on alternatives too.)
-      if (meal.items) allItems.push(...meal.items);
+      if (!meal?.items) continue;
+      allItems.push(...meal.items);
     }
   }
-  // De-duplicate & categorize
-  const seen = new Set<string>();
-  const unique: string[] = [];
-  for (const it of allItems) {
-    const key = it.toLowerCase().trim();
-    if (!seen.has(key) && key.length > 0) { seen.add(key); unique.push(it); }
+
+  // Consolidate: group by normalized ingredient name, keep the first (cleanest) label
+  const nameToLabel = new Map<string, string>();
+  for (const raw of allItems) {
+    if (!raw?.trim()) continue;
+    const normalized = extractIngredientName(raw);
+    if (normalized.length < 2) continue;
+    // Keep the shortest/cleanest label as the display name
+    if (!nameToLabel.has(normalized)) {
+      // Display label: strip qty but keep prep context if short
+      const display = raw.split(/\s*[+&]\s*/)[0].trim()
+        .replace(/\s+[\d./]+\s*(oz|g|lb|kg|cup|cups|tbsp|tsp|ml|l|slice|slices|piece|pieces|clove|cloves)[\w\s]*/i, '')
+        .replace(/\s+(grilled|cooked|lean|dry|drained|chopped|minced|roasted|baked|sliced)$/i, '')
+        .trim();
+      nameToLabel.set(normalized, display || normalized);
+    }
   }
-  const cat = (item: string): string => {
-    const lc = item.toLowerCase();
-    if (/(chicken|beef|pork|lamb|turkey|fish|salmon|tuna|sardine|mackerel|shrimp|tofu|tempeh|eggs?|cottage cheese|yogurt|greek yogurt)/i.test(lc)) return 'Proteins';
-    if (/(rice|oats|quinoa|barley|pasta|bread|sourdough|tortilla|noodle|farro|bulgur|millet)/i.test(lc)) return 'Grains & starches';
-    if (/(spinach|kale|broccoli|cauliflower|carrot|tomato|cucumber|pepper|onion|garlic|lettuce|arugula|cabbage|brassic|bok choy|asparagus|zucchini|squash|sweet potato|beet|mushroom)/i.test(lc)) return 'Vegetables';
-    if (/(berries|berry|apple|banana|orange|lemon|lime|peach|pear|grape|melon|kiwi|mango|pineapple)/i.test(lc)) return 'Fruit';
-    if (/(milk|butter|cheese|cream|kefir)/i.test(lc)) return 'Dairy';
-    if (/(olive oil|avocado oil|coconut oil|ghee|tahini|nut|seed|chia|flax|almond|walnut|pumpkin|sunflower)/i.test(lc)) return 'Fats, nuts & seeds';
-    if (/(salt|pepper|spice|herb|cumin|turmeric|cinnamon|ginger|paprika|oregano|basil|thyme|rosemary|miso|soy sauce|tamari|vinegar|mustard)/i.test(lc)) return 'Pantry / seasoning';
-    if (/(bean|lentil|chickpea|black bean|kidney|pinto|navy)/i.test(lc)) return 'Legumes';
-    return 'Other';
-  };
+
+  // Categorize consolidated items
   const byCategory: Record<string, string[]> = {};
-  for (const item of unique) {
-    const c = cat(item);
-    if (!byCategory[c]) byCategory[c] = [];
-    byCategory[c].push(item);
+  for (const [normalized, label] of nameToLabel.entries()) {
+    const cat = categorize(normalized);
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push(label);
   }
-  return { byCategory, total: unique.length };
+
+  // Sort items alphabetically within each category
+  for (const cat of Object.keys(byCategory)) {
+    byCategory[cat].sort((a, b) => a.localeCompare(b));
+  }
+
+  const total = Array.from(nameToLabel.keys()).length;
+  return { byCategory, total };
 }
 
 function todayIndex() {
@@ -133,19 +170,24 @@ function SuppStack({ weekData }: { weekData: any }) {
 function GroceryList({ weekData, selectedMealKeys }: { weekData: any; selectedMealKeys: Record<string, string> }) {
   const { byCategory, total } = useMemo(() => aggregateGrocery(weekData, selectedMealKeys), [weekData, selectedMealKeys]);
   if (total === 0) return <div style={{ padding: '20px', color: 'rgba(0,210,165,.55)' }}>No grocery items found in this week's meals.</div>;
-  const order = ['Proteins', 'Vegetables', 'Fruit', 'Grains & starches', 'Legumes', 'Dairy', 'Fats, nuts & seeds', 'Pantry / seasoning', 'Other'];
+  const order = ['Proteins', 'Vegetables', 'Grains & starches', 'Legumes', 'Dairy', 'Fats, nuts & seeds', 'Fruit', 'Pantry / seasoning', 'Other'];
+  const categories = order.filter(c => byCategory[c]);
   return (
     <div>
-      <div style={{ fontSize: 16, color: 'rgba(0,210,165,.6)', lineHeight: 1.6, marginBottom: 14 }}>
-        Every unique food item across your week's meals. {total} items in {Object.keys(byCategory).length} categories. Reflects your current meal selections — change a swap and this list updates.
+      <div style={{ fontSize: 15, color: 'rgba(0,210,165,.65)', lineHeight: 1.6, marginBottom: 18 }}>
+        {total} unique ingredients · {categories.length} categories · swaps update this list automatically
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
-        {order.filter(c => byCategory[c]).map(category => (
-          <div key={category} style={{ padding: '14px 16px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.14)', borderRadius: 6 }}>
-            <div style={{ fontSize: 12, color: 'rgba(0,225,180,.7)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>{category} · {byCategory[category].length}</div>
-            {byCategory[category].map((item: string, i: number) => (
-              <div key={i} style={{ fontSize: 16, color: 'rgba(220,255,235,.85)', padding: '4px 0', lineHeight: 1.4 }}>• {item}</div>
-            ))}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {categories.map(category => (
+          <div key={category} style={{ padding: '16px 20px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.14)', borderRadius: 8 }}>
+            <div style={{ fontSize: 12, color: 'rgba(0,225,180,.7)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>
+              {category} · {byCategory[category].length}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 24px' }}>
+              {byCategory[category].map((item: string, i: number) => (
+                <div key={i} style={{ fontSize: 15, color: 'rgba(220,255,235,.88)', lineHeight: 1.7, minWidth: 160 }}>• {item}</div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
