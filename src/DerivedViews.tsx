@@ -9,15 +9,43 @@ interface Props {
 
 // ---- helpers ---------------------------------------------------------------
 
-// Parse a supplement string like "Magnesium glycinate 300mg" into { name, dose }
-function parseSupp(s: string) {
-  const m = String(s).match(/^(.+?)\s+(\d+\s*(?:mg|mcg|g|iu|IU|ml|µg|%)?[\w/]*)\s*$/i);
-  if (m) return { name: m[1].trim(), dose: m[2].trim() };
-  return { name: String(s).trim(), dose: '' };
+// Parse a supplement string into { name, dose }.
+// Handles:
+//   "Magnesium glycinate 300mg"
+//   "Magnesium glycinate 350mg (elevated for post-strength soreness management)"
+//   "Casein protein shake optional (before bed): casein 30g + whole milk..."
+//   "Flax seeds 1 tbsp ground (brewed into tea or sprinkled on yogurt if desired)"
+function parseSupp(raw: string) {
+  let s = String(raw).trim();
+  // Strip everything after the first parenthesis (it's always a rationale/note, not the name)
+  s = s.replace(/\s*\(.*$/, '').trim();
+  // Strip "optional" flag
+  s = s.replace(/\s+optional$/i, '').trim();
+  // Strip colon-separated rationale: "Casein protein shake: casein 30g..." → "Casein protein shake"
+  s = s.split(':')[0].trim();
+  // Now extract dose: match trailing quantity like "300mg", "2g EPA/DHA", "5g", "2000 IU", "1 tbsp"
+  const doseMatch = s.match(/\s+(\d+[\d./]*\s*(?:mg|mcg|g|kg|iu|IU|ml|l|tbsp|tsp|µg|%)[^\s]*(?:\s+[A-Z][A-Z/]+)?)\s*$/i);
+  if (doseMatch) {
+    const dose = doseMatch[1].trim();
+    const name = s.slice(0, s.length - doseMatch[0].length).trim();
+    return { name, dose };
+  }
+  return { name: s, dose: '' };
 }
 
-// Aggregate every supp across the week, deduplicated by lowercase name.
-// Returns [{ name, doses: Set<string>, ampm: 'am'|'pm'|'both', days: Set<string> }]
+// Normalize supplement name for deduplication key:
+// strips doses, amounts, and common filler words so variants consolidate.
+function suppKey(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\s+\d[\d./]*\s*(mg|mcg|g|iu|tbsp|tsp|ml)[\w/]*/gi, '') // inline doses
+    .replace(/\b(supplement|extract|complex|formula|powder|capsule|tablet|optional)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Aggregate every supp across the week, deduplicated by normalized name.
+// Different doses of the same supplement are shown as a range, not as separate items.
 function aggregateSupps(weekData: any) {
   const map = new Map<string, { name: string; doses: Set<string>; ampm: Set<string>; days: Set<string> }>();
   if (!weekData?.days) return [];
@@ -26,7 +54,7 @@ function aggregateSupps(weekData: any) {
     const pm = d.evening?.supps_pm || [];
     for (const s of am) {
       const { name, dose } = parseSupp(s);
-      const key = name.toLowerCase();
+      const key = suppKey(name);
       if (!map.has(key)) map.set(key, { name, doses: new Set(), ampm: new Set(), days: new Set() });
       const ref = map.get(key)!;
       if (dose) ref.doses.add(dose);
@@ -35,7 +63,7 @@ function aggregateSupps(weekData: any) {
     }
     for (const s of pm) {
       const { name, dose } = parseSupp(s);
-      const key = name.toLowerCase();
+      const key = suppKey(name);
       if (!map.has(key)) map.set(key, { name, doses: new Set(), ampm: new Set(), days: new Set() });
       const ref = map.get(key)!;
       if (dose) ref.doses.add(dose);
@@ -43,13 +71,34 @@ function aggregateSupps(weekData: any) {
       ref.days.add(d.day);
     }
   }
-  return Array.from(map.values()).map(s => ({
-    name: s.name,
-    dose: Array.from(s.doses).join(' / '),
-    ampm: s.ampm.size === 2 ? 'AM + PM' : (s.ampm.has('am') ? 'AM' : 'PM'),
-    days: Array.from(s.days),
-    everyDay: s.days.size >= 7,
-  }));
+  return Array.from(map.values()).map(s => {
+    // Consolidate doses: extract numeric values, show min–max range if they differ
+    const doseValues = Array.from(s.doses);
+    let doseDisplay = '';
+    if (doseValues.length === 0) {
+      doseDisplay = '';
+    } else if (doseValues.length === 1) {
+      doseDisplay = doseValues[0];
+    } else {
+      // Extract unit from first dose
+      const unitMatch = doseValues[0].match(/[a-zA-Z%µ][a-zA-Z/%µ]*/);
+      const unit = unitMatch ? unitMatch[0] : '';
+      const nums = doseValues.map(d => parseFloat(d)).filter(n => !isNaN(n));
+      if (nums.length > 1) {
+        const mn = Math.min(...nums), mx = Math.max(...nums);
+        doseDisplay = mn === mx ? `${mn}${unit}` : `${mn}–${mx}${unit}`;
+      } else {
+        doseDisplay = doseValues[0];
+      }
+    }
+    return {
+      name: s.name,
+      dose: doseDisplay,
+      ampm: s.ampm.size === 2 ? 'AM + PM' : (s.ampm.has('am') ? 'AM' : 'PM'),
+      days: Array.from(s.days),
+      everyDay: s.days.size >= 7,
+    };
+  });
 }
 
 // Aggregate every grocery item across all selected meals, categorized.
