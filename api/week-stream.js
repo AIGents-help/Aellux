@@ -63,7 +63,7 @@ async function checkLimits({ userId, plan, isRegenerate }) {
 
 // Persist the generated protocol to meal_plans so it survives logout/login.
 // Upserts on user_id — one active protocol per user at a time.
-async function saveProtocol({ userId, result, mealStyle, additionalGoal, cycleLengthDays, isPreview }) {
+async function saveProtocol({ userId, result, mealStyle, additionalGoal, cycleLengthDays, isPreview, mealPrep = false }) {
   if (!userId || !result) return;
   try {
     await sbUpsert('meal_plans', {
@@ -78,6 +78,7 @@ async function saveProtocol({ userId, result, mealStyle, additionalGoal, cycleLe
       cycle_length_days: cycleLengthDays || 30,
       cycle_started_at: new Date().toISOString(),
       is_preview: !!isPreview,
+      meal_prep: !!mealPrep,
       generated_by_model: 'claude-haiku-4-5-20251001',
       updated_at: new Date().toISOString(),
     }, 'user_id');
@@ -86,19 +87,31 @@ async function saveProtocol({ userId, result, mealStyle, additionalGoal, cycleLe
   }
 }
 
-function buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly }) {
+function buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly, mealPrep }) {
   const ms = markers.slice(0, 20).map(m => `${m.name}:${m.value}${m.unit || ''}(${m.status || 'unknown'})`).join(', ');
   const profileBlock = profileStr ? `User profile: ${profileStr}\n` : '';
   const medSafetyBlock = medFlag
     ? '\nCRITICAL SAFETY: User is on medications listed above. Before recommending any supplement, food, or protocol, check for known interactions. Include contraindications. Never recommend stopping a prescription.\n'
     : '';
   const styleBlock = mealStyle && mealStyle !== 'none' ? `\nMeal style preference: ${mealStyle}. ALL meals AND alternatives must respect this style.\n` : '';
+  const mealPrepBlock = mealPrep ? `
+MEAL PREP MODE — ACTIVE. The user wants to cook everything on Sunday and portion into containers for the full week. Design meals around this constraint:
+- Choose EXACTLY 2 bulk proteins for the week (e.g. 10 lbs ground beef + 1 dozen eggs). Every meal uses one of these two proteins.
+- Choose EXACTLY 2 bulk carbs/sides (e.g. a large pot of brown rice + roasted sweet potatoes). Every meal pairs one of these two sides.
+- Choose EXACTLY 1-2 bulk vegetables (e.g. 2 lbs steamed broccoli + a bag of spinach). Used across all meals.
+- Every meal name MUST reference the container format: "Ground Beef & Rice Container", "Egg & Sweet Potato Bowl", "Ground Beef & Broccoli Box".
+- Items array lists PORTIONED amounts per container, not full batch amounts.
+- The "why" field MUST include the batch cook instruction for that protein/carb (e.g. "Cook 10 lbs ground beef with garlic and salt Sunday; portion 6oz per container").
+- flavor_boost field is the ONLY place to add variety — different sauces/seasonings each day so it doesn't get boring: Day 1 teriyaki, Day 2 hot sauce + lime, Day 3 ranch, Day 4 salsa, Day 5 garlic + parmesan, Day 6 sriracha mayo, Day 7 BBQ sauce.
+- Set key_insight to describe the batch cook strategy, including estimated total cook time (target: under 2 hours Sunday).
+- weekly_summary.training_load should include "Batch cook Sunday: [protein] + [carb] + [veg] → 21 containers"
+` : '';
   const goalBlock = additionalGoal ? `\nAdditional weekly focus from user: "${additionalGoal}". Optimize the week's design toward this goal IN ADDITION to the biomarker-driven priorities. Reflect this in key_insight.\n` : '';
 
   const dayCount = dayOnly ? 1 : 7;
   const dayList = dayOnly ? ['Monday'] : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
-  return `${profileBlock}User biomarkers: ${ms}${styleBlock}${goalBlock}${medSafetyBlock}
+  return `${profileBlock}User biomarkers: ${ms}${styleBlock}${mealPrepBlock}${goalBlock}${medSafetyBlock}
 
 Design a personalised ${dayCount}-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return EXACTLY ONE day (Monday) — this is a free-tier preview. Do not generate Tuesday through Sunday.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days. Generate ALL 7 days in order: ' + dayList.join(', ') + '.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density. Calorie/protein targets must reflect sex/age/weight/activity.
 
@@ -200,7 +213,7 @@ export default async function handler(req, res) {
   }
 
   // FIX: accept isRegenerate and cycleLengthDays from client
-  const { markers, userId = null, plan = 'free', mealStyle = 'none', additionalGoal = '', dayOnly = false, isRegenerate = false, cycleLengthDays = 30 } = parsed || {};
+  const { markers, userId = null, plan = 'free', mealStyle = 'none', additionalGoal = '', dayOnly = false, isRegenerate = false, cycleLengthDays = 30, mealPrep = false } = parsed || {};
   if (!Array.isArray(markers) || markers.length === 0) {
     res.statusCode = 400;
     return res.end(JSON.stringify({ error: 'No markers provided' }));
@@ -226,14 +239,14 @@ export default async function handler(req, res) {
 
   const markerHash = await hashMarkers(markers);
   const PROMPT_VERSION = 'v2-pantry';
-  const cacheKey = await sha256(`week|${PROMPT_VERSION}|${mealStyle}|${additionalGoal.toLowerCase().trim()}|${dayOnly ? 'preview' : 'full'}|${profileHash}|${markerHash}`);
+  const cacheKey = await sha256(`week|${PROMPT_VERSION}|${mealStyle}|${mealPrep ? 'prep' : 'standard'}|${additionalGoal.toLowerCase().trim()}|${dayOnly ? 'preview' : 'full'}|${profileHash}|${markerHash}`);
   const cachedRows = await sbSelect('personalised_cache', `cache_key=eq.${cacheKey}&select=result,hits&limit=1`);
   if (cachedRows && cachedRows.length > 0) {
     const row = cachedRows[0];
     sbUpdate('personalised_cache', `cache_key=eq.${cacheKey}`, { hits: (row.hits || 0) + 1, last_hit_at: new Date().toISOString() }).catch(() => {});
     logUsage(userId, 'personalise-week-cached').catch(() => {});
     // FIX: also save cached result to meal_plans for persistence
-    saveProtocol({ userId, result: row.result, mealStyle, additionalGoal, cycleLengthDays, isPreview: dayOnly }).catch(() => {});
+    saveProtocol({ userId, result: row.result, mealStyle, additionalGoal, cycleLengthDays, isPreview: dayOnly, mealPrep }).catch(() => {});
     sse(res, 'cached', { cache: 'HIT' });
     if (row.result?.days) {
       for (let i = 0; i < row.result.days.length; i++) {
@@ -244,7 +257,7 @@ export default async function handler(req, res) {
     return res.end();
   }
 
-  const prompt = buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly });
+  const prompt = buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly, mealPrep });
   const maxTokens = dayOnly ? 2500 : 7000;
 
   sse(res, 'start', { dayOnly });
@@ -349,7 +362,7 @@ export default async function handler(req, res) {
   } catch (e) { console.error('[week-stream] cache write failed:', e?.message); }
 
   // FIX: Save to meal_plans so user sees their protocol on next login
-  await saveProtocol({ userId, result, mealStyle, additionalGoal, cycleLengthDays, isPreview: dayOnly });
+  await saveProtocol({ userId, result, mealStyle, additionalGoal, cycleLengthDays, isPreview: dayOnly, mealPrep });
 
   const logEndpoint = dayOnly ? 'personalise-week-preview' : 'personalise-week';
   try { await logUsage(userId, logEndpoint); } catch (e) { console.error('[week-stream] usage log failed:', e?.message); }

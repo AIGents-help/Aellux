@@ -442,6 +442,7 @@ export default function App() {
   });
   const [bpAdditionalGoal, setBpAdditionalGoal] = useState<string>('');
   const [bpCycleLengthDays, setBpCycleLengthDays] = useState<number>(30);
+  const [bpMealPrep, setBpMealPrep] = useState<boolean>(false);
   const [bpGoalExpanded, setBpGoalExpanded] = useState(false);
 
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
@@ -522,6 +523,9 @@ export default function App() {
             }
             if (d.protocol.cycleLengthDays) {
               setBpCycleLengthDays(d.protocol.cycleLengthDays);
+            }
+            if (d.protocol.mealPrep) {
+              setBpMealPrep(true);
             }
           }
         })
@@ -778,6 +782,7 @@ export default function App() {
           dayOnly,
           isRegenerate: !!(personalised.week && Array.isArray(personalised.week.days) && personalised.week.days.length > 0),
           cycleLengthDays: bpCycleLengthDays,
+          mealPrep: bpMealPrep,
         }),
       });
 
@@ -1686,6 +1691,41 @@ export default function App() {
                             </button>
                           ))}
                         </div>
+                      </div>
+
+                      {/* Meal Prepper toggle */}
+                      <div style={{ marginBottom: 18, paddingTop: 18, borderTop: '1px solid rgba(0,210,165,.1)' }}>
+                        <button
+                          type="button"
+                          onClick={() => setBpMealPrep(!bpMealPrep)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+                            padding: '12px 16px',
+                            background: bpMealPrep ? 'rgba(0,225,180,.1)' : 'rgba(0,8,18,.4)',
+                            border: `1px solid ${bpMealPrep ? 'rgba(0,225,180,.5)' : 'rgba(0,210,165,.2)'}`,
+                            borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                          }}
+                        >
+                          <div style={{
+                            width: 22, height: 22, borderRadius: 4, flexShrink: 0,
+                            background: bpMealPrep ? 'rgba(0,225,180,.9)' : 'transparent',
+                            border: `2px solid ${bpMealPrep ? 'rgba(0,225,180,.9)' : 'rgba(0,210,165,.4)'}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            {bpMealPrep && <span style={{ color: '#000', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>✓</span>}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 15, color: bpMealPrep ? 'rgba(0,255,200,1)' : 'rgba(220,255,235,.85)', fontWeight: 500 }}>Meal Prepper mode</div>
+                            <div style={{ fontSize: 13, color: 'rgba(0,210,165,.6)', marginTop: 3, lineHeight: 1.5 }}>
+                              Cook once on Sunday, eat all week. Aellux designs your menu around 2 bulk proteins + 2 sides — portion into containers, grab and go.
+                            </div>
+                          </div>
+                        </button>
+                        {bpMealPrep && (
+                          <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(0,210,165,.05)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 6, fontSize: 13, color: 'rgba(0,210,165,.75)', lineHeight: 1.6 }}>
+                            💡 You'll get a batch cook plan: 2 proteins, 2 carbs, 1–2 vegs, 21 containers. Flavor rotates daily so it doesn't get boring.
+                          </div>
+                        )}
                       </div>
 
                       {/* Additional Goal toggle */}

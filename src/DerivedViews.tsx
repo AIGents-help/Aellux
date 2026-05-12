@@ -137,15 +137,19 @@ function categorize(name: string): string {
 function aggregateGrocery(weekData: any, selectedMealKeys: Record<string, string>) {
   if (!weekData?.days) return { byCategory: {}, total: 0 };
 
-  // Collect all raw item strings
+  // Collect all raw item strings — respects active swap selections
   const allItems: string[] = [];
   for (let i = 0; i < weekData.days.length; i++) {
     const day = weekData.days[i];
     if (!day.meals) continue;
     for (const slot of ['breakfast', 'lunch', 'dinner']) {
       const meal = day.meals[slot];
-      if (!meal?.items) continue;
-      allItems.push(...meal.items);
+      if (!meal) continue;
+      const swapKey = selectedMealKeys[`${i}|${slot}`];
+      // If user has swapped this meal and the alt has items, use those
+      const swappedAlt = swapKey && meal.alternatives?.find((a: any) => a.swap === swapKey);
+      const items = (swappedAlt as any)?.items || meal.items;
+      if (items) allItems.push(...items);
     }
   }
 

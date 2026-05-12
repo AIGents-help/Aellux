@@ -36,6 +36,7 @@ export default async function handler(req, res) {
         cycleStartedAt: p.cycle_started_at || p.created_at,
         createdAt: p.created_at,
         isPreview: false,
+        mealPrep: p.meal_prep || false,
       }
     }));
   }
@@ -59,6 +60,7 @@ export default async function handler(req, res) {
         cycleStartedAt: p.cycle_started_at || p.created_at,
         createdAt: p.created_at,
         isPreview: true,
+        mealPrep: p.meal_prep || false,
       }
     }));
   }
