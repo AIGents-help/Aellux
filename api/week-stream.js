@@ -322,10 +322,12 @@ export default async function handler(req, res) {
     return res.end();
   }
 
-  // Persist + log usage
-  sbUpsert('personalised_cache', { cache_key: cacheKey, type: 'week', result, hits: 0, created_at: new Date().toISOString() }, 'cache_key').catch(() => {});
+  // Persist + log usage — must await on Node runtime, fire-and-forget would be killed when res.end() returns
+  try {
+    await sbUpsert('personalised_cache', { cache_key: cacheKey, type: 'week', result, hits: 0, created_at: new Date().toISOString() }, 'cache_key');
+  } catch (e) { console.error('[week-stream] cache write failed:', e?.message); }
   const logEndpoint = dayOnly ? 'personalise-week-preview' : 'personalise-week';
-  logUsage(userId, logEndpoint).catch(() => {});
+  try { await logUsage(userId, logEndpoint); } catch (e) { console.error('[week-stream] usage log failed:', e?.message); }
 
   sse(res, 'complete', { result });
   return res.end();
