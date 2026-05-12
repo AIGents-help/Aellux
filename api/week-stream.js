@@ -70,33 +70,36 @@ function buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, 
   const styleBlock = mealStyle && mealStyle !== 'none' ? `\nMeal style preference: ${mealStyle}. ALL meals AND alternatives must respect this style.\n` : '';
   const goalBlock = additionalGoal ? `\nAdditional weekly focus from user: "${additionalGoal}". Optimize the week's design toward this goal IN ADDITION to the biomarker-driven priorities. Reflect this in key_insight.\n` : '';
 
+  // dayOnly mode: ONE day only. Otherwise: 7 days.
+  // Each meal gets 2 alternatives (was 4) to keep output under the 60s edge.
+  const dayCount = dayOnly ? 1 : 7;
+  const dayList = dayOnly ? ['Monday'] : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
   return `${profileBlock}User biomarkers: ${ms}${styleBlock}${goalBlock}${medSafetyBlock}
 
-Design a personalised 7-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return ONLY Monday (Day 1) — this is a free-tier preview.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density. Calorie/protein targets must reflect sex/age/weight/activity. For EACH meal, provide 4 alternatives keyed by swap reason: nutrient_match, cheaper, faster (<10min prep), and diet_pref (respecting any listed dietary_restrictions or the meal style above).
+Design a personalised ${dayCount}-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return EXACTLY ONE day (Monday) — this is a free-tier preview. Do not generate Tuesday through Sunday.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days. Generate ALL 7 days in order: ' + dayList.join(', ') + '.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density. Calorie/protein targets must reflect sex/age/weight/activity. For EACH meal, provide exactly 2 alternatives: one keyed swap="nutrient_match" (same nutrient profile, different food), one keyed swap="diet_pref" (honors any listed dietary_restrictions or the meal style; if none, offer a cheaper or faster version).
 
-Schema (return ONLY this JSON, no markdown):
+Schema (return ONLY this JSON, no markdown, no commentary):
 {
-  "key_insight":"one sentence describing the week's overall design${additionalGoal ? ' AND how it addresses the user\'s stated focus' : ''}",
-  "principles":["3-5 short guiding rules across the week"],
+  "key_insight":"one sentence describing the design${additionalGoal ? ' AND how it addresses the user\'s stated focus' : ''}",
+  "principles":["3-5 short guiding rules"],
   "days":[
     {
       "day":"Monday","theme":"Foundation","focus_marker":"marker name",
-      "morning":{"wake_time":"6:30am","actions":["short action 1","short action 2"],"supps_am":["Supp name dose"]},
+      "morning":{"wake_time":"6:30am","actions":["action 1","action 2"],"supps_am":["Supp name dose"]},
       "meals":{
-        "breakfast":{"name":"meal name","items":["item 1","item 2","item 3"],"why":"one sentence referencing user's actual numbers","macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker"],"alternatives":[
-          {"swap":"nutrient_match","name":"alt name","why":"hits same nutrient profile"},
-          {"swap":"cheaper","name":"alt name","why":"$X vs $Y, same goal"},
-          {"swap":"faster","name":"alt name","why":"5 min prep, same nutrient hit"},
+        "breakfast":{"name":"meal name","items":["item 1","item 2","item 3"],"why":"one sentence with user's actual numbers","macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker"],"alternatives":[
+          {"swap":"nutrient_match","name":"alt name","why":"same nutrients"},
           {"swap":"diet_pref","name":"alt name","why":"honors restriction/style"}
         ]},
-        "lunch":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"alternatives":[...4 items same shape]},
-        "dinner":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"alternatives":[...4 items same shape]}
+        "lunch":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"alternatives":[...2 items same shape]},
+        "dinner":{"name":"...","items":[],"why":"...","macros":{},"targets":[],"alternatives":[...2 items same shape]}
       },
       "movement":{"type":"Zone 2 cardio","duration":"45 min","when":"afternoon"},
       "evening":{"supps_pm":["Magnesium glycinate 300mg"],"wind_down":"screens off 9:30pm","sleep_target":"10:30pm"}
-    }${dayOnly ? '' : ',\n    { ...same shape for Tuesday Strength },\n    { ...Wednesday Recovery },\n    { ...Thursday Metabolic },\n    { ...Friday Hormonal },\n    { ...Saturday Long Movement },\n    { ...Sunday Restoration }'}
+    }${dayOnly ? '' : `,\n    { ...same shape for Tuesday Strength },\n    { ...Wednesday Recovery },\n    { ...Thursday Metabolic },\n    { ...Friday Hormonal },\n    { ...Saturday Long Movement },\n    { ...Sunday Restoration }\n    [must include all 7 days]`}
   ],
-  "weekly_summary":{"training_load":"e.g. 3 heavy days + 2 zone 2 + 2 recovery","total_supp_cost":"$X/week","estimated_calorie_target":14000}
+  "weekly_summary":{"training_load":"e.g. 3 heavy + 2 zone 2 + 2 recovery","total_supp_cost":"$X/week","estimated_calorie_target":${dayCount * 2000}}
 }`;
 }
 
@@ -216,7 +219,9 @@ export default async function handler(req, res) {
   }
 
   const prompt = buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly });
-  const maxTokens = dayOnly ? 3500 : 9000;
+  // Tightened budgets: 2 alts × 3 meals × 7 days = 42 alts vs prior 84.
+  // Day-only: 1 day × 3 meals × 2 alts = 6 alts. ~2000 tokens generous.
+  const maxTokens = dayOnly ? 2200 : 6500;
 
   sse(res, 'start', { dayOnly });
 
