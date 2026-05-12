@@ -9,6 +9,7 @@ import BiomarkerDetail from './BiomarkerDetail';
 import AdminDashboard from './AdminDashboard';
 import PrintableReport from './PrintableReport';
 import WeekView from './WeekView';
+import DerivedViews from './DerivedViews';
 import ProfileSetup from './ProfileSetup';
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
@@ -431,6 +432,17 @@ export default function App() {
       return next;
     });
   }, []);
+
+  // v1.5: Biologic Protocol generation state
+  const [weekStreamDays, setWeekStreamDays] = useState<any[]>([]);  // Days emitted so far during streaming
+  const [weekStreamStatus, setWeekStreamStatus] = useState<string>('');
+  const [showRegenConfirm, setShowRegenConfirm] = useState(false);
+  const [bpMealStyle, setBpMealStyle] = useState<string>(() => {
+    try { return localStorage.getItem('aellux_bp_meal_style') || 'none'; } catch { return 'none'; }
+  });
+  const [bpAdditionalGoal, setBpAdditionalGoal] = useState<string>('');
+  const [bpGoalExpanded, setBpGoalExpanded] = useState(false);
+
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
   const [input, setInput] = useState('');
@@ -634,7 +646,7 @@ export default function App() {
 
   // ── PERSONALISATION GENERATION ────────────────────────────────────────────
 
-  const generatePersonalised = async (type: 'meals' | 'supps' | 'protocol' | 'synthesis' | 'week') => {
+  const generatePersonalised = async (type: 'meals' | 'supps' | 'protocol' | 'synthesis') => {
     if (allMarkers.length === 0) { alert('Upload health documents first.'); return; }
     // Profile gate — Aellux can't generate calibrated recommendations without sex/age/weight
     if (profileLoaded && !isProfileComplete(profile)) {
@@ -645,18 +657,15 @@ export default function App() {
     setGenerationError(null);
     setOrbState('thinking');
     try {
-      // For week generation, free users get a Day 1 preview only
-      const dayOnly = type === 'week' && !isPro;
       const res = await fetch('/api/personalise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           markers: allMarkers,
           type,
-          preference: (type === 'meals' || type === 'week') ? mealPreference : null,
+          preference: type === 'meals' ? mealPreference : null,
           userId: user?.id,
           plan: isPro ? 'pro' : 'free',
-          dayOnly,
         }),
       });
       const data = await res.json();
@@ -674,8 +683,7 @@ export default function App() {
         (type === 'meals' && Array.isArray(data.meals)) ||
         (type === 'supps' && Array.isArray(data.supplements)) ||
         (type === 'protocol' && Array.isArray(data.protocols)) ||
-        (type === 'synthesis' && (data.aellux_voice || data.focus_priority)) ||
-        (type === 'week' && Array.isArray(data.days) && data.days.length > 0);
+        (type === 'synthesis' && (data.aellux_voice || data.focus_priority));
       if (!shapeOk) {
         console.warn('[personalise] unexpected shape', { type, data });
         const msg = 'Aellux returned an unexpected response shape. Tap regenerate.';
@@ -697,6 +705,115 @@ export default function App() {
       setGenerationError(msg);
       setResponse(msg);
       setOrbState('idle');
+    } finally {
+      setGeneratingType(null);
+    }
+  };
+
+  // ── BIOLOGIC PROTOCOL (week, streaming) ─────────────────────────────────
+  const generateBiologicProtocol = async () => {
+    if (allMarkers.length === 0) { alert('Upload health documents first.'); return; }
+    if (profileLoaded && !isProfileComplete(profile)) {
+      setShowProfileSetup(true);
+      return;
+    }
+    // Persist meal style preference for future generations
+    try { localStorage.setItem('aellux_bp_meal_style', bpMealStyle); } catch {}
+
+    setGeneratingType('week');
+    setGenerationError(null);
+    setOrbState('thinking');
+    setWeekStreamDays([]);
+    setWeekStreamStatus('Aellux is consulting your biology…');
+    // Clear prior week so the UI shows streaming-in-progress state
+    setPersonalised(p => ({ ...p, week: undefined }));
+
+    try {
+      const dayOnly = !isPro;
+      const res = await fetch('/api/week-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          markers: allMarkers,
+          userId: user?.id,
+          plan: isPro ? 'pro' : 'free',
+          mealStyle: bpMealStyle,
+          additionalGoal: bpAdditionalGoal.trim().slice(0, 240),
+          dayOnly,
+        }),
+      });
+
+      if (!res.ok || !res.body) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
+      }
+
+      // Read SSE stream
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let finalResult: any = null;
+      let receivedDays: any[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || '';
+
+        for (const evt of events) {
+          const eventMatch = evt.match(/^event: (.+)$/m);
+          const dataMatch = evt.match(/^data: (.+)$/m);
+          if (!eventMatch || !dataMatch) continue;
+          const eventName = eventMatch[1].trim();
+          let data: any;
+          try { data = JSON.parse(dataMatch[1]); } catch { continue; }
+
+          if (eventName === 'start') {
+            setWeekStreamStatus(data.dayOnly ? 'Designing your Day 1 preview…' : 'Designing your 7-day protocol…');
+          } else if (eventName === 'cached') {
+            setWeekStreamStatus('Loading from cache…');
+          } else if (eventName === 'day') {
+            receivedDays = [...receivedDays.slice(0, data.index), data.day, ...receivedDays.slice(data.index + 1)];
+            setWeekStreamDays([...receivedDays]);
+            setWeekStreamStatus(`Day ${data.index + 1} ready · ${data.day.day}${data.day.theme ? ` (${data.day.theme})` : ''}`);
+          } else if (eventName === 'parsing') {
+            setWeekStreamStatus('Finalizing…');
+          } else if (eventName === 'complete') {
+            finalResult = data.result;
+          } else if (eventName === 'error') {
+            throw new Error(data.message || 'Generation error');
+          }
+        }
+      }
+
+      if (!finalResult || !Array.isArray(finalResult.days) || finalResult.days.length === 0) {
+        throw new Error('No complete protocol received from server');
+      }
+
+      // Save final
+      const updated = { ...personalised, week: finalResult };
+      setPersonalised(updated);
+      try { localStorage.setItem('aellux_personalised', JSON.stringify(updated)); } catch {}
+      if (user?.id) savePersonalised(user.id, 'week', finalResult);
+
+      // Clear any meal swaps from the prior week
+      setMealSwaps({});
+      try { localStorage.removeItem('aellux_meal_swaps'); } catch {}
+
+      setOrbState('speaking');
+      setResponse(finalResult.key_insight || 'Your Biologic Protocol has been designed from your biology.');
+      setTimeout(() => setOrbState('idle'), 4000);
+      setWeekStreamStatus('');
+      setWeekStreamDays([]);
+    } catch (err: any) {
+      console.error('[biologic-protocol] failed', err);
+      const msg = `Generation failed: ${err?.message || 'network error'}`;
+      setGenerationError(msg);
+      setResponse(msg);
+      setOrbState('idle');
+      setWeekStreamStatus('');
     } finally {
       setGeneratingType(null);
     }
@@ -759,14 +876,18 @@ export default function App() {
   const NAV: Array<{ id: Panel; label: string; count?: number }> = [
     { id: 'upload',    label: '+ Upload Records',  count: documents.length },
     { id: 'dashboard', label: 'Health Dashboard',  count: allMarkers.length },
-    { id: 'week',      label: 'My Aellux Week'                              },
+    { id: 'week',      label: 'Biologic Protocol'                           },
     { id: 'trends',    label: 'Biomarker Trends'                            },
     { id: 'protocols', label: 'Protocols & Plans'                           },
-    { id: 'meals',     label: 'Meal Protocol'                               },
-    { id: 'supps',     label: 'Supplement Stack'                            },
-    { id: 'protocol',  label: 'Daily Protocol'                              },
     { id: 'ask',       label: 'Ask Aellux'                                  },
-    ...(isAdmin ? [{ id: 'admin' as Panel, label: 'Admin' }] : []),
+    // Legacy individual protocols — only visible to admin for QA. Pages still
+    // work if navigated to directly; this just hides them from regular users.
+    ...(isAdmin ? [
+      { id: 'meals'    as Panel, label: 'Meal Protocol (legacy)' },
+      { id: 'supps'    as Panel, label: 'Supp Stack (legacy)' },
+      { id: 'protocol' as Panel, label: 'Daily Protocol (legacy)' },
+      { id: 'admin'    as Panel, label: 'Admin' },
+    ] : []),
   ];
 
   const S = {
@@ -1450,58 +1571,168 @@ export default function App() {
           {/* ── WEEK ── */}
           {panel === 'week' && (
             <div>
-              {!personalised.week ? (
-                <div style={{ textAlign: 'center', padding: '50px 20px' }}>
-                  <p style={{ fontSize: 18, color: 'rgba(0,225,180,.92)', marginBottom: 10, lineHeight: 1.7 }}>
-                    {allMarkers.length === 0
-                      ? 'Upload your health documents first.'
-                      : `Aellux will design 7 biologically distinct days from your ${allMarkers.length} biomarkers.`}
-                  </p>
-                  <p style={{ fontSize: 14, color: 'rgba(0,210,165,.65)', marginBottom: 26, lineHeight: 1.7, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
-                    Each day is engineered around a different lever in your biology. Meals come with 4 swap options so you can adapt to constraints — cheaper, faster, dietary restrictions — while still hitting the same nutrient targets.
-                    {!isPro && ' Free plan generates Day 1 as a preview; Pro unlocks all 7 days plus the printable weekly PDF.'}
-                  </p>
+              {!personalised.week && !weekStreamDays.length ? (
+                /* ============ PRE-GENERATION STATE ============ */
+                <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 60px' }}>
+                  <div style={{ textAlign: 'center', marginBottom: 30 }}>
+                    <div style={{ fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(0,225,180,.65)', marginBottom: 10 }}>The flagship Aellux output</div>
+                    <h1 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 36, color: 'rgba(220,255,235,1)', fontWeight: 500, margin: '0 0 14px', lineHeight: 1.15 }}>Your Biologic Protocol</h1>
+                    <p style={{ fontSize: 16, color: 'rgba(0,210,165,.78)', lineHeight: 1.7, margin: 0, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
+                      {allMarkers.length === 0
+                        ? 'Upload your health documents first to begin.'
+                        : `Aellux will design 7 biologically distinct days from your ${allMarkers.length} biomarkers. Meals, supplements, training and recovery — woven together as one weekly operating system.`}
+                    </p>
+                    {!isPro && allMarkers.length > 0 && (
+                      <p style={{ fontSize: 13, color: 'rgba(255,200,80,.85)', marginTop: 14, lineHeight: 1.6 }}>
+                        Free plan: Day 1 preview only. Pro ($29/mo) unlocks all 7 days + alternatives + grocery list + printable PDF.
+                      </p>
+                    )}
+                  </div>
+
+                  {allMarkers.length > 0 && (
+                    <div style={{ background: 'rgba(0,8,18,.5)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 8, padding: '22px 26px', marginBottom: 20 }}>
+                      {/* Meal style selector */}
+                      <div style={{ marginBottom: 18 }}>
+                        <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(0,210,165,.7)', marginBottom: 8 }}>Meal style</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {[
+                            { val: 'none',        label: 'No preference' },
+                            { val: 'mediterranean', label: 'Mediterranean' },
+                            { val: 'vegetarian',  label: 'Vegetarian' },
+                            { val: 'vegan',       label: 'Vegan' },
+                            { val: 'pescatarian', label: 'Pescatarian' },
+                            { val: 'carnivore',   label: 'Carnivore' },
+                            { val: 'keto',        label: 'Keto' },
+                            { val: 'paleo',       label: 'Paleo' },
+                          ].map(s => (
+                            <button key={s.val} type="button" onClick={() => setBpMealStyle(s.val)}
+                              style={{
+                                fontSize: 12,
+                                padding: '7px 13px',
+                                background: bpMealStyle === s.val ? 'rgba(0,225,180,.14)' : 'rgba(0,8,18,.5)',
+                                border: `1px solid ${bpMealStyle === s.val ? 'rgba(0,225,180,.55)' : 'rgba(0,210,165,.22)'}`,
+                                borderRadius: 14,
+                                color: bpMealStyle === s.val ? 'rgba(0,255,200,1)' : 'rgba(0,210,165,.65)',
+                                cursor: 'pointer',
+                                fontFamily: 'inherit',
+                                letterSpacing: '0.02em',
+                              }}>
+                              {s.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Additional Goal toggle */}
+                      <div>
+                        <button type="button" onClick={() => setBpGoalExpanded(!bpGoalExpanded)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(0,210,165,.7)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em', textTransform: 'uppercase', padding: 0 }}>
+                          <span style={{ fontSize: 14, transform: bpGoalExpanded ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform .15s' }}>▸</span>
+                          Add a focus for this week (optional)
+                        </button>
+                        {bpGoalExpanded && (
+                          <div style={{ marginTop: 12 }}>
+                            <p style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', lineHeight: 1.6, margin: '0 0 10px' }}>
+                              Your profile already drives the primary goal. Add anything *specific* you want this particular week to optimize for — Aellux will weave it into the design alongside your biomarker priorities.
+                            </p>
+                            <input
+                              value={bpAdditionalGoal}
+                              onChange={e => setBpAdditionalGoal(e.target.value.slice(0, 240))}
+                              placeholder="e.g. prepping for travel, training for a 10K, cutting sugar cravings"
+                              style={{ width: '100%', background: 'rgba(0,8,18,.7)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 5, color: 'rgba(220,255,235,.95)', fontSize: 14, fontFamily: 'inherit', padding: '10px 14px', outline: 'none', marginBottom: 8 }}
+                            />
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                              {['More energy', 'Better sleep', 'Cut sugar cravings', 'Improve focus', 'Reduce stress', 'Prep for travel'].map(chip => (
+                                <button key={chip} type="button" onClick={() => setBpAdditionalGoal(chip)}
+                                  style={{ fontSize: 11, padding: '4px 10px', background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 12, color: 'rgba(0,210,165,.7)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                  {chip}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {generationError && (
-                    <div style={{ marginBottom: 20, padding: '12px 18px', background: 'rgba(80,12,12,.4)', border: '1px solid rgba(255,120,80,.45)', borderRadius: 6, color: 'rgba(255,200,180,1)', fontSize: 14, textAlign: 'left', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
+                    <div style={{ marginBottom: 18, padding: '12px 18px', background: 'rgba(80,12,12,.4)', border: '1px solid rgba(255,120,80,.45)', borderRadius: 6, color: 'rgba(255,200,180,1)', fontSize: 14, lineHeight: 1.5 }}>
                       <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,160,100,.85)', marginBottom: 4 }}>⚠ Generation Error</div>
                       {generationError}
                     </div>
                   )}
-                  <button
-                    onClick={() => generatePersonalised('week')}
-                    disabled={generatingType === 'week' || allMarkers.length === 0}
-                    style={{ fontSize: 17, color: 'rgba(0,225,180,1)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
-                  >
-                    {generatingType === 'week'
-                      ? (isPro ? '⟳ Aellux is designing your week…' : '⟳ Aellux is designing Day 1…')
-                      : (isPro ? 'Generate my 7-day Aellux Week →' : 'Generate my Day 1 preview →')}
-                  </button>
+
+                  {/* Pro user: warn that hitting generate burns the weekly slot */}
+                  {isPro && allMarkers.length > 0 && (
+                    <div style={{ marginBottom: 18, padding: '11px 16px', background: 'rgba(255,200,80,.06)', border: '1px solid rgba(255,200,80,.3)', borderRadius: 6, fontSize: 12, color: 'rgba(255,220,160,.92)', lineHeight: 1.55 }}>
+                      <strong style={{ color: 'rgba(255,210,100,1)' }}>Heads up:</strong> Generating uses your weekly Biologic Protocol slot. You can regenerate once every 7 days. Within that week, swap individual meals freely — no slot used.
+                    </div>
+                  )}
+
+                  <div style={{ textAlign: 'center' }}>
+                    <button
+                      onClick={generateBiologicProtocol}
+                      disabled={generatingType === 'week' || allMarkers.length === 0}
+                      style={{ fontSize: 17, color: 'rgba(0,255,200,1)', background: 'rgba(0,195,155,.16)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 5, padding: '14px 36px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
+                    >
+                      {generatingType === 'week'
+                        ? '⟳ Designing…'
+                        : (isPro ? 'Generate my Biologic Protocol →' : 'Generate Day 1 preview →')}
+                    </button>
+                  </div>
+                </div>
+              ) : weekStreamDays.length > 0 && !personalised.week ? (
+                /* ============ STREAMING IN PROGRESS ============ */
+                <div>
+                  <div style={{ marginBottom: 18, padding: '14px 20px', background: 'rgba(0,210,165,.05)', border: '1px solid rgba(0,225,180,.3)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%)', flexShrink: 0, animation: 'pulse 2s ease-in-out infinite' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, color: 'rgba(0,225,180,.95)', letterSpacing: '0.04em', marginBottom: 2 }}>{weekStreamStatus || 'Aellux is designing your protocol…'}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(0,210,165,.55)' }}>{weekStreamDays.length} of {isPro ? 7 : 1} day{(isPro ? 7 : 1) === 1 ? '' : 's'} ready · Tap any meal once it appears for alternatives</div>
+                    </div>
+                  </div>
+                  <WeekView
+                    data={{ days: weekStreamDays, key_insight: '' }}
+                    selectedMealKeys={mealSwaps}
+                    onSwap={handleMealSwap}
+                    isPreview={!isPro}
+                    onUpgrade={() => setShowUpgrade(true)}
+                  />
                 </div>
               ) : (
+                /* ============ COMPLETED — TABBED VIEW ============ */
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
                     <div>
-                      <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 26, color: 'rgba(220,255,235,1)', fontWeight: 500, lineHeight: 1.1 }}>{isPro ? 'Your Aellux Week' : 'Your Aellux Week — Day 1 Preview'}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(0,210,165,.65)', marginTop: 4, letterSpacing: '0.04em' }}>Designed from your {allMarkers.length} biomarkers · Tap any meal for alternatives</div>
+                      <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 26, color: 'rgba(220,255,235,1)', fontWeight: 500, lineHeight: 1.1 }}>{isPro ? 'Your Biologic Protocol' : 'Day 1 Preview'}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(0,210,165,.65)', marginTop: 4, letterSpacing: '0.04em' }}>
+                        Designed from your {allMarkers.length} biomarkers
+                        {bpMealStyle !== 'none' && <> · {bpMealStyle.charAt(0).toUpperCase() + bpMealStyle.slice(1)}</>}
+                        {bpAdditionalGoal && <> · Focus: {bpAdditionalGoal}</>}
+                      </div>
                     </div>
                     {isPro && (
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button onClick={() => triggerPrint('week')} style={{ fontSize: 13, color: 'rgba(0,225,180,1)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
-                        <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'rgba(0,225,180,.85)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Report</button>
-                        <button
-                          onClick={() => { if (confirm('Regenerate your week? This uses one of your weekly generations.')) { setPersonalised(p => ({ ...p, week: undefined })); setMealSwaps({}); try { localStorage.removeItem('aellux_meal_swaps'); } catch {} } }}
-                          style={{ fontSize: 13, color: 'rgba(0,150,120,.65)', background: 'none', border: '1px solid rgba(0,150,120,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}
+                        <button onClick={() => setShowRegenConfirm(true)}
+                          style={{ fontSize: 13, color: 'rgba(255,210,100,.85)', background: 'rgba(255,200,80,.05)', border: '1px solid rgba(255,200,80,.4)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}
                         >Regenerate</button>
                       </div>
                     )}
                   </div>
 
-                  <WeekView
-                    data={personalised.week}
+                  <DerivedViews
+                    weekData={personalised.week}
                     selectedMealKeys={mealSwaps}
-                    onSwap={handleMealSwap}
-                    isPreview={!isPro}
-                    onUpgrade={() => setShowUpgrade(true)}
+                    weekView={
+                      <WeekView
+                        data={personalised.week}
+                        selectedMealKeys={mealSwaps}
+                        onSwap={handleMealSwap}
+                        isPreview={!isPro}
+                        onUpgrade={() => setShowUpgrade(true)}
+                      />
+                    }
                   />
                 </div>
               )}
@@ -1593,6 +1824,31 @@ export default function App() {
           }}
           onSkip={() => setShowProfileSetup(false)}
         />
+      )}
+
+      {showRegenConfirm && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,10,20,0.92)', backdropFilter: 'blur(8px)', padding: 16 }}>
+          <div style={{ background: 'rgba(2,12,22,0.98)', border: '1px solid rgba(255,200,80,.4)', borderRadius: 12, padding: '28px 32px', maxWidth: 480, width: '100%' }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,210,100,.85)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>⚠ Confirm regeneration</div>
+            <h3 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'rgba(220,255,235,1)', margin: '0 0 12px', fontWeight: 500 }}>Use your weekly slot?</h3>
+            <p style={{ fontSize: 14, color: 'rgba(0,210,165,.78)', lineHeight: 1.6, margin: '0 0 18px' }}>
+              Regenerating your Biologic Protocol uses your <strong style={{ color: 'rgba(255,210,100,1)' }}>weekly generation slot</strong>. You can only regenerate once every 7 days.
+            </p>
+            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.62)', lineHeight: 1.6, margin: '0 0 20px' }}>
+              If you just want different meals, use the swap dropdowns inside each day — that's free and unlimited.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => { setShowRegenConfirm(false); generateBiologicProtocol(); }}
+                style={{ flex: 1, fontSize: 14, color: 'rgba(255,210,100,1)', background: 'rgba(255,200,80,.1)', border: '1px solid rgba(255,200,80,.5)', borderRadius: 5, padding: '11px 18px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
+                Yes, regenerate
+              </button>
+              <button onClick={() => setShowRegenConfirm(false)}
+                style={{ fontSize: 13, color: 'rgba(0,180,140,.7)', background: 'none', border: '1px solid rgba(0,180,140,.25)', borderRadius: 5, padding: '11px 18px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <PrintableReport
