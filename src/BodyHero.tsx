@@ -52,24 +52,24 @@ export default function BodyHero({ personalised }: Props) {
             );
           })}
         </svg>
-        <div style={{ textAlign: 'center', fontSize: 10, color: 'rgba(0,210,165,.3)', letterSpacing: '0.1em', marginTop: 4 }}>TAP TO EXPLORE</div>
+        <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(0,210,165,.5)', letterSpacing: '0.1em', marginTop: 4 }}>TAP TO EXPLORE</div>
       </div>
       <div style={{ flex: 1, paddingTop: 4 }}>
         {cat ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: cat.color, display: 'inline-block', flexShrink: 0 }}/>
-              <span style={{ fontFamily: 'Georgia,serif', fontSize: 18, color: cat.color }}>{cat.label}</span>
-              {counts[cat.id] > 0 && <span style={{ fontSize: 11, color: 'rgba(0,210,165,.4)', letterSpacing: '0.06em' }}>{counts[cat.id]} markers tracked</span>}
+              <span style={{ fontFamily: 'Georgia,serif', fontSize: 20, color: cat.color }}>{cat.label}</span>
+              {counts[cat.id] > 0 && <span style={{ fontSize: 13, color: 'rgba(0,210,165,.7)', letterSpacing: '0.06em' }}>{counts[cat.id]} markers tracked</span>}
             </div>
-            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.72)', lineHeight: 1.7, margin: '0 0 14px' }}>{cat.description}</p>
-            <div style={{ fontSize: 11, color: 'rgba(0,210,165,.4)', letterSpacing: '0.06em' }}>AFFECTS: <span style={{ color: cat.color, opacity: 0.8 }}>{cat.impact}</span></div>
-            <button onClick={() => setActive(null)} style={{ marginTop: 16, fontSize: 11, color: 'rgba(0,210,165,.4)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '0.06em', padding: 0 }}>back to overview</button>
+            <p style={{ fontSize: 15, color: 'rgba(0,210,165,.88)', lineHeight: 1.7, margin: '0 0 14px' }}>{cat.description}</p>
+            <div style={{ fontSize: 13, color: 'rgba(0,210,165,.65)', letterSpacing: '0.06em' }}>AFFECTS: <span style={{ color: cat.color, opacity: 0.9 }}>{cat.impact}</span></div>
+            <button onClick={() => setActive(null)} style={{ marginTop: 16, fontSize: 13, color: 'rgba(0,210,165,.6)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '0.06em', padding: 0 }}>← back to overview</button>
           </>
         ) : (
           <>
-            <div style={{ fontFamily: 'Georgia,serif', fontSize: 16, color: 'rgba(0,210,165,.75)', marginBottom: 10 }}>Your Biology at a Glance</div>
-            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.55)', lineHeight: 1.7, margin: '0 0 16px' }}>
+            <div style={{ fontFamily: 'Georgia,serif', fontSize: 22, color: 'rgba(0,230,185,.95)', marginBottom: 10, fontWeight: 500 }}>Your Biology at a Glance</div>
+            <p style={{ fontSize: 15, color: 'rgba(0,210,165,.82)', lineHeight: 1.7, margin: '0 0 16px' }}>
               {total > 0 ? total + ' biomarkers tracked across ' + Object.keys(counts).filter(k => counts[k] > 0).length + ' systems. Tap any node to understand what it means for your health.' : 'Upload your health records to see your biology mapped across all systems.'}
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -77,8 +77,8 @@ export default function BodyHero({ personalised }: Props) {
                 <button key={c.id} onClick={() => setActive(c.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px', background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 20, cursor: 'pointer' }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.color, opacity: 0.7, flexShrink: 0 }}/>
-                  <span style={{ fontSize: 11, color: 'rgba(0,210,165,.6)', letterSpacing: '0.04em' }}>{c.label}</span>
-                  {counts[c.id] > 0 && <span style={{ fontSize: 10, color: c.color, opacity: 0.7 }}>{counts[c.id]}</span>}
+                  <span style={{ fontSize: 13, color: 'rgba(0,210,165,.85)', letterSpacing: '0.04em' }}>{c.label}</span>
+                  {counts[c.id] > 0 && <span style={{ fontSize: 12, color: c.color, opacity: 0.85 }}>{counts[c.id]}</span>}
                 </button>
               ))}
             </div>

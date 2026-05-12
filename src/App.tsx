@@ -1034,12 +1034,14 @@ export default function App() {
             {!isPro && (
               <button onClick={() => setShowUpgrade(true)} style={{ width: '100%', fontSize: 13, color: 'rgba(0,210,165,.85)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.25)', borderRadius: 3, padding: '6px 0', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>Upgrade to Pro →</button>
             )}
-            <button onClick={() => setPanel('profile')} style={{ width: '100%', fontSize: 11, color: 'rgba(0,210,165,.72)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginTop: 10, textAlign: 'left', letterSpacing: '0.08em', padding: '6px 0', borderTop: '1px solid rgba(0,210,165,.12)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span>&#9881;</span> PROFILE &amp; SETTINGS
-            </button>
-            <button onClick={signOut} style={{ width: '100%', fontSize: 11, color: 'rgba(255,90,90,.65)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginTop: 2, textAlign: 'left', letterSpacing: '0.08em', padding: '6px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span>&#10554;</span> SIGN OUT
-            </button>
+            <div style={{ marginTop: 12, borderTop: '1px solid rgba(0,210,165,.14)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <button onClick={() => setPanel('profile')} style={{ width: '100%', fontSize: 13, color: 'rgba(0,225,180,.9)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,210,165,.2)', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 15 }}>⚙</span> Profile &amp; Settings
+              </button>
+              <button onClick={signOut} style={{ width: '100%', fontSize: 13, color: 'rgba(255,110,110,.9)', background: 'rgba(255,80,80,.06)', border: '1px solid rgba(255,90,90,.2)', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 15 }}>→</span> Sign Out
+              </button>
+            </div>
           </div>
         </div>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
@@ -1173,13 +1175,13 @@ export default function App() {
                           <button onClick={() => triggerPrint('all')} style={{ fontSize: 11, color: 'rgba(0,225,180,.85)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Report</button>
                         </div>
                       </div>
-                      <p style={{ ...S.italic, margin: '0 0 12px', fontSize: 18 }}>{personalised.synthesis.aellux_voice}</p>
+                      <p style={{ ...S.italic, margin: '0 0 14px', fontSize: 20, lineHeight: 1.75 }}>{personalised.synthesis.aellux_voice}</p>
                       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                         {personalised.synthesis.biological_age_estimate && (
-                          <div style={{ fontSize: 15, color: 'rgba(0,195,155,.75)' }}>Bio age: <strong style={{ color: 'rgba(0,215,172,.9)' }}>{personalised.synthesis.biological_age_estimate}</strong></div>
+                          <div style={{ fontSize: 16, color: 'rgba(0,210,165,.9)' }}>Bio age: <strong style={{ color: 'rgba(0,235,185,1)' }}>{personalised.synthesis.biological_age_estimate}</strong></div>
                         )}
                         {personalised.synthesis.focus_priority && (
-                          <div style={{ fontSize: 15, color: 'rgba(255,170,60,.75)' }}>Priority: <strong style={{ color: 'rgba(255,190,80,.9)' }}>{personalised.synthesis.focus_priority}</strong></div>
+                          <div style={{ fontSize: 16, color: 'rgba(255,190,80,.9)' }}>Priority: <strong style={{ color: 'rgba(255,210,100,1)' }}>{personalised.synthesis.focus_priority}</strong></div>
                         )}
                       </div>
                     </div>
@@ -1188,12 +1190,12 @@ export default function App() {
                   {/* Flags */}
                   {flaggedMarkers.length > 0 && (
                     <div style={{ marginBottom: 22 }}>
-                      <div style={{ ...S.label, marginBottom: 12, color: 'rgba(255,160,60,.7)' }}>⚠ Needs Attention ({flaggedMarkers.length})</div>
+                      <div style={{ fontSize: 13, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,175,70,.9)', marginBottom: 14, fontWeight: 500 }}>⚠ Needs Attention ({flaggedMarkers.length})</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                         {flaggedMarkers.map(m => (
                           <div key={m.name} onClick={() => setSelectedMarker(m)} style={{ ...S.card, padding: '14px 16px', cursor: 'pointer', borderColor: 'rgba(255,130,60,.32)', transition: 'border-color .2s' }}>
-                            <div style={{ fontSize: 18, color: 'rgba(255,205,140,1)', fontWeight: 500, marginBottom: 6, lineHeight: 1.2 }}>{m.name}</div>
-                            <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,170,90,.65)', marginBottom: 6 }}>{m.category}</div>
+                            <div style={{ fontSize: 18, color: 'rgba(255,215,155,1)', fontWeight: 500, marginBottom: 6, lineHeight: 1.2 }}>{m.name}</div>
+                            <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,185,100,.8)', marginBottom: 6 }}>{m.category}</div>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                               <span style={{ fontSize: 26, color: STATUS_COLORS[m.status] || 'rgba(255,140,60,.9)', fontWeight: 500 }}>{m.value}</span>
                               <span style={{ fontSize: 13, color: 'rgba(0,160,130,.5)' }}>{m.unit}</span>
