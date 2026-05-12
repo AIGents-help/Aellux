@@ -1,0 +1,259 @@
+/* =============================================================================
+   Aellux Mobile Responsive (v1.7)
+   =============================================================================
+   Breakpoint: 768px.
+   Strategy:
+     - Desktop (≥768px): unchanged — sidebar grid layout, no mobile chrome.
+     - Mobile (<768px):
+         - Sidebar becomes a drawer that slides in from left
+         - Top bar (hamburger + title + status dot) always visible
+         - Bottom tab bar (4 destinations) fixed to viewport
+         - Floating action button (Ask Aellux) bottom-right
+         - Content area is full-width, scrollable, with safe-area insets
+   ============================================================================= */
+
+/* ── MOBILE CHROME — hidden by default (desktop), shown <768px ── */
+.aellux-mobile-topbar,
+.aellux-mobile-tabbar,
+.aellux-mobile-fab,
+.aellux-mobile-backdrop {
+  display: none;
+}
+
+/* ── DESKTOP: hamburger button stays hidden ── */
+@media (min-width: 768px) {
+  .aellux-hamburger { display: none !important; }
+}
+
+/* ── MOBILE BREAKPOINT ── */
+@media (max-width: 767px) {
+
+  /* Override the desktop grid — make sidebar a slide-in drawer */
+  .aellux-layout {
+    grid-template-columns: 1fr !important;
+    height: 100dvh !important;  /* dynamic vh handles mobile browser chrome */
+  }
+
+  /* Sidebar: off-canvas drawer */
+  .aellux-lc {
+    position: fixed !important;
+    top: 0; left: 0; bottom: 0;
+    width: 280px !important;
+    max-width: 85vw;
+    z-index: 1500;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    height: 100dvh !important;
+    box-shadow: 0 0 40px rgba(0,0,0,.5);
+    overflow-y: auto !important;
+    padding-top: 24px !important;
+    padding-bottom: 100px !important;  /* space for closer button */
+  }
+  .aellux-lc.open {
+    transform: translateX(0);
+  }
+
+  /* Backdrop when drawer is open */
+  .aellux-mobile-backdrop {
+    display: block;
+    position: fixed; inset: 0;
+    z-index: 1400;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  .aellux-mobile-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Top bar */
+  .aellux-mobile-topbar {
+    display: flex !important;
+    position: sticky;
+    top: 0;
+    left: 0; right: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: space-between;
+    height: 54px;
+    padding: 0 14px;
+    background: rgba(0,4,10,.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,180,140,.1);
+  }
+  .aellux-hamburger {
+    width: 44px; height: 44px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: rgba(0,225,180,.95);
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .aellux-hamburger:active { background: rgba(0,225,180,.08); }
+  .aellux-mobile-title {
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: 16px;
+    color: rgba(220,255,235,.95);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    flex: 1;
+    text-align: center;
+  }
+  .aellux-mobile-orb {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 38% 32%, rgba(0,240,185,.95) 0%, rgba(0,180,210,.75) 35%, rgba(0,8,22,.99) 100%);
+    flex-shrink: 0;
+  }
+
+  /* Hide the desktop topbar on mobile (we use our own) */
+  .aellux-topbar { display: none !important; }
+
+  /* Main content area — push down for top bar, up for tab bar */
+  .aellux-main {
+    height: calc(100dvh - 54px - 64px) !important;
+    overflow-y: auto !important;
+    padding: 16px 14px 24px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Bottom tab bar */
+  .aellux-mobile-tabbar {
+    display: flex !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 1000;
+    height: 64px;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: rgba(0,4,10,.96);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(0,180,140,.15);
+    justify-content: space-around;
+    align-items: stretch;
+  }
+  .aellux-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: rgba(168,232,200,.5);
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 8px 4px;
+    transition: color .15s;
+  }
+  .aellux-tab:active { background: rgba(0,225,180,.06); }
+  .aellux-tab-icon { font-size: 20px; line-height: 1; }
+  .aellux-tab.active { color: rgba(0,255,200,1); }
+  .aellux-tab.active .aellux-tab-icon { filter: drop-shadow(0 0 4px rgba(0,225,180,.6)); }
+
+  /* Floating action button */
+  .aellux-mobile-fab {
+    display: flex !important;
+    position: fixed;
+    bottom: calc(64px + env(safe-area-inset-bottom) + 16px);
+    right: 16px;
+    z-index: 1200;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 38% 32%, rgba(0,240,185,.95) 0%, rgba(0,180,210,.85) 50%, rgba(0,28,42,.99) 100%);
+    border: 1px solid rgba(0,255,200,.55);
+    color: white;
+    box-shadow: 0 6px 20px rgba(0,180,140,.4);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: transform .15s;
+  }
+  .aellux-mobile-fab:active { transform: scale(.92); }
+
+  /* Touch-friendly sizes everywhere */
+  button:not(.aellux-tab):not(.aellux-hamburger) {
+    min-height: 44px;
+  }
+  input, select, textarea {
+    font-size: 16px !important;  /* prevents iOS auto-zoom */
+    min-height: 44px;
+  }
+
+  /* Nav items in drawer — bigger, better tap targets */
+  .aellux-nav-item {
+    width: 100% !important;
+    padding: 14px 18px !important;
+    font-size: 13px !important;
+    min-height: 48px !important;
+  }
+
+  /* Bigger orb in drawer */
+  .aellux-lc > div[style*="border-radius: 50%"]:first-child,
+  .aellux-lc > div:first-child {
+    /* let it size naturally */
+  }
+
+  /* Ask Aellux input in drawer is fine, but hide on mobile drawer since FAB handles it */
+  .aellux-speak-input { display: none; }
+  .aellux-lc .aellux-speak-wrapper { display: none; }
+
+  /* WeekView day cards — full-width on mobile */
+  .aellux-day-card { padding: 12px 14px !important; }
+
+  /* Tabs in DerivedViews — scroll horizontally if needed */
+  .aellux-dv-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    flex-wrap: nowrap !important;
+  }
+
+  /* Body diagram on dashboard — center, smaller */
+  svg[viewBox*="200"] { max-width: 90vw; height: auto; }
+
+  /* Cards / grids — force single column at narrow widths */
+  div[style*="gridTemplateColumns: 'repeat(auto-fill, minmax(280px"] {
+    grid-template-columns: 1fr !important;
+  }
+  div[style*="gridTemplateColumns: '1fr 1fr'"],
+  div[style*="gridTemplateColumns: 'repeat(3"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Sidebar Ask input — hidden on mobile since FAB exists */
+  .aellux-speak-wrapper { display: none !important; }
+
+  /* Hide PrintableReport's print-only orb sparkle dots on mobile */
+  @media print {
+    .aellux-mobile-topbar,
+    .aellux-mobile-tabbar,
+    .aellux-mobile-fab { display: none !important; }
+  }
+}
+
+/* ── EXTRA SMALL (<400px) ── tighter padding ── */
+@media (max-width: 399px) {
+  .aellux-main { padding: 12px 10px 20px !important; }
+  .aellux-mobile-topbar { padding: 0 10px; }
+}
+
+/* ── DESKTOP STATE: ensure mobile drawer state never persists ── */
+@media (min-width: 768px) {
+  .aellux-lc {
+    transform: none !important;
+    position: relative !important;
+    width: 220px !important;
+    box-shadow: none !important;
+  }
+}

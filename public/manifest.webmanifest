@@ -1,0 +1,22 @@
+{
+  "name": "Aellux — Health Intelligence",
+  "short_name": "Aellux",
+  "description": "Personalised health intelligence from your biology.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020810",
+  "theme_color": "#020810",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/aellux-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/aellux-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

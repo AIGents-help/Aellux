@@ -452,6 +452,9 @@ export default function App() {
   const [profile, setProfile] = useState<any | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
+  // v1.7 mobile chrome
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [askSheetOpen, setAskSheetOpen] = useState(false);
   const [awakened, setAwakened] = useState(false);
   const [awakePhase, setAwakePhase] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -461,11 +464,20 @@ export default function App() {
 
   // Load from Supabase on mount (with localStorage fallback)
   useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
     // Immediate localStorage load for fast UI
     try {
       const saved = localStorage.getItem('aellux_documents');
-      if (saved) { const docs = JSON.parse(saved); setDocuments(docs); if (docs.length > 0) setPanel('dashboard'); }
       const savedP = localStorage.getItem('aellux_personalised');
+      const hasP = !!(savedP && JSON.parse(savedP).week);
+      if (saved) {
+        const docs = JSON.parse(saved);
+        setDocuments(docs);
+        if (docs.length > 0) {
+          // Mobile users land on Today (week) if they have a protocol, else dashboard
+          setPanel(isMobile && hasP ? 'week' : 'dashboard');
+        }
+      }
       if (savedP) setPersonalised(sanitisePersonalised(JSON.parse(savedP)));
     } catch {}
 
@@ -480,7 +492,8 @@ export default function App() {
           }));
           setDocuments(mapped);
           localStorage.setItem('aellux_documents', JSON.stringify(mapped));
-          setPanel('dashboard');
+          // Don't override panel here if user has already navigated
+          setPanel(p => p === 'upload' ? (isMobile ? 'week' : 'dashboard') : p);
         }
       });
       getPersonalised(user.id).then(p => {
@@ -903,13 +916,41 @@ export default function App() {
 
   return (
     <div className="aellux-layout">
-      {/* ── LEFT COLUMN ── */}
-      <div className="aellux-lc">
-        <div onClick={() => setPanel('upload')} style={{ cursor: 'pointer', marginBottom: 22 }}><Orb state={orbState} size={110} /></div>
+      {/* ── MOBILE TOP BAR (visible only <768px) ── */}
+      <div className="aellux-mobile-topbar">
+        <button className="aellux-hamburger" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div className="aellux-mobile-title">
+          {panel === 'upload' && 'Upload'}
+          {panel === 'dashboard' && 'Dashboard'}
+          {panel === 'week' && 'Biologic Protocol'}
+          {panel === 'trends' && 'Trends'}
+          {panel === 'protocols' && 'Protocols'}
+          {panel === 'profile' && 'Profile'}
+          {panel === 'ask' && 'Ask Aellux'}
+          {panel === 'meals' && 'Meal Protocol'}
+          {panel === 'supps' && 'Supp Stack'}
+          {panel === 'protocol' && 'Daily Protocol'}
+          {panel === 'admin' && 'Admin'}
+        </div>
+        <div className="aellux-mobile-orb" />
+      </div>
+
+      {/* ── DRAWER BACKDROP (mobile only) ── */}
+      <div className={`aellux-mobile-backdrop ${drawerOpen ? 'open' : ''}`} onClick={() => setDrawerOpen(false)} />
+
+      {/* ── LEFT COLUMN / DRAWER ── */}
+      <div className={`aellux-lc ${drawerOpen ? 'open' : ''}`}>
+        <div onClick={() => { setPanel('upload'); setDrawerOpen(false); }} style={{ cursor: 'pointer', marginBottom: 22 }}><Orb state={orbState} size={110} /></div>
 
         <div style={{ width: '100%', padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 18 }}>
           {NAV.map(({ id, label, count }) => (
-            <button key={id} className={`aellux-nav-item ${panel === id ? 'active' : ''}`} onClick={() => setPanel(id)}>
+            <button key={id} className={`aellux-nav-item ${panel === id ? 'active' : ''}`} onClick={() => { setPanel(id); setDrawerOpen(false); }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: panel === id ? 'rgba(0,210,165,.9)' : 'rgba(0,130,105,.3)', flexShrink: 0, display: 'inline-block' }} />
               <span style={{ flex: 1 }}>{label}</span>
               {count !== undefined && count > 0 && (
@@ -940,7 +981,7 @@ export default function App() {
           </div>
         )}
 
-        <div style={{ padding: '0 14px', width: '100%', position: 'relative' }}>
+        <div className="aellux-speak-wrapper" style={{ padding: '0 14px', width: '100%', position: 'relative' }}>
           <input className="aellux-speak-input" placeholder="Ask Aellux..."
             value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAsk()}
@@ -993,7 +1034,7 @@ export default function App() {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
+        <div className="aellux-main" style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
 
           {/* ── UPLOAD ── */}
           {panel === 'upload' && (
@@ -1807,6 +1848,65 @@ export default function App() {
 
         </div>
       </div>
+
+      {/* ── MOBILE BOTTOM TAB BAR ── */}
+      <div className="aellux-mobile-tabbar">
+        <button className={`aellux-tab ${panel === 'week' ? 'active' : ''}`} onClick={() => setPanel('week')}>
+          <span className="aellux-tab-icon">📅</span>
+          <span>Today</span>
+        </button>
+        <button className={`aellux-tab ${panel === 'dashboard' ? 'active' : ''}`} onClick={() => setPanel('dashboard')}>
+          <span className="aellux-tab-icon">⊕</span>
+          <span>Biology</span>
+        </button>
+        <button className={`aellux-tab ${panel === 'trends' ? 'active' : ''}`} onClick={() => setPanel('trends')}>
+          <span className="aellux-tab-icon">📈</span>
+          <span>Trends</span>
+        </button>
+        <button className={`aellux-tab ${panel === 'profile' ? 'active' : ''}`} onClick={() => setPanel('profile')}>
+          <span className="aellux-tab-icon">◉</span>
+          <span>Profile</span>
+        </button>
+      </div>
+
+      {/* ── MOBILE FLOATING ACTION BUTTON (Ask Aellux) ── */}
+      <button className="aellux-mobile-fab" onClick={() => setAskSheetOpen(true)} aria-label="Ask Aellux">
+        ✦
+      </button>
+
+      {/* ── ASK AELLUX BOTTOM SHEET (mobile FAB target) ── */}
+      {askSheetOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1800, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(2,10,20,.85)', backdropFilter: 'blur(8px)' }} onClick={() => setAskSheetOpen(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 720, background: 'rgba(2,12,22,.98)', borderTop: '1px solid rgba(0,225,180,.3)', borderRadius: '14px 14px 0 0', padding: '20px 18px calc(20px + env(safe-area-inset-bottom))', maxHeight: '85dvh', overflowY: 'auto' }}>
+            <div style={{ width: 40, height: 4, background: 'rgba(0,225,180,.3)', borderRadius: 2, margin: '0 auto 14px' }} />
+            <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'rgba(220,255,235,1)', fontWeight: 500, marginBottom: 6 }}>Ask Aellux</div>
+            <div style={{ fontSize: 13, color: 'rgba(0,210,165,.65)', marginBottom: 14, lineHeight: 1.5 }}>
+              {allMarkers.length > 0 ? `${allMarkers.length} of your biomarkers in context from ${documents.length} documents.` : 'Upload health documents first for personalised answers.'}
+            </div>
+            <textarea
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="What would you like to know about your health?"
+              style={{ width: '100%', minHeight: 80, padding: 12, background: 'rgba(0,8,18,.7)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 6, color: 'rgba(220,255,235,.95)', fontSize: 16, fontFamily: 'inherit', resize: 'vertical', outline: 'none', marginBottom: 12 }}
+            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => { handleAsk(); setAskSheetOpen(false); }} disabled={asking || !input.trim()}
+                style={{ flex: 1, fontSize: 15, color: 'rgba(0,255,200,1)', background: 'rgba(0,195,155,.16)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 5, padding: '12px 0', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
+                {asking ? 'Aellux is reading…' : 'Ask Aellux →'}
+              </button>
+              <button onClick={() => setAskSheetOpen(false)}
+                style={{ fontSize: 13, color: 'rgba(0,180,140,.7)', background: 'none', border: '1px solid rgba(0,180,140,.25)', borderRadius: 5, padding: '12px 18px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                Close
+              </button>
+            </div>
+            {response && (
+              <div style={{ marginTop: 16, padding: '12px 14px', background: 'rgba(0,210,165,.05)', border: '1px solid rgba(0,225,180,.2)', borderRadius: 6, color: 'rgba(220,255,235,.92)', fontSize: 14, lineHeight: 1.65 }}>
+                {response}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
 

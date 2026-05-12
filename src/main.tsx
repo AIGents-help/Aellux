@@ -4,6 +4,7 @@ import { AuthProvider } from './useAuth'
 import App from './App'
 import './index.css'
 import './aellux-readability.css'
+import './mobile.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
