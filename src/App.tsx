@@ -1323,7 +1323,7 @@ export default function App() {
               {/* Biomarker cards with mini trend lines */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
                 {allMarkers
-                  .filter(m => !WEARABLE_NOISE.test(m.name))
+                  .filter(m => !WEARABLE_NOISE.test(String(m.name || '')))
                   .filter(m => trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase())
                   .sort((a, b) => ((b as any).history?.length || 0) - ((a as any).history?.length || 0))
                   .slice(0, 48)
@@ -1400,7 +1400,7 @@ export default function App() {
                     );
                   })}
               </div>
-              {allMarkers.filter(m => !WEARABLE_NOISE.test(m.name) && (trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase())).length === 0 && (
+              {allMarkers.filter(m => !WEARABLE_NOISE.test(String(m.name || '')) && (trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase())).length === 0 && (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(0,210,165,.35)', fontSize: 13 }}>No markers in this category</div>
               )}
             </div>
