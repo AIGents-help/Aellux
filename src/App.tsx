@@ -1321,49 +1321,88 @@ export default function App() {
                 ))}
               </div>
               {/* Biomarker cards with mini trend lines */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
                 {allMarkers
+                  .filter(m => !WEARABLE_NOISE.test(m.name))
                   .filter(m => trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase())
                   .sort((a, b) => ((b as any).history?.length || 0) - ((a as any).history?.length || 0))
-                  .slice(0, 24)
+                  .slice(0, 48)
                   .map(m => {
-                    const vals: {value: any; date: string}[] = ((m as any).history) || [{ value: m.value, date: m.date }];
-                    const nums = vals.map((v: any) => parseFloat(v.value)).filter((n: any) => !isNaN(n));
-                    const min = Math.min(...nums), max = Math.max(...nums);
-                    const range = max - min || 1;
-                    const pts = nums.map((v: number, i: number) => `${(i / Math.max(nums.length - 1, 1)) * 80},${28 - ((v - min) / range) * 24}`).join(' ');
+                    const history: {value: any; date: string}[] = ((m as any).history) || [{ value: m.value, date: (m as any).date || '' }];
+                    const nums = history.map((v: any) => parseFloat(v.value)).filter((n: any) => !isNaN(n));
+                    const numVal = parseFloat(m.value);
+                    const REF_CARD: Record<string, {low:number;high:number}> = {
+                      'Total Testosterone':{low:250,high:900},'Free Testosterone':{low:46,high:224},
+                      'Estrogen':{low:15,high:32},'SHBG':{low:10,high:57},'Free T3':{low:2.3,high:4.4},
+                      'Ferritin':{low:30,high:300},'Vitamin D':{low:20,high:80},'ApoB':{low:40,high:120},
+                      'LDL':{low:0,high:160},'HDL':{low:40,high:100},'Triglycerides':{low:0,high:200},
+                      'HbA1c':{low:4.5,high:6.5},'Fasting Glucose':{low:70,high:126},'CRP':{low:0,high:10},
+                      'TSH':{low:0.4,high:4.0},'IGF-1':{low:100,high:300},'DHEA-S':{low:70,high:430},
+                    };
+                    const ref = REF_CARD[m.name];
+                    const statusColor = !isNaN(numVal) && ref
+                      ? (numVal < ref.low ? '#fb923c' : numVal > ref.high ? '#f87171' : '#34d399')
+                      : (m.status === 'elevated' || m.status === 'high' ? '#f87171' : m.status === 'low' ? '#fb923c' : 'rgba(0,210,165,.8)');
                     const trend = nums.length > 1 ? nums[nums.length-1] - nums[0] : 0;
-                    const tColor = trend > 0 ? '#34d399' : trend < 0 ? '#f87171' : 'rgba(0,210,165,.5)';
-                    const statusColor = m.status === 'high' || m.status === 'low' ? '#f59e0b' : 'rgba(0,210,165,.6)';
+                    const tLabel = trend === 0 ? '' : (trend > 0 ? '▲' : '▼') + ' ' + Math.abs(trend).toFixed(1);
+                    const sMin = nums.length ? Math.min(...nums) : 0;
+                    const sMax = nums.length ? Math.max(...nums) : 1;
+                    const sRange = sMax - sMin || 1;
+                    const SW = 80, SH = 28;
+                    const sPts = nums.map((v:number,i:number) => `${(i/Math.max(nums.length-1,1))*SW},${SH-4-((v-sMin)/sRange)*(SH-8)}`).join(' ');
+                    let barEl = null;
+                    if (ref && !isNaN(numVal)) {
+                      const pad = (ref.high - ref.low) * 0.15;
+                      const dMin = Math.max(0, ref.low - pad), dMax = ref.high + pad;
+                      const dSpan = dMax - dMin;
+                      const pct = (v:number) => Math.min(100,Math.max(0,((v-dMin)/dSpan)*100));
+                      barEl = (
+                        <div style={{ marginTop: 12 }}>
+                          <div style={{ position:'relative',height:7,borderRadius:7,background:'rgba(0,210,165,.08)' }}>
+                            <div style={{ position:'absolute',top:0,height:'100%',borderRadius:7,left:`${pct(ref.low)}%`,width:`${Math.max(0,pct(ref.high)-pct(ref.low))}%`,background:'rgba(0,210,165,.15)' }} />
+                            <div style={{ position:'absolute',top:'50%',left:`${pct(numVal)}%`,transform:'translate(-50%,-50%)',width:13,height:13,borderRadius:'50%',background:statusColor,border:'2px solid rgba(2,12,22,1)',boxShadow:`0 0 6px ${statusColor}88`,zIndex:2 }} />
+                          </div>
+                          <div style={{ display:'flex',justifyContent:'space-between',marginTop:4 }}>
+                            <span style={{ fontSize:11,color:'rgba(0,210,165,.45)' }}>Low {ref.low}</span>
+                            <span style={{ fontSize:11,color:'rgba(0,210,165,.45)' }}>High {ref.high}{m.unit?' '+m.unit:''}</span>
+                          </div>
+                        </div>
+                      );
+                    }
                     return (
                       <div key={m.name} onClick={() => setSelectedMarker(m)}
-                        style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 8, padding: '14px 16px', cursor: 'pointer', transition: 'border-color .2s, background .2s' }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,225,180,.5)'; e.currentTarget.style.background = 'rgba(0,210,165,.09)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,210,165,.18)'; e.currentTarget.style.background = 'rgba(0,210,165,.04)'; }}>
-                        <div style={{ fontSize: 17, color: 'rgba(220,255,235,1)', fontFamily: 'Georgia,serif', marginBottom: 4, fontWeight: 500, lineHeight: 1.25 }}>{m.name}</div>
-                        <div style={{ fontSize: 10, color: 'rgba(0,210,165,.55)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>{m.category}</div>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8 }}>
-                          <span style={{ fontSize: 20, color: statusColor, fontFamily: 'Georgia,serif' }}>{m.value}</span>
-                          <span style={{ fontSize: 11, color: 'rgba(0,210,165,.4)' }}>{m.unit}</span>
-                          {trend !== 0 && <span style={{ fontSize: 10, color: tColor, marginLeft: 'auto' }}>{trend > 0 ? '+' : ''}{trend.toFixed(1)}</span>}
+                        style={{ background:'rgba(0,210,165,.04)',border:`1px solid ${m.status==='elevated'||m.status==='high'||m.status==='low'?'rgba(255,150,60,.28)':'rgba(0,210,165,.16)'}`,borderRadius:10,padding:'16px 18px',cursor:'pointer',transition:'border-color .2s,background .2s' }}
+                        onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(0,225,180,.45)';e.currentTarget.style.background='rgba(0,210,165,.08)';}}
+                        onMouseLeave={e=>{e.currentTarget.style.borderColor=(m.status==='elevated'||m.status==='high'||m.status==='low')?'rgba(255,150,60,.28)':'rgba(0,210,165,.16)';e.currentTarget.style.background='rgba(0,210,165,.04)';}}>
+                        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:3 }}>
+                          <div style={{ fontSize:17,color:'rgba(220,255,235,1)',fontFamily:'EB Garamond,Georgia,serif',fontWeight:500,lineHeight:1.25,flex:1,paddingRight:8 }}>{m.name}</div>
+                          {tLabel && <span style={{ fontSize:12,color:trend>0?'#34d399':'#f87171',flexShrink:0,marginTop:2 }}>{tLabel}</span>}
                         </div>
-                        {nums.length > 1 ? (
-                          <svg viewBox="-2 0 84 32" width="100%" height="32" style={{ display: 'block', overflow: 'visible' }}>
-                            <polyline points={pts} fill="none" stroke={tColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
-                            {nums.map((v: number, i: number) => <circle key={i} cx={(i / Math.max(nums.length-1,1)) * 80} cy={28-((v-min)/range)*24} r="1.5" fill={tColor} opacity="0.5"/>)}
-                          </svg>
-                        ) : (
-                          <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
-                            <div style={{ fontSize: 10, color: 'rgba(0,210,165,.3)', letterSpacing: '0.06em' }}>single reading</div>
+                        <div style={{ fontSize:11,color:'rgba(0,210,165,.5)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10 }}>{m.category}</div>
+                        <div style={{ display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:8,marginBottom:2 }}>
+                          <div>
+                            <div style={{ display:'flex',alignItems:'baseline',gap:5 }}>
+                              <span style={{ fontSize:26,color:statusColor,fontFamily:'EB Garamond,Georgia,serif',fontWeight:500 }}>{m.value}</span>
+                              <span style={{ fontSize:13,color:'rgba(0,210,165,.45)' }}>{m.unit}</span>
+                            </div>
+                            {m.status && <div style={{ fontSize:11,color:statusColor,letterSpacing:'0.06em',textTransform:'uppercase',marginTop:2 }}>{m.status}</div>}
                           </div>
-                        )}
-                        {m.status && <div style={{ fontSize: 10, color: statusColor, letterSpacing: '0.06em', marginTop: 4, textTransform: 'uppercase' }}>{m.status}</div>}
+                          {nums.length > 1 && (
+                            <svg viewBox={`0 0 ${SW} ${SH}`} width={SW} height={SH} style={{ flexShrink:0,opacity:0.85 }}>
+                              <polyline points={sPts} fill="none" stroke={statusColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              {nums.map((v:number,i:number)=><circle key={i} cx={(i/Math.max(nums.length-1,1))*SW} cy={SH-4-((v-sMin)/sRange)*(SH-8)} r="2" fill={statusColor}/>)}
+                            </svg>
+                          )}
+                        </div>
+                        {barEl}
+                        {!barEl && <div style={{ marginTop:10,height:4,borderRadius:4,background:'rgba(0,210,165,.06)' }} />}
                       </div>
                     );
                   })}
               </div>
-              {allMarkers.filter(m => trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase()).length === 0 && (
+              {allMarkers.filter(m => !WEARABLE_NOISE.test(m.name) && (trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase())).length === 0 && (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(0,210,165,.35)', fontSize: 13 }}>No markers in this category</div>
+              )}
               )}
             </div>
           )}
