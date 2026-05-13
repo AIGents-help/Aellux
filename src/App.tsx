@@ -1403,7 +1403,6 @@ export default function App() {
               {allMarkers.filter(m => !WEARABLE_NOISE.test(m.name) && (trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase())).length === 0 && (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(0,210,165,.35)', fontSize: 13 }}>No markers in this category</div>
               )}
-              )}
             </div>
           )}
 
