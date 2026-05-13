@@ -1330,7 +1330,7 @@ export default function App() {
                   .map(m => {
                     const history: {value: any; date: string}[] = ((m as any).history) || [{ value: m.value, date: (m as any).date || '' }];
                     const nums = history.map((v: any) => parseFloat(v.value)).filter((n: any) => !isNaN(n));
-                    const numVal = parseFloat(m.value);
+                    const numVal = parseFloat(String(m.value ?? 0));
                     const REF_CARD: Record<string, {low:number;high:number}> = {
                       'Total Testosterone':{low:250,high:900},'Free Testosterone':{low:46,high:224},
                       'Estrogen':{low:15,high:32},'SHBG':{low:10,high:57},'Free T3':{low:2.3,high:4.4},
