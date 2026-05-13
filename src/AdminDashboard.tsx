@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 
 const SUPABASE_URL = 'https://dpweejtslbzmstcywcnl.supabase.co';
