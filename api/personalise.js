@@ -72,7 +72,12 @@ export default async function handler(req) {
   }
 
   // ── Build prompt ──────────────────────────────────────────────────────────
-  const ms = markers.slice(0, 20).map(m => `${m.name}:${m.value}${m.unit || ''}(${m.status || 'unknown'})`).join(', ');
+
+// Strip GPS/device telemetry and intake logs before sending to AI
+const GPS_NOISE = /horizontal.?acc|vertical.?acc|hAcc|vAcc|HDOP|elevation.?(gain|change|loss)|GPS.?signal|route.?duration|avg.?speed|average.?speed|m\/s|ECG.?raw|accelerometer|supplement.?intake|food.?diary|leafy.?greens|microgreens|protein.?intake|pathogenic.?variant|device.?noise|step.?count.?raw/i;
+const cleanMarkers = (arr) => (arr || []).filter(m => m && m.name && !GPS_NOISE.test(m.name));
+
+  const ms = cleanMarkers(markers).slice(0, 20).map(m => `${m.name}:${m.value}${m.unit || ''}(${m.status || 'unknown'})`).join(', ');
   const profileBlock = profileStr ? `User profile: ${profileStr}\n` : '';
   const medSafetyBlock = medFlag
     ? '\nCRITICAL SAFETY: The user is on medications listed above. Before recommending any supplement, food, or protocol, check for known interactions with those medications. If a recommendation could interact (e.g. vitamin K with warfarin, calcium with levothyroxine, grapefruit with statins), either omit it or include a "contraindications" note explaining the interaction. Never recommend stopping or adjusting a prescription medication.\n'

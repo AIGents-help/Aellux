@@ -22,10 +22,10 @@
   --text-inverse:   #ffffff;
 
   /* Brand — deep forest green */
-  --brand:          #0a3d25;
-  --brand-dim:      #14532d;
-  --brand-ghost:    rgba(10,61,37,.07);
-  --brand-border:   rgba(10,61,37,.18);
+  --brand:          #052e16;
+  --brand-dim:      #064e23;
+  --brand-ghost:    rgba(5,46,22,.07);
+  --brand-border:   rgba(5,46,22,.18);
 
   /* Accent — for data, alerts, highlights */
   --accent-elevated: #c0392b;
