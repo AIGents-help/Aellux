@@ -35,12 +35,25 @@ export default async function handler(req) {
   }
 
   // ── AI generate ────────────────────────────────────────────────────────────
-  const prompt = `Generate precise, evidence-based clinical information for the biomarker: "${name}"${category ? ` (category: ${category})` : ''}${unit ? ` (typical unit: ${unit})` : ''}.
+  const prompt = `Generate precise, evidence-based information for the biomarker: "${name}"${category ? ` (category: ${category})` : ''}${unit ? ` (typical unit: ${unit})` : ''}.
+
+Your philosophy: the body has intelligence. Lead with what the person can do themselves through lifestyle, nutrition, movement, sleep, and targeted supplementation. Pharmaceutical and medical interventions belong at the END as escalation — not the opening move. Be specific and mechanistic. Never vague.
 
 Return ONLY this JSON schema (no markdown, no fences, no preamble):
-{"what":"2 sentences: what this marker is biologically","why":"2 sentences: why this marker matters for health, longevity, or disease risk","high":"2 sentences: specific symptoms, risks, or conditions associated with elevated levels","low":"2 sentences: specific symptoms, risks, or conditions associated with low levels","mitigateHigh":"2 sentences: specific interventions to lower this marker (foods, supplements, medications, lifestyle)","mitigateLow":"2 sentences: specific interventions to raise this marker","goodFor":"1-2 sentences: positive physiological effects when in optimal range","badFor":"1-2 sentences: chronic-imbalance risks in either direction"}
+{
+  "what": "2 sentences: what this marker is biologically and what it reflects about the body's state",
+  "why": "2 sentences: why this marker matters for health, longevity, and daily felt experience",
+  "high": "2 sentences: what symptoms and risks the person may experience when this is elevated",
+  "low": "2 sentences: what symptoms and risks occur when this is low — how it actually feels",
+  "mitigateHigh": "3-4 sentences: HOLISTIC FIRST — specific foods, lifestyle changes, movement, sleep, stress interventions, targeted supplements to bring this down. Lead with the body's own mechanisms. Be specific: name the food, the dose, the mechanism.",
+  "mitigateHighMedical": "1-2 sentences: when and why to involve a physician or consider medical intervention for elevated levels. Frame as escalation after lifestyle fails, or when severity warrants it.",
+  "mitigateLow": "3-4 sentences: HOLISTIC FIRST — specific foods, lifestyle changes, movement, sleep, stress interventions, targeted supplements to bring this up. Be specific and mechanistic.",
+  "mitigateLowMedical": "1-2 sentences: when and why to involve a physician or consider medical intervention for low levels. Frame as escalation.",
+  "goodFor": "1-2 sentences: positive effects when in optimal range — how the person will feel and perform",
+  "badFor": "1-2 sentences: chronic-imbalance risks in either direction"
+}
 
-Reference specific dose ranges, food sources, mechanisms (e.g. AMPK, PCSK9, SHBG) where relevant. If the marker is obscure, do your best with available clinical knowledge — never refuse.`;
+Reference specific mechanisms, food sources, supplement doses, and timelines where relevant. Never refuse — give your best answer for any marker.`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -48,7 +61,7 @@ Reference specific dose ranges, food sources, mechanisms (e.g. AMPK, PCSK9, SHBG
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1200,
+        max_tokens: 1800,
         system: SYSTEM,
         messages: [{ role: 'user', content: prompt }],
       }),
