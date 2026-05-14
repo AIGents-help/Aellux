@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from './useAuth';
 
 interface Props {
@@ -7,78 +7,156 @@ interface Props {
   onSkip: () => void;
 }
 
+// ── Data ─────────────────────────────────────────────────────────────────────
+
+const MOTIVATIONS = [
+  { id: 'prevent',      label: 'I want to stay on top of my health and prevent problems before they start' },
+  { id: 'understand',   label: "I want to understand what's causing health issues I'm already experiencing" },
+  { id: 'optimize',     label: 'I want to optimize my performance and longevity beyond what feels normal' },
+  { id: 'missed',       label: "I'm looking for reassurance that nothing serious is being missed" },
+  { id: 'protocol',     label: 'I want a specific, personalized protocol — not generic advice' },
+  { id: 'recommended',  label: 'Someone I trust told me to try this' },
+];
+
 const GOALS = [
-  { id: 'longevity',     label: 'Longevity & healthspan',    icon: '◎' },
-  { id: 'hormones',      label: 'Hormone optimization',      icon: '⬡' },
-  { id: 'performance',   label: 'Athletic performance',      icon: '△' },
-  { id: 'weight',        label: 'Body composition',          icon: '◈' },
-  { id: 'energy',        label: 'Energy & mental clarity',   icon: '✦' },
-  { id: 'prevention',    label: 'Disease prevention',        icon: '◐' },
+  { id: 'longevity',    label: 'Longevity & healthspan' },
+  { id: 'hormones',     label: 'Hormone optimization' },
+  { id: 'performance',  label: 'Athletic performance' },
+  { id: 'weight',       label: 'Body composition' },
+  { id: 'energy',       label: 'Energy & mental clarity' },
+  { id: 'prevention',   label: 'Disease prevention' },
 ];
 
 const ACTIVITY = [
-  { id: 'sedentary',   label: 'Mostly sedentary',         sub: 'Desk job, minimal exercise' },
-  { id: 'light',       label: 'Lightly active',           sub: '1-3 workouts per week' },
-  { id: 'moderate',    label: 'Moderately active',        sub: '3-5 workouts per week' },
-  { id: 'very_active', label: 'Very active',              sub: '6+ workouts, physical job' },
+  { id: 'sedentary',    label: 'Mostly sedentary',    sub: 'Desk job, little exercise' },
+  { id: 'light',        label: 'Lightly active',      sub: '1–3 workouts per week' },
+  { id: 'moderate',     label: 'Moderately active',   sub: '3–5 workouts per week' },
+  { id: 'very_active',  label: 'Very active',         sub: '6+ workouts or physical job' },
 ];
 
-const STEP_COUNT = 4;
+const WEARABLES = [
+  { id: 'apple',      label: 'Apple Watch / iPhone',  icon: '' },
+  { id: 'oura',       label: 'Oura Ring',             icon: '' },
+  { id: 'garmin',     label: 'Garmin',                icon: '' },
+  { id: 'whoop',      label: 'Whoop',                 icon: '' },
+  { id: 'fitbit',     label: 'Fitbit',                icon: '' },
+  { id: 'ultrahuman', label: 'Ultrahuman',            icon: '' },
+  { id: 'withings',   label: 'Withings',              icon: '' },
+  { id: 'none',       label: 'I don\'t use a wearable', icon: '' },
+];
 
-function ProgressDots({ step }: { step: number }) {
+// Step names — each is one focused question
+const STEPS = [
+  'welcome',
+  'motivation',
+  'sex',
+  'birthyear',
+  'weight_height',
+  'goal',
+  'activity',
+  'wearables',
+  'done',
+];
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function ProgressBar({ step, total }: { step: number; total: number }) {
+  const pct = Math.round((step / (total - 1)) * 100);
   return (
-    <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 32 }}>
-      {Array.from({ length: STEP_COUNT }).map((_, i) => (
-        <div key={i} style={{
-          width: i === step ? 20 : 6, height: 6, borderRadius: 3,
-          background: i <= step ? 'rgba(0,225,180,.9)' : 'rgba(0,210,165,.15)',
-          transition: 'all .3s ease',
-        }} />
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(0,210,165,.12)' }}>
+      <div style={{ height: '100%', width: `${pct}%`, background: 'rgba(0,225,180,.7)', transition: 'width .4s ease', borderRadius: '0 2px 2px 0' }} />
+    </div>
+  );
+}
+
+function Orb() {
+  return (
+    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%)', boxShadow: '0 0 30px rgba(0,210,165,.4)', flexShrink: 0 }} />
+  );
+}
+
+function NextBtn({ onClick, disabled, label = 'Continue →' }: { onClick: () => void; disabled?: boolean; label?: string }) {
+  return (
+    <button onClick={onClick} disabled={disabled}
+      style={{ width: '100%', fontSize: 17, color: disabled ? 'rgba(0,50,40,.5)' : 'rgba(0,20,14,1)', background: disabled ? 'rgba(0,225,180,.25)' : 'rgba(0,225,180,.92)', border: 'none', borderRadius: 10, padding: '16px 0', cursor: disabled ? 'default' : 'pointer', fontFamily: 'inherit', fontWeight: 600, transition: 'all .2s', marginTop: 8 }}>
+      {label}
+    </button>
+  );
+}
+
+function SkipBtn({ onClick }: { onClick: () => void }) {
+  return (
+    <button onClick={onClick} style={{ width: '100%', fontSize: 14, color: 'rgba(0,210,165,.4)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '12px 0', marginTop: 2 }}>
+      Skip for now
+    </button>
+  );
+}
+
+function OptionList({ options, selected, onSelect, multi = false }: { options: any[]; selected: any; onSelect: (id: string) => void; multi?: boolean }) {
+  const isSelected = (id: string) => multi ? (selected || []).includes(id) : selected === id;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {options.map(opt => (
+        <button key={opt.id} onClick={() => onSelect(opt.id)}
+          style={{ padding: '16px 18px', background: isSelected(opt.id) ? 'rgba(0,225,180,.08)' : 'rgba(0,4,10,.5)', border: `1.5px solid ${isSelected(opt.id) ? 'rgba(0,225,180,.6)' : 'rgba(0,210,165,.14)'}`, borderRadius: 10, color: isSelected(opt.id) ? 'rgba(220,255,235,1)' : 'rgba(220,255,235,.65)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'all .15s', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ lineHeight: 1.4 }}>{opt.label}</div>
+            {opt.sub && <div style={{ fontSize: 12, color: 'rgba(0,210,165,.45)', marginTop: 3 }}>{opt.sub}</div>}
+          </div>
+          {isSelected(opt.id) && <span style={{ color: 'rgba(0,225,180,.9)', fontSize: 16, flexShrink: 0, marginTop: 1 }}>✓</span>}
+        </button>
       ))}
     </div>
   );
 }
 
+// ── Main Component ────────────────────────────────────────────────────────────
+
 export default function Onboarding({ onComplete, onSkip }: Props) {
-  const [step, setStep] = useState(0);
+  const { user } = useAuth();
+  const [stepIdx, setStepIdx] = useState(0);
+  const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
+    motivation: '',
     biological_sex: '',
     birth_year: '',
     weight_kg: '',
     height_cm: '',
     goal: '',
     activity_level: '',
+    wearables: [] as string[],
   });
-  const [saving, setSaving] = useState(false);
-  const { user } = useAuth();
+
+  const step = STEPS[stepIdx];
+  const totalSteps = STEPS.length;
 
   const set = (key: string, val: any) => setProfile(p => ({ ...p, [key]: val }));
 
-  const canNext = () => {
-    if (step === 0) return true; // welcome — always can proceed
-    if (step === 1) return !!profile.biological_sex && !!profile.birth_year;
-    if (step === 2) return !!profile.goal;
-    if (step === 3) return !!profile.activity_level;
-    return true;
+  const toggleWearable = (id: string) => {
+    setProfile(p => {
+      const cur = p.wearables || [];
+      if (id === 'none') return { ...p, wearables: ['none'] };
+      const without_none = cur.filter(w => w !== 'none');
+      return { ...p, wearables: cur.includes(id) ? without_none.filter(w => w !== id) : [...without_none, id] };
+    });
   };
 
   const next = () => {
-    if (step < STEP_COUNT - 1) setStep(s => s + 1);
-    else finish();
+    if (stepIdx < STEPS.length - 1) setStepIdx(s => s + 1);
   };
+  const back = () => { if (stepIdx > 0) setStepIdx(s => s - 1); };
 
   const finish = async () => {
     setSaving(true);
-    // Save profile via API
     if (user?.id) {
-      const birthYear = parseInt(profile.birth_year);
+      const by = parseInt(profile.birth_year);
       await fetch('/api/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
           biological_sex: profile.biological_sex || null,
-          birth_year: !isNaN(birthYear) ? birthYear : null,
+          birth_year: !isNaN(by) ? by : null,
           weight_kg: profile.weight_kg ? parseFloat(profile.weight_kg) : null,
           height_cm: profile.height_cm ? parseFloat(profile.height_cm) : null,
           goal: profile.goal || null,
@@ -92,81 +170,116 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
   };
 
   const S = {
-    heading: { fontFamily: 'EB Garamond, Georgia, serif', fontSize: 28, color: 'rgba(220,255,235,1)', fontWeight: 500, lineHeight: 1.2, margin: '0 0 10px' } as any,
-    sub: { fontSize: 15, color: 'rgba(0,210,165,.7)', lineHeight: 1.7, margin: '0 0 28px' } as any,
-    label: { fontSize: 13, color: 'rgba(0,210,165,.6)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, display: 'block', marginBottom: 10 },
-    input: { width: '100%', fontSize: 16, padding: '12px 14px', background: 'rgba(0,8,18,.8)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 7, color: 'rgba(220,255,235,.95)', fontFamily: 'inherit', outline: 'none' } as any,
-    btnPrimary: { width: '100%', fontSize: 16, color: 'rgba(0,20,14,1)', background: 'rgba(0,225,180,.92)', border: 'none', borderRadius: 8, padding: '14px 0', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, transition: 'opacity .2s' } as any,
-    btnGhost: { width: '100%', fontSize: 14, color: 'rgba(0,210,165,.5)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '10px 0', marginTop: 4 } as any,
+    wrap: { position: 'fixed' as const, inset: 0, zIndex: 4000, background: '#020810', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' },
+    inner: { flex: 1, overflowY: 'auto' as const, padding: '52px 24px 24px', maxWidth: 480, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column' as const },
+    heading: { fontFamily: 'EB Garamond, Georgia, serif', fontSize: 30, color: 'rgba(220,255,235,.97)', fontWeight: 400, lineHeight: 1.2, margin: '0 0 10px' } as any,
+    sub: { fontSize: 15, color: 'rgba(0,210,165,.65)', lineHeight: 1.7, margin: '0 0 28px' } as any,
+    input: { width: '100%', fontSize: 17, padding: '14px 16px', background: 'rgba(0,8,18,.8)', border: '1.5px solid rgba(0,210,165,.25)', borderRadius: 10, color: 'rgba(220,255,235,.95)', fontFamily: 'inherit', outline: 'none', WebkitAppearance: 'none' as const } as any,
+    label: { fontSize: 12, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase' as const, display: 'block', marginBottom: 8 },
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,6,14,.97)', backdropFilter: 'blur(16px)', padding: 20 }}>
-      <div style={{ width: '100%', maxWidth: 480 }}>
+    <div style={S.wrap}>
+      <ProgressBar step={stepIdx} total={totalSteps} />
 
-        {/* Orb */}
-        <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%)', boxShadow: '0 0 40px rgba(0,210,165,.4)', margin: '0 auto 24px', animation: 'pulse 4s ease-in-out infinite' }} />
+      <div style={S.inner}>
 
-        <ProgressDots step={step} />
-
-        {/* ── STEP 0 — Welcome ── */}
-        {step === 0 && (
-          <div style={{ textAlign: 'center' }}>
-            <h1 style={{ ...S.heading, fontSize: 34, marginBottom: 14 }}>
-              Your biology has a protocol.<br />
-              <em style={{ color: 'rgba(0,210,165,.9)', fontStyle: 'italic' }}>Aellux finds it.</em>
+        {/* ── WELCOME ── */}
+        {step === 'welcome' && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32 }}>
+              <Orb />
+              <div style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Ancient Intelligence. Present Clarity.</div>
+            </div>
+            <h1 style={{ ...S.heading, fontSize: 36, marginBottom: 16 }}>
+              Your biology has a protocol.
             </h1>
-            <p style={{ ...S.sub, maxWidth: 380, margin: '0 auto 32px' }}>
-              Upload your medical records and wearable data. Aellux reads everything — blood panels, genetics, physician notes — and builds a 7-day operating system calibrated to your exact biology.
+            <p style={{ ...S.sub, fontSize: 17 }}>
+              Aellux reads your medical records, wearable data, and health history — and builds a 7-day operating system calibrated to your exact biology. Not a template. Yours.
             </p>
-
-            {/* Value props */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 32, textAlign: 'left' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 36 }}>
               {[
-                { icon: '◎', text: 'Cross-references your markers — not as isolated numbers, but as a system in conversation' },
-                { icon: '✦', text: 'Generates meals, supplements, and training specific to your biomarker pattern' },
-                { icon: '◈', text: 'Tracks compliance, adapts recommendations, and shows you where you\'re heading' },
-              ].map((v, i) => (
-                <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 16px', background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.14)', borderRadius: 8 }}>
-                  <span style={{ fontSize: 18, color: 'rgba(0,225,180,.7)', flexShrink: 0 }}>{v.icon}</span>
-                  <span style={{ fontSize: 14, color: 'rgba(0,210,165,.8)', lineHeight: 1.6 }}>{v.text}</span>
+                'Reads blood panels, DEXA scans, genetic reports, and wearables',
+                'Cross-references your markers as a biological system — not isolated numbers',
+                'Generates meals, supplements, and training specific to your biomarker pattern',
+              ].map((t, i) => (
+                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{ color: 'rgba(0,225,180,.6)', flexShrink: 0, marginTop: 2 }}>◎</span>
+                  <span style={{ fontSize: 15, color: 'rgba(0,210,165,.75)', lineHeight: 1.6 }}>{t}</span>
                 </div>
               ))}
             </div>
-
-            <button onClick={next} style={S.btnPrimary}>Get started — takes 2 minutes →</button>
-            <button onClick={onSkip} style={S.btnGhost}>Skip setup and explore</button>
+            <NextBtn onClick={next} label="Let's get started →" />
+            <SkipBtn onClick={onSkip} />
           </div>
         )}
 
-        {/* ── STEP 1 — Basic biology ── */}
-        {step === 1 && (
+        {/* ── MOTIVATION ── */}
+        {step === 'motivation' && (
           <div>
-            <h2 style={S.heading}>Tell Aellux about your biology</h2>
-            <p style={S.sub}>This makes every recommendation specific to you — not a generic template.</p>
+            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Getting to know you</p>
+            <h2 style={S.heading}>What brought you to Aellux?</h2>
+            <p style={S.sub}>This helps Aellux orient your first protocol around what matters most to you.</p>
+            <OptionList options={MOTIVATIONS} selected={profile.motivation} onSelect={id => set('motivation', id)} />
+            <div style={{ height: 20 }} />
+            <NextBtn onClick={next} disabled={!profile.motivation} />
+            <SkipBtn onClick={next} />
+          </div>
+        )}
 
-            {/* Sex */}
-            <div style={{ marginBottom: 20 }}>
-              <label style={S.label}>Biological sex</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {['male', 'female'].map(s => (
-                  <button key={s} onClick={() => set('biological_sex', s)}
-                    style={{ padding: '12px 0', background: profile.biological_sex === s ? 'rgba(0,225,180,.12)' : 'rgba(0,8,18,.6)', border: `1px solid ${profile.biological_sex === s ? 'rgba(0,225,180,.6)' : 'rgba(0,210,165,.2)'}`, borderRadius: 7, color: profile.biological_sex === s ? 'rgba(0,240,190,1)' : 'rgba(0,210,165,.6)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', transition: 'all .15s' }}>
-                    {s}
-                  </button>
-                ))}
+        {/* ── BIOLOGICAL SEX ── */}
+        {step === 'sex' && (
+          <div>
+            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your biology</p>
+            <h2 style={S.heading}>What is your biological sex?</h2>
+            <p style={S.sub}>Hormonal reference ranges, risk factors, and recommendations differ significantly between sexes. This is the most important input Aellux uses.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+              {['male', 'female'].map(s => (
+                <button key={s} onClick={() => set('biological_sex', s)}
+                  style={{ padding: '18px', background: profile.biological_sex === s ? 'rgba(0,225,180,.08)' : 'rgba(0,4,10,.5)', border: `1.5px solid ${profile.biological_sex === s ? 'rgba(0,225,180,.6)' : 'rgba(0,210,165,.14)'}`, borderRadius: 10, color: profile.biological_sex === s ? 'rgba(220,255,235,1)' : 'rgba(220,255,235,.65)', fontSize: 17, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', textTransform: 'capitalize', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  {s}
+                  {profile.biological_sex === s && <span style={{ color: 'rgba(0,225,180,.9)' }}>✓</span>}
+                </button>
+              ))}
+            </div>
+            <NextBtn onClick={next} disabled={!profile.biological_sex} />
+            <SkipBtn onClick={next} />
+          </div>
+        )}
+
+        {/* ── BIRTH YEAR ── */}
+        {step === 'birthyear' && (
+          <div>
+            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your biology</p>
+            <h2 style={S.heading}>What year were you born?</h2>
+            <p style={S.sub}>Age affects what's optimal vs. what's merely normal. A testosterone level that's fine at 25 is a problem at 50.</p>
+            <input
+              type="number"
+              value={profile.birth_year}
+              onChange={e => set('birth_year', e.target.value)}
+              placeholder="e.g. 1974"
+              min="1920" max="2006"
+              style={{ ...S.input, fontSize: 28, textAlign: 'center', letterSpacing: '0.08em', marginBottom: 8 }}
+              autoFocus
+            />
+            {profile.birth_year && !isNaN(parseInt(profile.birth_year)) && parseInt(profile.birth_year) > 1920 && parseInt(profile.birth_year) < 2007 && (
+              <div style={{ textAlign: 'center', fontSize: 14, color: 'rgba(0,210,165,.5)', marginBottom: 16 }}>
+                Age: {new Date().getFullYear() - parseInt(profile.birth_year)}
               </div>
-            </div>
+            )}
+            <div style={{ height: 8 }} />
+            <NextBtn onClick={next} disabled={!profile.birth_year || isNaN(parseInt(profile.birth_year))} />
+            <SkipBtn onClick={next} />
+          </div>
+        )}
 
-            {/* Year of birth */}
-            <div style={{ marginBottom: 20 }}>
-              <label style={S.label}>Year of birth</label>
-              <input type="number" value={profile.birth_year} onChange={e => set('birth_year', e.target.value)}
-                placeholder="e.g. 1974" min="1920" max="2005" style={S.input} />
-            </div>
-
-            {/* Height + Weight */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 8 }}>
+        {/* ── WEIGHT & HEIGHT ── */}
+        {step === 'weight_height' && (
+          <div>
+            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your biology</p>
+            <h2 style={S.heading}>Height and weight</h2>
+            <p style={S.sub}>Used for body composition calculations and protocol caloric targets. Optional — you can add this later.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
               <div>
                 <label style={S.label}>Height (cm)</label>
                 <input type="number" value={profile.height_cm} onChange={e => set('height_cm', e.target.value)}
@@ -178,59 +291,112 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
                   placeholder="e.g. 82" style={S.input} />
               </div>
             </div>
-            <div style={{ fontSize: 12, color: 'rgba(0,210,165,.35)', marginBottom: 24 }}>Height and weight are optional — used for body composition calculations</div>
-
-            <button onClick={next} disabled={!canNext()} style={{ ...S.btnPrimary, opacity: canNext() ? 1 : 0.4 }}>Continue →</button>
-            <button onClick={() => setStep(s => s - 1)} style={S.btnGhost}>Back</button>
+            <NextBtn onClick={next} label="Continue →" />
+            <SkipBtn onClick={next} />
           </div>
         )}
 
-        {/* ── STEP 2 — Primary goal ── */}
-        {step === 2 && (
+        {/* ── GOAL ── */}
+        {step === 'goal' && (
           <div>
+            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your focus</p>
             <h2 style={S.heading}>What is your primary goal?</h2>
-            <p style={S.sub}>Aellux prioritizes recommendations around what matters most to you.</p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 28 }}>
-              {GOALS.map(g => (
-                <button key={g.id} onClick={() => set('goal', g.id)}
-                  style={{ padding: '14px 12px', background: profile.goal === g.id ? 'rgba(0,225,180,.1)' : 'rgba(0,8,18,.5)', border: `1px solid ${profile.goal === g.id ? 'rgba(0,225,180,.55)' : 'rgba(0,210,165,.15)'}`, borderRadius: 8, color: profile.goal === g.id ? 'rgba(0,240,190,1)' : 'rgba(0,210,165,.6)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'all .15s', display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <span style={{ fontSize: 18, opacity: 0.8 }}>{g.icon}</span>
-                  <span style={{ lineHeight: 1.3 }}>{g.label}</span>
-                </button>
-              ))}
-            </div>
-
-            <button onClick={next} disabled={!profile.goal} style={{ ...S.btnPrimary, opacity: profile.goal ? 1 : 0.4 }}>Continue →</button>
-            <button onClick={() => setStep(s => s - 1)} style={S.btnGhost}>Back</button>
+            <p style={S.sub}>Aellux will prioritize its analysis and recommendations around this.</p>
+            <OptionList options={GOALS} selected={profile.goal} onSelect={id => set('goal', id)} />
+            <div style={{ height: 20 }} />
+            <NextBtn onClick={next} disabled={!profile.goal} />
+            <SkipBtn onClick={next} />
           </div>
         )}
 
-        {/* ── STEP 3 — Activity level ── */}
-        {step === 3 && (
+        {/* ── ACTIVITY ── */}
+        {step === 'activity' && (
           <div>
-            <h2 style={S.heading}>How active are you?</h2>
-            <p style={S.sub}>Affects your protocol intensity, recovery recommendations, and caloric targets.</p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 28 }}>
-              {ACTIVITY.map(a => (
-                <button key={a.id} onClick={() => set('activity_level', a.id)}
-                  style={{ padding: '14px 16px', background: profile.activity_level === a.id ? 'rgba(0,225,180,.08)' : 'rgba(0,8,18,.5)', border: `1px solid ${profile.activity_level === a.id ? 'rgba(0,225,180,.5)' : 'rgba(0,210,165,.15)'}`, borderRadius: 8, color: 'rgba(220,255,235,.9)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'all .15s' }}>
-                  <div style={{ fontWeight: 500, marginBottom: 2 }}>{a.label}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(0,210,165,.5)' }}>{a.sub}</div>
-                </button>
-              ))}
-            </div>
-
-            <button onClick={next} disabled={!profile.activity_level || saving}
-              style={{ ...S.btnPrimary, opacity: profile.activity_level ? 1 : 0.4 }}>
-              {saving ? 'Saving…' : 'Take me to my dashboard →'}
-            </button>
-            <button onClick={() => setStep(s => s - 1)} style={S.btnGhost}>Back</button>
+            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your lifestyle</p>
+            <h2 style={S.heading}>How active are you currently?</h2>
+            <p style={S.sub}>This affects your protocol intensity, recovery recommendations, and caloric targets.</p>
+            <OptionList options={ACTIVITY} selected={profile.activity_level} onSelect={id => set('activity_level', id)} />
+            <div style={{ height: 20 }} />
+            <NextBtn onClick={next} disabled={!profile.activity_level} />
+            <SkipBtn onClick={next} />
           </div>
         )}
 
-        <style>{`@keyframes pulse { 0%,100%{box-shadow:0 0 20px rgba(0,210,165,.4)} 50%{box-shadow:0 0 40px rgba(0,210,165,.65)} }`}</style>
+        {/* ── WEARABLES ── */}
+        {step === 'wearables' && (
+          <div>
+            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your data sources</p>
+            <h2 style={S.heading}>Do you use a wearable device?</h2>
+            <p style={S.sub}>Wearable data overlaid on blood markers reveals patterns no single source can show alone. Select all that apply.</p>
+            <OptionList options={WEARABLES} selected={profile.wearables} onSelect={toggleWearable} multi />
+            <div style={{ height: 20 }} />
+            <NextBtn onClick={next} disabled={profile.wearables.length === 0} />
+            <SkipBtn onClick={next} />
+          </div>
+        )}
+
+        {/* ── DONE ── */}
+        {step === 'done' && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32 }}>
+              <Orb />
+            </div>
+            <h2 style={{ ...S.heading, fontSize: 34, marginBottom: 14 }}>
+              Aellux is ready<br />
+              <em style={{ fontStyle: 'italic', color: 'rgba(0,210,165,.9)' }}>for your biology.</em>
+            </h2>
+            <p style={{ fontSize: 16, color: 'rgba(0,210,165,.65)', lineHeight: 1.75, marginBottom: 32 }}>
+              Upload your first health record — a blood panel, wearable export, or even a photo of your lab results. Aellux reads any format and extracts every biomarker automatically.
+            </p>
+
+            {/* Wearable export instructions if they selected one */}
+            {profile.wearables.length > 0 && !profile.wearables.includes('none') && (
+              <div style={{ marginBottom: 28, padding: '16px 18px', background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 10 }}>
+                <div style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>How to export from your wearable</div>
+                {profile.wearables.includes('apple') && (
+                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Apple Health:</strong> Health app → your profile icon → Export All Health Data → share the .zip file
+                  </div>
+                )}
+                {profile.wearables.includes('oura') && (
+                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Oura:</strong> Oura app → Profile → Download My Data → export CSV
+                  </div>
+                )}
+                {profile.wearables.includes('garmin') && (
+                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Garmin:</strong> connect.garmin.com → Account → Data Export
+                  </div>
+                )}
+                {profile.wearables.includes('whoop') && (
+                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Whoop:</strong> app.whoop.com → More → Profile → Export Data
+                  </div>
+                )}
+                {profile.wearables.includes('fitbit') && (
+                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Fitbit:</strong> Account → Data Export → Export Account Archive
+                  </div>
+                )}
+                {profile.wearables.includes('ultrahuman') && (
+                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Ultrahuman:</strong> app → Profile → Data Export
+                  </div>
+                )}
+              </div>
+            )}
+
+            <NextBtn onClick={finish} disabled={saving} label={saving ? 'Setting up…' : 'Upload my first record →'} />
+          </div>
+        )}
+
+        {/* Back button — not on welcome or done */}
+        {stepIdx > 0 && step !== 'done' && (
+          <button onClick={back}
+            style={{ background: 'none', border: 'none', color: 'rgba(0,210,165,.35)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', padding: '10px 0', marginTop: 4, textAlign: 'center' as const }}>
+            ← Back
+          </button>
+        )}
       </div>
     </div>
   );
