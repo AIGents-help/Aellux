@@ -64,7 +64,7 @@ function RangeBar({ value, markerName, unit, compact = false }: { value: number;
           <div style={{
             position: 'absolute', top: 0, height: '100%',
             left: `${optLowPct}%`, width: `${optHighPct - optLowPct}%`,
-            background: 'rgba(20,83,45,.25)',
+            background: 'rgba(20,83,45,.15)',
           }} />
         )}
         {/* Value marker */}
@@ -86,7 +86,7 @@ function RangeBar({ value, markerName, unit, compact = false }: { value: number;
           Low {ref.low}{unit ? ` ${unit}` : ''}
         </span>
         {ref.optLow != null && !compact && (
-          <span style={{ fontSize: 11, color: 'rgba(20,83,45,.6)' }}>
+          <span style={{ fontSize: 11, color: 'var(--brand)' }}>
             Optimal {ref.optLow}–{ref.optHigh}{unit ? ` ${unit}` : ''}
           </span>
         )}
@@ -237,15 +237,15 @@ function TrendChart({ history, markerName, unit, profile, allMarkers, userId, pl
           {/* Optimal zone */}
           {optLowY != null && optHighY != null && (
             <rect x={PAD_X} y={optHighY} width={W - PAD_X * 2} height={Math.max(0, optLowY - optHighY)}
-              fill="rgba(52,211,153,.06)" rx="2" />
+              fill="rgba(20,83,45,.06)" rx="2" />
           )}
           {/* Reference lines */}
           {ref && (
             <>
-              <line x1={PAD_X} x2={W - PAD_X} y1={py(ref.low)} y2={py(ref.low)} stroke="rgba(251,146,60,.25)" strokeWidth="1" strokeDasharray="4,4" />
-              <line x1={PAD_X} x2={W - PAD_X} y1={py(ref.high)} y2={py(ref.high)} stroke="rgba(248,113,113,.25)" strokeWidth="1" strokeDasharray="4,4" />
-              <text x={PAD_X + 2} y={py(ref.high) - 4} fontSize="9" fill="rgba(248,113,113,.5)" fontFamily="inherit">High {ref.high}</text>
-              <text x={PAD_X + 2} y={py(ref.low) + 12} fontSize="9" fill="rgba(251,146,60,.5)" fontFamily="inherit">Low {ref.low}</text>
+              <line x1={PAD_X} x2={W - PAD_X} y1={py(ref.low)} y2={py(ref.low)} stroke="var(--accent-watch)" strokeOpacity="0.3" strokeWidth="1" strokeDasharray="4,4" />
+              <line x1={PAD_X} x2={W - PAD_X} y1={py(ref.high)} y2={py(ref.high)} stroke="var(--accent-elevated)" strokeOpacity="0.3" strokeWidth="1" strokeDasharray="4,4" />
+              <text x={PAD_X + 2} y={py(ref.high) - 4} fontSize="9" fill="var(--accent-elevated)" fontFamily="inherit">High {ref.high}</text>
+              <text x={PAD_X + 2} y={py(ref.low) + 12} fontSize="9" fill="var(--accent-watch)" fontFamily="inherit">Low {ref.low}</text>
             </>
           )}
           {/* Trend line */}
@@ -255,7 +255,7 @@ function TrendChart({ history, markerName, unit, profile, allMarkers, userId, pl
           {/* Significant change highlights */}
           {significantChanges.map(i => (
             <line key={i} x1={px(i)} x2={px(i)} y1={PAD_Y} y2={H - PAD_Y}
-              stroke="rgba(255,200,80,.2)" strokeWidth="1" strokeDasharray="2,3" />
+              stroke="var(--accent-watch)" strokeOpacity="0.3" strokeWidth="1" strokeDasharray="2,3" />
           ))}
           {/* Data points — clickable */}
           {nums.map((v, i) => {
@@ -273,7 +273,7 @@ function TrendChart({ history, markerName, unit, profile, allMarkers, userId, pl
                 {/* Glow ring on selected */}
                 {isSel && <circle cx={px(i)} cy={py(v)} r="10" fill="none" stroke={col} strokeWidth="1" opacity="0.4" />}
                 {/* Significant change ring */}
-                {isSig && !isSel && <circle cx={px(i)} cy={py(v)} r="7" fill="none" stroke="rgba(255,200,80,.5)" strokeWidth="1" />}
+                {isSig && !isSel && <circle cx={px(i)} cy={py(v)} r="7" fill="none" stroke="var(--accent-watch)" strokeOpacity="0.6" strokeWidth="1.5" />}
                 {/* Main dot */}
                 <circle cx={px(i)} cy={py(v)} r={isSel ? 6 : isHov ? 5 : 4}
                   fill={col} stroke="var(--bg-surface)" strokeWidth="2"
@@ -289,7 +289,7 @@ function TrendChart({ history, markerName, unit, profile, allMarkers, userId, pl
                 {isHov && (
                   <g>
                     <rect x={px(i) - 28} y={py(v) - 28} width="56" height="22" rx="4"
-                      fill="rgba(0,8,18,.95)" stroke="rgba(0,210,165,.3)" strokeWidth="1" />
+                      fill="white" stroke="rgba(0,0,0,.12)" strokeWidth="1" />
                     <text x={px(i)} y={py(v) - 13} textAnchor="middle" fontSize="11"
                       fill={col} fontFamily="inherit" fontWeight="600">
                       {v}{unit ? ' ' + unit : ''}
@@ -304,7 +304,7 @@ function TrendChart({ history, markerName, unit, profile, allMarkers, userId, pl
 
       {/* AI Analysis Panel */}
       {(analysisLoading || analysis || selectedIdx !== null) && (
-        <div style={{ marginTop: 12, padding: '16px 18px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderLeft: '3px solid rgba(0,225,180,.6)', borderRadius: 8 }}>
+        <div style={{ marginTop: 12, padding: '16px 18px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderLeft: '3px solid var(--brand)', borderRadius: 8 }}>
           {selectedIdx !== null && (
             <div style={{ fontSize: 12, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
               {formatDate(sorted[selectedIdx]?.date)} · {sorted[selectedIdx]?.value}{unit ? ' ' + unit : ''}
@@ -526,8 +526,8 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
     : null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,10,20,0.88)', backdropFilter: 'blur(8px)' }} onClick={onClose}>
-      <div style={{ background: 'rgba(2,12,22,0.99)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 14, padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 640, width: '95%', maxHeight: '92vh', overflowY: 'auto', position: 'relative' }} onClick={e => e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,26,15,0.45)', backdropFilter: 'blur(16px)' }} onClick={onClose}>
+      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 14, boxShadow: '0 20px 60px rgba(0,0,0,.18)', padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 640, width: '95%', maxHeight: '92vh', overflowY: 'auto', position: 'relative' }} onClick={e => e.stopPropagation()}>
 
         {/* Header: value + trend side by side */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
@@ -580,40 +580,40 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
             </div>
           )}
           {error && !loading && (
-            <div style={{ padding: '12px 18px', background: 'rgba(80,12,12,.4)', border: '1px solid rgba(255,120,80,.45)', borderRadius: 6, color: 'rgba(255,200,180,1)', fontSize: 14, lineHeight: 1.5 }}>
-              <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,160,100,.85)', marginBottom: 4 }}>⚠ Could not load marker info</div>
+            <div style={{ padding: '12px 18px', background: 'rgba(127,29,29,.06)', border: '1px solid rgba(127,29,29,.2)', borderRadius: 6, color: 'var(--accent-elevated)', fontSize: 14, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'var(--accent-elevated)', marginBottom: 4 }}>⚠ Could not load marker info</div>
               {error}
             </div>
           )}
           {info && !loading && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <InfoBlock title="What is it?" text={info.what} bg="rgba(0,210,165,.03)" border="var(--border-subtle)" titleColor="rgba(0,225,180,.75)" textColor="var(--text-primary)" />
-              <InfoBlock title="Why it matters" text={info.why} bg="rgba(0,210,165,.03)" border="var(--brand-ghost)" titleColor="rgba(0,200,160,.65)" textColor="var(--text-secondary)" />
+              <InfoBlock title="What is it?" text={info.what} bg="var(--bg-sunken)" border="var(--border-subtle)" titleColor="var(--brand-dim)" textColor="var(--text-primary)" />
+              <InfoBlock title="Why it matters" text={info.why} bg="var(--bg-sunken)" border="var(--border-subtle)" titleColor="var(--text-secondary)" textColor="var(--text-secondary)" />
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
-                <InfoBlock title="If too high" text={info.high} bg="rgba(248,113,113,.05)" border="rgba(248,113,113,.18)" titleColor="rgba(248,113,113,.9)" textColor="rgba(255,190,180,.9)" />
-                <InfoBlock title="If too low" text={info.low} bg="rgba(251,146,60,.05)" border="rgba(251,146,60,.18)" titleColor="rgba(251,146,60,.9)" textColor="rgba(255,210,165,.9)" />
-                <div style={{ background: 'rgba(20,83,45,.04)', border: '1px solid rgba(52,211,153,.18)', borderRadius: 8, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, color: 'rgba(20,83,45,.85)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>To bring it down — natural first</div>
+                <InfoBlock title="If too high" text={info.high} bg="rgba(127,29,29,.04)" border="rgba(127,29,29,.15)" titleColor="var(--accent-elevated)" textColor="var(--text-primary)" />
+                <InfoBlock title="If too low" text={info.low} bg="rgba(120,53,15,.04)" border="rgba(120,53,15,.15)" titleColor="var(--accent-watch)" textColor="var(--text-primary)" />
+                <div style={{ background: 'rgba(20,83,45,.04)', border: '1px solid rgba(20,83,45,.15)', borderRadius: 8, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 11, color: 'var(--brand)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>To bring it down — natural first</div>
                   <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>{info.mitigateHigh}</p>
                   {info.mitigateHighMedical && info.mitigateHighMedical !== 'No medical intervention needed.' && (
-                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(52,211,153,.12)' }}>
-                      <div style={{ fontSize: 11, color: 'rgba(255,200,80,.75)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>When to involve a physician</div>
-                      <p style={{ fontSize: 13, color: 'rgba(255,220,140,.85)', lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>{info.mitigateHighMedical}</p>
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(20,83,45,.12)' }}>
+                      <div style={{ fontSize: 11, color: 'var(--accent-watch)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>When to involve a physician</div>
+                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>{info.mitigateHighMedical}</p>
                     </div>
                   )}
                 </div>
-                <div style={{ background: 'rgba(56,189,248,.04)', border: '1px solid rgba(56,189,248,.15)', borderRadius: 8, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, color: 'rgba(56,189,248,.85)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>To bring it up — natural first</div>
+                <div style={{ background: 'rgba(30,58,95,.04)', border: '1px solid rgba(30,58,95,.15)', borderRadius: 8, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 11, color: 'var(--accent-info)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>To bring it up — natural first</div>
                   <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>{info.mitigateLow}</p>
                   {info.mitigateLowMedical && info.mitigateLowMedical !== 'No medical intervention needed.' && (
-                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(56,189,248,.12)' }}>
-                      <div style={{ fontSize: 11, color: 'rgba(255,200,80,.75)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>When to involve a physician</div>
-                      <p style={{ fontSize: 13, color: 'rgba(255,220,140,.85)', lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>{info.mitigateLowMedical}</p>
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(30,58,95,.12)' }}>
+                      <div style={{ fontSize: 11, color: 'var(--accent-watch)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>When to involve a physician</div>
+                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>{info.mitigateLowMedical}</p>
                     </div>
                   )}
                 </div>
                 <InfoBlock title="Good for" text={info.goodFor} bg="var(--brand-ghost)" border="var(--border-subtle)" titleColor="var(--brand)" textColor="rgba(0,232,184,.9)" />
-                <InfoBlock title="Watch out for" text={info.badFor} bg="rgba(167,139,250,.04)" border="rgba(167,139,250,.15)" titleColor="rgba(167,139,250,.85)" textColor="rgba(200,180,255,.9)" />
+                <InfoBlock title="Watch out for" text={info.badFor} bg="var(--bg-sunken)" border="var(--border-subtle)" titleColor="var(--text-secondary)" textColor="var(--text-primary)" />
               </div>
             </div>
           )}
