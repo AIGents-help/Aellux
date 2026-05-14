@@ -71,7 +71,7 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
 
 function Orb() {
   return (
-    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'radial-gradient(ellipse at 35% 30%, #4dc98a 0%, #1a5c3a 50%, #0a1a0a 100%)', boxShadow: '0 0 30px var(--text-tertiary)', flexShrink: 0 }} />
+    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'radial-gradient(ellipse at 35% 30%, #1a7a3a 0%, #0a3d25 50%, #0a1a0a 100%)', boxShadow: '0 0 30px var(--text-tertiary)', flexShrink: 0 }} />
   );
 }
 

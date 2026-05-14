@@ -35,7 +35,7 @@ const css = `
     font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
     transition: background .15s;
   }
-  .lp-nav-btn:hover { background: #1a5c3a; }
+  .lp-nav-btn:hover { background: #0a3d25; }
 
   /* HERO */
   .lp-hero {
@@ -51,11 +51,11 @@ const css = `
   .lp-hero-eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
     font-size: 12px; font-weight: 500; letter-spacing: 0.1em;
-    text-transform: uppercase; color: #1a5c3a;
-    background: rgba(26,92,58,.07); border: 1px solid rgba(26,92,58,.15);
+    text-transform: uppercase; color: #0a3d25;
+    background: rgba(10,61,37,.07); border: 1px solid rgba(10,61,37,.15);
     border-radius: 100px; padding: 6px 14px; margin-bottom: 32px;
   }
-  .lp-hero-eyebrow span { width: 6px; height: 6px; border-radius: 50%; background: #1a5c3a; animation: lp-pulse 2s ease-in-out infinite; }
+  .lp-hero-eyebrow span { width: 6px; height: 6px; border-radius: 50%; background: #0a3d25; animation: lp-pulse 2s ease-in-out infinite; }
 
   .lp-h1 {
     font-family: 'EB Garamond', serif;
@@ -64,7 +64,7 @@ const css = `
     color: #0f1a0f; margin-bottom: 24px; max-width: 900px;
     letter-spacing: -0.02em;
   }
-  .lp-h1 em { font-style: italic; color: #1a5c3a; }
+  .lp-h1 em { font-style: italic; color: #0a3d25; }
 
   .lp-hero-sub {
     font-size: 19px; color: #4a5e4a; max-width: 540px;
@@ -79,7 +79,7 @@ const css = `
     border-radius: 8px; padding: 14px 32px; cursor: pointer;
     text-decoration: none; display: inline-block; transition: background .15s;
   }
-  .lp-btn-primary:hover { background: #1a5c3a; }
+  .lp-btn-primary:hover { background: #0a3d25; }
 
   .lp-btn-ghost {
     font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 400;
@@ -113,7 +113,7 @@ const css = `
   /* SECTIONS */
   .lp-section { max-width: 1100px; margin: 0 auto; padding: 100px 32px; }
   .lp-section-sm { max-width: 760px; margin: 0 auto; padding: 80px 32px; }
-  .lp-eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #1a5c3a; margin-bottom: 16px; }
+  .lp-eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #0a3d25; margin-bottom: 16px; }
   .lp-h2 { font-family: 'EB Garamond', serif; font-size: clamp(34px, 4vw, 56px); font-weight: 400; line-height: 1.1; color: #0f1a0f; margin-bottom: 20px; letter-spacing: -0.01em; }
   .lp-body { font-size: 17px; color: #4a5e4a; line-height: 1.8; max-width: 620px; font-weight: 300; }
 
@@ -121,9 +121,9 @@ const css = `
   .lp-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
   .lp-quote {
     font-family: 'EB Garamond', serif; font-size: 24px; font-style: italic;
-    color: #1a5c3a; line-height: 1.7;
-    padding: 28px 32px; background: rgba(26,92,58,.04);
-    border-left: 3px solid #1a5c3a; border-radius: 0 8px 8px 0;
+    color: #0a3d25; line-height: 1.7;
+    padding: 28px 32px; background: rgba(10,61,37,.04);
+    border-left: 3px solid #0a3d25; border-radius: 0 8px 8px 0;
   }
 
   /* HOW IT WORKS */
@@ -179,7 +179,7 @@ const css = `
   }
   .lp-intel-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #8a9e8a; margin-bottom: 10px; }
   .lp-intel-text { font-family: 'EB Garamond', serif; font-size: 16px; color: #0f1a0f; line-height: 1.65; font-style: italic; }
-  .lp-intel-marker { display: inline-block; margin-top: 12px; font-size: 11px; font-weight: 500; color: #1a5c3a; background: rgba(26,92,58,.07); padding: 2px 8px; border-radius: 100px; }
+  .lp-intel-marker { display: inline-block; margin-top: 12px; font-size: 11px; font-weight: 500; color: #0a3d25; background: rgba(10,61,37,.07); padding: 2px 8px; border-radius: 100px; }
 
   /* PRICING */
   .lp-pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 800px; margin: 48px auto 0; }
@@ -188,10 +188,10 @@ const css = `
   .lp-price-tier { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #4a5e4a; margin-bottom: 16px; }
   .lp-price-amount { font-family: 'EB Garamond', serif; font-size: 52px; color: #0f1a0f; font-weight: 400; line-height: 1; margin-bottom: 4px; }
   .lp-price-period { font-size: 14px; color: #8a9e8a; margin-bottom: 6px; }
-  .lp-price-hsa { font-size: 12px; color: #1a5c3a; background: rgba(26,92,58,.07); border: 1px solid rgba(26,92,58,.15); display: inline-block; padding: 2px 8px; border-radius: 100px; margin-bottom: 24px; }
+  .lp-price-hsa { font-size: 12px; color: #0a3d25; background: rgba(10,61,37,.07); border: 1px solid rgba(10,61,37,.15); display: inline-block; padding: 2px 8px; border-radius: 100px; margin-bottom: 24px; }
   .lp-price-features { list-style: none; margin-bottom: 32px; }
   .lp-price-features li { font-size: 14px; color: #4a5e4a; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,.05); display: flex; gap: 10px; font-weight: 300; }
-  .lp-price-features li::before { content: '✓'; color: #1a5c3a; flex-shrink: 0; font-weight: 500; }
+  .lp-price-features li::before { content: '✓'; color: #0a3d25; flex-shrink: 0; font-weight: 500; }
 
   /* FOOTER */
   .lp-footer { border-top: 1px solid rgba(0,0,0,.06); padding: 40px 48px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; background: #fff; }
@@ -211,7 +211,7 @@ const css = `
   .lp-final { text-align: center; padding: 120px 24px; background: #0f1a0f; }
   .lp-final .lp-h2 { color: #f7f6f2; }
   .lp-final .lp-body { color: rgba(247,246,242,.65); margin: 0 auto 44px; }
-  .lp-final .lp-eyebrow { color: #4dc98a; }
+  .lp-final .lp-eyebrow { color: #1a7a3a; }
   .lp-final-btn {
     font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 500;
     color: #0f1a0f; background: #f7f6f2; border: none;
@@ -252,7 +252,7 @@ export default function LandingPage({ onAuth }: Props) {
   }, []);
 
   const Orb = () => (
-    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'radial-gradient(ellipse at 35% 30%, #4dc98a 0%, #1a5c3a 50%, #0a1a0a 100%)', flexShrink: 0 }} />
+    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'radial-gradient(ellipse at 35% 30%, #1a7a3a 0%, #0a3d25 50%, #0a1a0a 100%)', flexShrink: 0 }} />
   );
 
   return (
@@ -484,7 +484,7 @@ export default function LandingPage({ onAuth }: Props) {
       {/* FINAL CTA */}
       <div className="lp-final">
         <p className="lp-eyebrow">Your biology is waiting</p>
-        <h2 className="lp-h2" style={{ marginBottom: 20 }}>Upload your first record.<br /><em style={{ color: '#4dc98a' }}>See what your labs actually mean.</em></h2>
+        <h2 className="lp-h2" style={{ marginBottom: 20 }}>Upload your first record.<br /><em style={{ color: '#1a7a3a' }}>See what your labs actually mean.</em></h2>
         <p className="lp-body" style={{ color: 'rgba(247,246,242,.6)', margin: '0 auto 40px', textAlign: 'center' }}>Free to start. No credit card. No generic templates.</p>
         <button className="lp-final-btn" onClick={onAuth}>Upload my first record →</button>
       </div>
