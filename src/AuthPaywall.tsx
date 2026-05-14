@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 
 const FREE = ['Upload up to 3 health documents', 'Extract and view all biomarkers', 'Basic health dashboard', 'Ask Aellux (5 questions/day)'];
+const HSA_NOTE = 'HSA/FSA eligible — check with your plan administrator';
 const PRO  = ['Unlimited document uploads', 'Full biomarker trend graphs', 'AI-generated meal protocol', 'AI-generated supplement stack', 'AI-generated daily protocol', 'Unlimited Aellux conversations', 'Priority Claude Opus analysis', 'Export your health data'];
 
 type View = 'landing' | 'signup-free' | 'signup-pro' | 'signin' | 'forgot' | 'reset';
@@ -408,6 +409,10 @@ export default function AuthPaywall() {
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
             <span style={{ fontSize: 52, color: '#c0fff0', fontWeight: 500 }}>$29</span>
             <span style={{ fontSize: 18, color: 'rgba(140,220,190,.6)' }}>/month</span>
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(0,210,165,.5)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ padding: '2px 7px', background: 'rgba(0,210,165,.1)', border: '1px solid rgba(0,210,165,.3)', borderRadius: 3, fontSize: 11, color: 'rgba(0,225,180,.8)', letterSpacing: '0.06em' }}>HSA/FSA</span>
+            <span>May be eligible — check with your plan</span>
           </div>
           <div style={{ fontSize: 17, color: 'rgba(120,210,175,.6)', marginBottom: 28 }}>Full biological intelligence</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 32 }}>

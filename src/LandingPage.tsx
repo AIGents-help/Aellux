@@ -395,7 +395,7 @@ export default function LandingPage({ onAuth }: Props) {
         <div className="lp-pricing">
           {[
             { tier: 'Free', amount: '$0', period: 'forever', featured: false, features: ['Upload 3 documents', 'Extract all biomarkers', 'Health dashboard & trends', 'Day 1 protocol preview', '5 AI questions per day'], cta: 'Get started free' },
-            { tier: 'Aellux Pro', amount: '$29', period: 'per month', featured: true, features: ['Unlimited documents', 'Full 7-day Biologic Protocol', 'Meal Prepper mode', 'Unlimited AI conversations', 'Supplement stack with rationale', 'PDF export — all protocols', 'Regenerate when biology updates', 'Priority processing'], cta: 'Start Pro — $29/mo' },
+            { tier: 'Aellux Pro', amount: '$29', period: 'per month · HSA/FSA may be eligible', featured: true, features: ['Unlimited documents', 'Full 7-day Biologic Protocol', 'Meal Prepper mode', 'Unlimited AI conversations', 'Supplement stack with rationale', 'PDF export — all protocols', 'Regenerate when biology updates', 'Priority processing'], cta: 'Start Pro — $29/mo' },
           ].map(p => (
             <div className={`lp-price${p.featured ? ' featured' : ''}`} key={p.tier}>
               <p className="lp-price-tier" style={p.featured ? { color: 'rgba(0,225,180,.9)' } : {}}>{p.tier}</p>
