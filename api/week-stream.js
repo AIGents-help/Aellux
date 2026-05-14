@@ -1,4 +1,4 @@
-import { sbSelect, sbUpsert, sbUpdate, rateLimit, logUsage, sha256, hashMarkers, getProfile, formatProfileForPrompt, hashProfile, hasMedications } from './_lib.js';
+import { sbSelect, sbUpsert, sbUpdate, rateLimit, logUsage, sha256, hashMarkers, getProfile, formatProfileForPrompt, hashProfile, hasMedications, getIntelligenceContext, formatIntelligenceForPrompt } from './_lib.js';
 
 export const config = { runtime: 'nodejs', maxDuration: 60 };
 
@@ -87,7 +87,7 @@ async function saveProtocol({ userId, result, mealStyle, additionalGoal, cycleLe
   }
 }
 
-function buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly, mealPrep }) {
+function buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly, mealPrep, intelligenceStr = '' }) {
   const ms = markers.slice(0, 20).map(m => `${m.name}:${m.value}${m.unit || ''}(${m.status || 'unknown'})`).join(', ');
   const profileBlock = profileStr ? `User profile: ${profileStr}\n` : '';
   const medSafetyBlock = medFlag
@@ -111,7 +111,7 @@ MEAL PREP MODE — ACTIVE. The user wants to cook everything on Sunday and porti
   const dayCount = dayOnly ? 1 : 7;
   const dayList = dayOnly ? ['Monday'] : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
-  return `${profileBlock}User biomarkers: ${ms}${styleBlock}${mealPrepBlock}${goalBlock}${medSafetyBlock}
+  return `${profileBlock}User biomarkers: ${ms}${styleBlock}${mealPrepBlock}${goalBlock}${intelligenceStr}${medSafetyBlock}
 
 Design a personalised ${dayCount}-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return EXACTLY ONE day (Monday) — this is a free-tier preview. Do not generate Tuesday through Sunday.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days. Generate ALL 7 days in order: ' + dayList.join(', ') + '.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density. Calorie/protein targets must reflect sex/age/weight/activity.
 
@@ -236,10 +236,13 @@ export default async function handler(req, res) {
   const profileStr = formatProfileForPrompt(profile);
   const profileHash = await hashProfile(profile);
   const medFlag = hasMedications(profile);
+  const intelligence = await getIntelligenceContext(userId);
+  const intelligenceStr = formatIntelligenceForPrompt(intelligence);
 
   const markerHash = await hashMarkers(markers);
   const PROMPT_VERSION = 'v2-pantry';
-  const cacheKey = await sha256(`week|${PROMPT_VERSION}|${mealStyle}|${mealPrep ? 'prep' : 'standard'}|${additionalGoal.toLowerCase().trim()}|${dayOnly ? 'preview' : 'full'}|${profileHash}|${markerHash}`);
+  const intelHash = intelligence ? await sha256(JSON.stringify(intelligence)) : 'nointel';
+  const cacheKey = await sha256(`week|${PROMPT_VERSION}|${mealStyle}|${mealPrep ? 'prep' : 'standard'}|${additionalGoal.toLowerCase().trim()}|${dayOnly ? 'preview' : 'full'}|${profileHash}|${markerHash}|${intelHash}`);
   const cachedRows = await sbSelect('personalised_cache', `cache_key=eq.${cacheKey}&select=result,hits&limit=1`);
   if (cachedRows && cachedRows.length > 0) {
     const row = cachedRows[0];
@@ -257,7 +260,7 @@ export default async function handler(req, res) {
     return res.end();
   }
 
-  const prompt = buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly, mealPrep });
+  const prompt = buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly, mealPrep, intelligenceStr });
   const maxTokens = dayOnly ? 2500 : 7000;
 
   sse(res, 'start', { dayOnly });

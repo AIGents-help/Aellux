@@ -159,3 +159,104 @@ export async function hashProfile(p) {
 export function hasMedications(p) {
   return !!(p && Array.isArray(p.medications) && p.medications.length > 0);
 }
+
+// ── Intelligence context ─────────────────────────────────────────────────────
+// Pulls ALL accumulated intelligence for a user — doctor-missed flags,
+// detected patterns, supplement log, bio age trajectory, correlation notes.
+// Injected into every AI generation prompt so nothing is generated in isolation.
+export async function getIntelligenceContext(userId) {
+  if (!userId) return null;
+
+  // Run all lookups in parallel
+  const [suppRows, bioAgeRows, docRows] = await Promise.all([
+    sbSelect('supplement_log', `user_id=eq.${userId}&ended_date=is.null&order=started_date.desc&select=name,dose,frequency,started_date&limit=10`),
+    sbSelect('bio_age_history', `user_id=eq.${userId}&order=created_at.desc&limit=6&select=biological_age,chronological_age,gap_years,created_at`),
+    sbSelect('documents', `user_id=eq.${userId}&select=doctor_missed_flags,document_date,document_type&limit=10`),
+  ]);
+
+  const ctx = {};
+
+  // Active supplements
+  if (suppRows && suppRows.length > 0) {
+    ctx.supplements = suppRows.map(s =>
+      `${s.name}${s.dose ? ' ' + s.dose : ''} ${s.frequency || 'daily'} (since ${s.started_date?.slice(0, 7) || 'unknown'})`
+    ).join(', ');
+  }
+
+  // Biological age trajectory
+  if (bioAgeRows && bioAgeRows.length > 0) {
+    const latest = bioAgeRows[0];
+    const oldest = bioAgeRows[bioAgeRows.length - 1];
+    const trend = bioAgeRows.length > 1
+      ? (parseFloat(latest.biological_age) - parseFloat(oldest.biological_age)).toFixed(1)
+      : null;
+    ctx.biologicalAge = {
+      current: latest.biological_age,
+      chronological: latest.chronological_age,
+      gap: latest.gap_years,
+      trend: trend, // negative = improving (getting biologically younger)
+      trajectory: bioAgeRows.slice(0, 4).map(r => `${r.created_at?.slice(0, 7)}: ${r.biological_age}`).join(' → '),
+    };
+  }
+
+  // Doctor-missed flags from recent documents
+  const missedFlags = [];
+  if (docRows) {
+    for (const doc of docRows) {
+      if (doc.doctor_missed_flags && Array.isArray(doc.doctor_missed_flags)) {
+        missedFlags.push(...doc.doctor_missed_flags.map(f => ({
+          ...f,
+          docDate: doc.document_date,
+          docType: doc.document_type,
+        })));
+      }
+    }
+  }
+  if (missedFlags.length > 0) ctx.doctorMissedFlags = missedFlags;
+
+  return Object.keys(ctx).length > 0 ? ctx : null;
+}
+
+// Format intelligence context for inclusion in AI prompts.
+// Returns a compact but information-dense string the model can reason from.
+export function formatIntelligenceForPrompt(intel) {
+  if (!intel) return '';
+  const parts = [];
+
+  if (intel.supplements) {
+    parts.push(`ACTIVE SUPPLEMENTS: ${intel.supplements}`);
+  }
+
+  if (intel.biologicalAge) {
+    const bio = intel.biologicalAge;
+    const gapStr = bio.gap != null
+      ? (parseFloat(bio.gap) < 0
+          ? `${Math.abs(bio.gap)} years younger than calendar age`
+          : parseFloat(bio.gap) > 0
+            ? `${bio.gap} years older than calendar age`
+            : 'at chronological age')
+      : '';
+    const trendStr = bio.trend != null
+      ? (parseFloat(bio.trend) < 0
+          ? ` — IMPROVING (trending ${Math.abs(bio.trend)} years younger)`
+          : parseFloat(bio.trend) > 0
+            ? ` — WORSENING (trending ${bio.trend} years older)`
+            : '')
+      : '';
+    parts.push(`BIOLOGICAL AGE: ${bio.current} (${gapStr}${trendStr}) | Trajectory: ${bio.trajectory}`);
+  }
+
+  if (intel.doctorMissedFlags && intel.doctorMissedFlags.length > 0) {
+    const flags = intel.doctorMissedFlags
+      .filter(f => f.severity === 'act' || f.severity === 'concern')
+      .slice(0, 4)
+      .map(f => `${f.marker} (${f.value}) — labeled normal but: ${f.why_concerning}`);
+    if (flags.length > 0) {
+      parts.push(`AELLUX FLAGS (missed by conventional analysis):\n${flags.join('\n')}`);
+    }
+  }
+
+  return parts.length > 0
+    ? `\n\n=== ACCUMULATED INTELLIGENCE (factor this into every recommendation) ===\n${parts.join('\n')}`
+    : '';
+}

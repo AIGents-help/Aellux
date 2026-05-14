@@ -4,7 +4,7 @@
  * Finds what was labeled "normal" but is functionally concerning
  * given the user's full marker context and profile.
  */
-import { logUsage, rateLimit, json } from './_lib.js';
+import { logUsage, rateLimit, json, getIntelligenceContext, formatIntelligenceForPrompt } from './_lib.js';
 
 export const config = { runtime: 'edge' };
 
@@ -17,6 +17,8 @@ export default async function handler(req) {
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, { status: 400 }); }
 
   const { userId, plan, docMarkers, allMarkers, profileCtx, docSummary, docType } = body || {};
+  const intelligence = await getIntelligenceContext(userId).catch(() => null);
+  const intelligenceStr = formatIntelligenceForPrompt(intelligence);
   if (!docMarkers?.length) return json({ flags: [] });
 
   if (userId) {
@@ -46,6 +48,8 @@ MARKERS FROM THIS DOCUMENT:
 ${docCtx}
 
 DOCUMENT SUMMARY: ${docSummary || 'Not provided'}
+
+${intelligenceStr}
 
 Identify up to 3 findings that a conventional doctor likely dismissed but warrant attention. Focus on:
 1. Values that are "normal" by lab standards but suboptimal for this person's age/sex/goals

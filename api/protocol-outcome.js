@@ -3,7 +3,7 @@
  * Compares biomarkers before and after a protocol cycle.
  * Called when user uploads new labs after completing a cycle.
  */
-import { sbSelect, logUsage, json } from './_lib.js';
+import { sbSelect, logUsage, json, getIntelligenceContext, formatIntelligenceForPrompt } from './_lib.js';
 
 export const config = { runtime: 'edge' };
 
@@ -19,6 +19,8 @@ export default async function handler(req) {
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, { status: 400 }); }
 
   const { userId, plan, protocolId, cycleStartDate, currentMarkers, previousMarkers, protocolSummary, profileCtx } = body || {};
+  const intelligence = await getIntelligenceContext(userId).catch(() => null);
+  const intelligenceStr = formatIntelligenceForPrompt(intelligence);
   if (!userId || !currentMarkers?.length) return json({ error: 'Missing required fields' }, { status: 400 });
 
   // Compute deltas
@@ -51,7 +53,9 @@ ${changeStr || 'No significant changes detected — labs may have been uploaded 
 IMPROVEMENTS (${improvements.length}): ${improvements.map(c => `${c.name} ${c.pct}%`).join(', ') || 'none'}
 REGRESSIONS (${regressions.length}): ${regressions.map(c => `${c.name} ${c.pct}%`).join(', ') || 'none'}
 
-Write a direct protocol audit — what worked, what didn't, and what to adjust for the next cycle. Reference specific numbers. If a recommended intervention is visible in the data (e.g. ferritin dropping after blood donation was recommended), acknowledge it. If something got worse, name what the protocol should have done differently. End with the single highest-leverage adjustment for the next cycle. Plain prose, no markdown, 5 sentences max.`;
+Write a direct protocol audit — what worked, what didn't, and what to adjust for the next cycle. Reference specific numbers. If a recommended intervention is visible in the data (e.g. ferritin dropping after blood donation was recommended), acknowledge it. If something got worse, name what the protocol should have done differently. End with the single highest-leverage adjustment for the next cycle. Plain prose, no markdown, 5 sentences max.
+
+${intelligenceStr}`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {

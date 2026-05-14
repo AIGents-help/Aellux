@@ -3,7 +3,7 @@
  * Given two marker names and a userId, returns their aligned timeline
  * and an AI analysis of how they interact across the user's history.
  */
-import { sbSelect, logUsage, rateLimit, json } from './_lib.js';
+import { sbSelect, logUsage, rateLimit, json, getIntelligenceContext, formatIntelligenceForPrompt } from './_lib.js';
 
 export const config = { runtime: 'edge' };
 
@@ -22,6 +22,9 @@ export default async function handler(req) {
     const r = await rateLimit({ userId, endpoint: 'correlate', limit: plan === 'pro' ? 30 : 3, windowHours: 24 });
     if (!r.ok) return json({ error: 'Daily correlation limit reached.' }, { status: 429 });
   }
+
+  const intelligence = await getIntelligenceContext(userId).catch(() => null);
+  const intelligenceStr = formatIntelligenceForPrompt(intelligence);
 
   // Align timelines by month
   const toMonth = (d) => d?.slice(0, 7) || '';
