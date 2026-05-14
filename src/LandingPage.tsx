@@ -224,6 +224,131 @@ const css = `
     0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
   }
 
+  /* === IMAGERY === */
+  /* Hero background */
+  .lp-hero { position: relative; }
+  .lp-hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background-size: cover; background-position: center;
+    opacity: 0.18; filter: saturate(0.55) contrast(1.05);
+  }
+  .lp-hero-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(247,246,242,0.5) 0%, rgba(247,246,242,0.85) 60%, #f7f6f2 100%);
+  }
+  .lp-hero > *:not(.lp-hero-bg) { position: relative; z-index: 1; }
+
+  /* Editorial paired image (problem section) */
+  .lp-paired-img {
+    width: 100%; aspect-ratio: 4 / 5;
+    border-radius: 14px; overflow: hidden;
+    background-size: cover; background-position: center;
+    filter: saturate(0.7) contrast(1.02);
+    box-shadow: 0 20px 60px -20px rgba(15,26,15,.25);
+  }
+
+  /* Wide editorial banner (above How it works) */
+  .lp-banner {
+    width: 100%; max-width: 1100px; margin: 0 auto;
+    aspect-ratio: 21 / 9;
+    border-radius: 16px; overflow: hidden;
+    background-size: cover; background-position: center;
+    filter: saturate(0.65) contrast(1.03);
+    box-shadow: 0 30px 80px -30px rgba(15,26,15,.3);
+    position: relative;
+  }
+  .lp-banner::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 50%, rgba(15,26,15,.35) 100%);
+  }
+  .lp-banner-caption {
+    position: absolute; bottom: 24px; left: 28px; z-index: 2;
+    font-family: 'EB Garamond', serif; font-size: 18px; font-style: italic;
+    color: #f7f6f2; max-width: 480px; line-height: 1.5;
+    text-shadow: 0 2px 12px rgba(0,0,0,.5);
+  }
+
+  /* Triptych — three images side by side */
+  .lp-triptych {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    max-width: 1100px; margin: 0 auto; padding: 0 32px 100px;
+  }
+  .lp-triptych-img {
+    aspect-ratio: 3 / 4; border-radius: 12px; overflow: hidden;
+    background-size: cover; background-position: center;
+    filter: saturate(0.65) contrast(1.02);
+    box-shadow: 0 12px 40px -16px rgba(15,26,15,.2);
+    position: relative;
+    transition: transform .3s ease, filter .3s ease;
+  }
+  .lp-triptych-img:hover { transform: translateY(-4px); filter: saturate(0.85) contrast(1.05); }
+  .lp-triptych-cap {
+    position: absolute; bottom: 16px; left: 18px; right: 18px; z-index: 2;
+    color: #f7f6f2; font-size: 13px; letter-spacing: 0.06em;
+    text-transform: uppercase; font-weight: 500;
+    text-shadow: 0 1px 8px rgba(0,0,0,.6);
+  }
+  .lp-triptych-img::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 55%, rgba(15,26,15,.55) 100%);
+  }
+
+  /* Mock pair image (replaces text-only side of dashboard mock) */
+  .lp-mock-side-img {
+    width: 100%; aspect-ratio: 1 / 1;
+    border-radius: 14px; overflow: hidden; margin-top: 32px;
+    background-size: cover; background-position: center;
+    filter: saturate(0.7) contrast(1.02);
+    box-shadow: 0 20px 60px -20px rgba(15,26,15,.25);
+  }
+
+  /* Voice section background image */
+  .lp-voice {
+    position: relative;
+    background-size: cover; background-position: center;
+    background-blend-mode: lighten;
+  }
+  .lp-voice-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background-size: cover; background-position: center;
+    opacity: 0.22; filter: saturate(0.6);
+  }
+  .lp-voice-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, #f7f6f2 0%, rgba(247,246,242,0.5) 30%, rgba(247,246,242,0.5) 70%, #f7f6f2 100%);
+  }
+  .lp-voice > *:not(.lp-voice-bg) { position: relative; z-index: 1; }
+
+  /* Philosophy image — full width editorial */
+  .lp-phil-img {
+    width: 100%; max-width: 1100px; margin: 56px auto 0;
+    aspect-ratio: 21 / 9;
+    border-radius: 16px; overflow: hidden;
+    background-size: cover; background-position: center;
+    filter: saturate(0.6) contrast(1.05);
+    box-shadow: 0 20px 60px -20px rgba(15,26,15,.25);
+  }
+
+  /* Final CTA — image background */
+  .lp-final { position: relative; overflow: hidden; }
+  .lp-final-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background-size: cover; background-position: center;
+    opacity: 0.25; filter: saturate(0.5) contrast(1.1);
+  }
+  .lp-final-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(15,26,15,0.85) 0%, rgba(15,26,15,0.95) 100%);
+  }
+  .lp-final > *:not(.lp-final-bg) { position: relative; z-index: 1; }
+
+  @media (max-width: 768px) {
+    .lp-triptych { grid-template-columns: 1fr; padding: 0 20px 64px; }
+    .lp-banner, .lp-phil-img { aspect-ratio: 4 / 3; border-radius: 12px; }
+    .lp-banner-caption { font-size: 15px; left: 18px; bottom: 16px; }
+    .lp-paired-img, .lp-mock-side-img { aspect-ratio: 4 / 3; }
+  }
+
   @media (max-width: 768px) {
     .lp-nav { padding: 0 20px; }
     .lp-nav-links { display: none; }
@@ -244,6 +369,22 @@ interface Props { onAuth: () => void; }
 
 export default function LandingPage({ onAuth }: Props) {
   const [scrolled, setScrolled] = useState(false);
+
+  // Curated Unsplash imagery — premium lifestyle, editorial framing
+  // All hotlinked from Unsplash CDN (free for commercial use, no attribution required)
+  // Filtered hard for: editorial > stock, desaturated > saturated, hands/details > faces
+  const img = {
+    hero:       'https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=1800&q=80&fm=webp',                 // soft morning light through linen — atmospheric
+    problem:    'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=900&q=85&fm=webp',                  // hand holding glass of water, editorial
+    howBanner:  'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1800&q=85&fm=webp',                 // overhead flatlay of food/ingredients — premium editorial
+    practice1:  'https://images.unsplash.com/photo-1543362906-acfc16c67564?w=700&q=85&fm=webp',                     // hands preparing food, top-down
+    practice2:  'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=700&q=85&fm=webp',                  // person running silhouette, calm tones
+    practice3:  'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=700&q=85&fm=webp',                  // meditation/calm body, soft light
+    mockSide:   'https://images.unsplash.com/photo-1505944270255-72b8c68c6a70?w=900&q=85&fm=webp',                  // hands holding cup, contemplative
+    voice:      'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=1600&q=80&fm=webp',                 // soft botanical close-up
+    philosophy: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1800&q=85&fm=webp',                 // forest light, holistic-first signal
+    finalCta:   'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1800&q=80&fm=webp',                 // mountain landscape — aspirational
+  };
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 20);
@@ -275,6 +416,7 @@ export default function LandingPage({ onAuth }: Props) {
 
       {/* HERO */}
       <div className="lp-hero">
+        <div className="lp-hero-bg" style={{ backgroundImage: `url(${img.hero})` }} />
         <div className="lp-hero-eyebrow">
           <span />
           Health intelligence, built on your biology
@@ -316,10 +458,11 @@ export default function LandingPage({ onAuth }: Props) {
             <p className="lp-body">
               Your blood work shows elevated estrogen suppressing free testosterone. Your thyroid T3 is suboptimal despite a "normal" TSH. Your ferritin is affecting your energy and recovery. A generic wellness app sees none of this. It gives you the same meal plan as 10 million other users.
             </p>
+            <div className="lp-quote" style={{ marginTop: 28 }}>
+              "Aellux is not a wellness app. It is a mirror — reflecting the truth of what your markers are saying, not what the industry wants you to believe they mean."
+            </div>
           </div>
-          <div className="lp-quote">
-            "Aellux is not a wellness app. It is a mirror — reflecting the truth of what your markers are saying, not what the industry wants you to believe they mean."
-          </div>
+          <div className="lp-paired-img" style={{ backgroundImage: `url(${img.problem})` }} role="img" aria-label="Editorial photograph" />
         </div>
       </div>
 
@@ -327,6 +470,9 @@ export default function LandingPage({ onAuth }: Props) {
 
       {/* HOW IT WORKS */}
       <div className="lp-section" id="how">
+        <div className="lp-banner" style={{ backgroundImage: `url(${img.howBanner})`, marginBottom: 64 }} role="img" aria-label="Editorial flatlay">
+          <div className="lp-banner-caption">Your biology, mapped — every marker calibrated to a specific lever you can actually pull.</div>
+        </div>
         <p className="lp-eyebrow">How it works</p>
         <h2 className="lp-h2">Three steps to your<br />Biologic Protocol.</h2>
         <div className="lp-steps">
@@ -369,6 +515,25 @@ export default function LandingPage({ onAuth }: Props) {
 
       <div className="lp-divider" />
 
+      {/* IN PRACTICE — TRIPTYCH */}
+      <div className="lp-section" style={{ paddingBottom: 0 }}>
+        <p className="lp-eyebrow" style={{ textAlign: 'center' }}>In practice</p>
+        <h2 className="lp-h2" style={{ textAlign: 'center', maxWidth: 720, margin: '0 auto 56px' }}>Your protocol shows up<br/>in the way you live.</h2>
+      </div>
+      <div className="lp-triptych">
+        <div className="lp-triptych-img" style={{ backgroundImage: `url(${img.practice1})` }} role="img" aria-label="Meal preparation">
+          <div className="lp-triptych-cap">Meals · Calibrated to your markers</div>
+        </div>
+        <div className="lp-triptych-img" style={{ backgroundImage: `url(${img.practice2})` }} role="img" aria-label="Movement">
+          <div className="lp-triptych-cap">Movement · Tuned to your recovery</div>
+        </div>
+        <div className="lp-triptych-img" style={{ backgroundImage: `url(${img.practice3})` }} role="img" aria-label="Recovery">
+          <div className="lp-triptych-cap">Recovery · Built on your biology</div>
+        </div>
+      </div>
+
+      <div className="lp-divider" />
+
       {/* MOCK UI */}
       <div className="lp-section" id="intelligence">
         <div className="lp-mock-wrap">
@@ -376,6 +541,7 @@ export default function LandingPage({ onAuth }: Props) {
             <p className="lp-eyebrow">Your data, your story</p>
             <h2 className="lp-h2">Not just numbers. A map of how your biology moves.</h2>
             <p className="lp-body">Every biomarker shows where you sit on the full reference spectrum — your dot riding the track between Low and High. Tap any marker to see the deep analysis: what it is, why it matters, what it's doing to your other markers.</p>
+            <div className="lp-mock-side-img" style={{ backgroundImage: `url(${img.mockSide})` }} role="img" aria-label="Contemplative editorial" />
           </div>
           <div className="lp-mock">
             <div className="lp-mock-header">
@@ -404,6 +570,7 @@ export default function LandingPage({ onAuth }: Props) {
 
       {/* VOICE */}
       <div className="lp-voice">
+        <div className="lp-voice-bg" style={{ backgroundImage: `url(${img.voice})` }} />
         <p className="lp-eyebrow" style={{ textAlign: 'center', marginBottom: 32 }}>Aellux Synthesis</p>
         <p className="lp-voice-text">
           "Your elevated estrogen at 34.6 is not an isolated problem. It is actively suppressing your free testosterone and slowing thyroid T3 conversion — one upstream imbalance creating three downstream symptoms you have been told are unrelated. This is correctable without a prescription."
@@ -439,6 +606,7 @@ export default function LandingPage({ onAuth }: Props) {
         <p className="lp-eyebrow">Our philosophy</p>
         <h2 className="lp-h2">We are not the medical industry.</h2>
         <p className="lp-body" style={{ marginBottom: 0 }}>Aellux exists because most health information is designed to create dependency, not independence. We believe your body has intelligence. We believe the answers are usually in the biology, not the pharmacy.</p>
+        <div className="lp-phil-img" style={{ backgroundImage: `url(${img.philosophy})` }} role="img" aria-label="Holistic biology" />
         <div className="lp-phil-grid">
           {[
             { n: 'I', h: 'Holistic first', p: 'Every recommendation leads with food, movement, sleep, and targeted supplementation. Medical intervention appears last — as escalation when genuinely warranted, not the opening move.' },
@@ -483,6 +651,7 @@ export default function LandingPage({ onAuth }: Props) {
 
       {/* FINAL CTA */}
       <div className="lp-final">
+        <div className="lp-final-bg" style={{ backgroundImage: `url(${img.finalCta})` }} />
         <p className="lp-eyebrow">Your biology is waiting</p>
         <h2 className="lp-h2" style={{ marginBottom: 20 }}>Upload your first record.<br /><em style={{ color: '#064e23' }}>See what your labs actually mean.</em></h2>
         <p className="lp-body" style={{ color: 'rgba(247,246,242,.6)', margin: '0 auto 40px', textAlign: 'center' }}>Free to start. No credit card. No generic templates.</p>
