@@ -591,8 +591,8 @@ export default function App() {
 
   // Filter out wearable signal-quality metrics (GPS accuracy, signal strength etc.)
   // These are device readings, not health biomarkers — showing them as health flags destroys trust.
-  const WEARABLE_NOISE = /horizontal.accu|vertical.accu|gps.accu|signal.qual|hdop|pdop|gps.sat|speed.accu/i;
-  const healthMarkers = useMemo(() => allMarkers.filter(m => !WEARABLE_NOISE.test(m.name)), [allMarkers]);
+  const DEVICE_NOISE = /horizontal.acc|vertical.acc|gps.acc|gps.signal|gps.route|elevation.gain|elevation.change|route.duration|ecg.*raw|raw.signal|lead.*raw|signal.qual|status.code|supplemental.drop|leafy.green|microgreen|protein.intake|pathogenic.*count|uncertain.signif.*count/i;
+  const healthMarkers = useMemo(() => allMarkers.filter(m => !DEVICE_NOISE.test(String(m.name || ''))), [allMarkers]);
   const flaggedMarkers = useMemo(() => healthMarkers.filter(m => m.status === 'elevated' || m.status === 'low'), [healthMarkers]);
 
   // Keep activeMarkerKeys in sync
@@ -1411,7 +1411,7 @@ export default function App() {
               {/* Biomarker cards with mini trend lines */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
                 {allMarkers
-                  .filter(m => !WEARABLE_NOISE.test(String(m.name || '')))
+                  .filter(m => !DEVICE_NOISE.test(String(m.name || '')))
                   .filter(m => trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase())
                   .sort((a, b) => ((b as any).history?.length || 0) - ((a as any).history?.length || 0))
                   .slice(0, 48)
@@ -1488,7 +1488,7 @@ export default function App() {
                     );
                   })}
               </div>
-              {allMarkers.filter(m => !WEARABLE_NOISE.test(String(m.name || '')) && (trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase())).length === 0 && (
+              {allMarkers.filter(m => !DEVICE_NOISE.test(String(m.name || '')) && (trendsFilter === 'All' || (m.category || '').toLowerCase() === trendsFilter.toLowerCase())).length === 0 && (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(0,210,165,.35)', fontSize: 13 }}>No markers in this category</div>
               )}
             </div>

@@ -1,16 +1,16 @@
 export const config = { runtime: 'edge' };
 
-const EXTRACT_PROMPT = `You are a medical data extraction AI. Extract ALL health biomarkers from this document.
+const EXTRACT_PROMPT = `You are a precision health biomarker extraction AI. Extract HEALTH BIOMARKERS ONLY — values that reflect the body's internal biological state.
 
 Return ONLY valid JSON in this exact format, no other text:
 {
-  "document_type": "blood_panel|wearable|dexa|sleep|microbiome|physician_note|other",
+  "document_type": "blood_panel|wearable|dexa|sleep|microbiome|physician_note|genetic|other",
   "document_date": "YYYY-MM-DD or null",
   "patient_name": "name or null",
   "markers": [
     {
       "name": "exact marker name",
-      "category": "metabolic|cardiovascular|hormonal|inflammatory|nutritional|sleep|fitness|body_composition|cognitive|gut|other",
+      "category": "metabolic|cardiovascular|hormonal|inflammatory|nutritional|sleep|fitness|body_composition|cognitive|gut|genetic|other",
       "value": 123.4,
       "unit": "mg/dL",
       "reference_range_low": 70,
@@ -19,12 +19,20 @@ Return ONLY valid JSON in this exact format, no other text:
       "trend_direction": "improving|worsening|stable|unknown"
     }
   ],
-  "summary": "2-3 sentence clinical summary of what this document reveals",
-  "flags": ["any critical findings worth highlighting"],
+  "summary": "2-3 sentence summary of what this document reveals about the person's health",
+  "flags": ["any critical health findings worth highlighting"],
   "recommendations": ["specific actionable items based on results"]
 }
 
-Extract EVERY measurable value — hormones, vitamins, minerals, lipids, metabolic markers, inflammatory markers, sleep stages, HRV, VO2max, body fat %, lean mass, gut bacteria ratios, everything. If a value appears, extract it.`;
+EXTRACT these health biomarkers: hormones (testosterone, estrogen, cortisol, thyroid, DHEA, IGF-1), blood lipids (LDL, HDL, ApoB, triglycerides), metabolic (glucose, HbA1c, insulin, creatinine, albumin), inflammatory (CRP, IL-6, homocysteine), nutritional (vitamin D, B12, ferritin, magnesium, zinc, iron), sleep quality metrics (deep sleep %, REM %, HRV, sleep efficiency, sleep score), body composition (body fat %, lean mass, visceral fat, bone density, T-score), fitness physiology (VO2max, resting heart rate, recovery score, lactate threshold), gut health (diversity scores, pathogen flags), genetic variants with health implications.
+
+NEVER EXTRACT — these are device artifacts, not health biomarkers:
+- GPS/device telemetry: GPS accuracy, horizontal accuracy, vertical accuracy, GPS signal quality, hAcc, vAcc, HDOP, PDOP, satellite count, GPS route data, elevation, elevation gain, elevation change, speed in m/s, route duration (GPS), distance traveled
+- Raw sensor signals: ECG raw signal in µV, accelerometer readings, gyroscope data, status_code values
+- Supplement intake logs (what was TAKEN, not measured in blood): "Magnesium Glycinate 300mg dose", "Vitamin D3 supplemental drops" — only extract measured blood/serum/tissue levels
+- Food diary entries: "leafy greens intake cups/day", "protein intake servings", "microgreens intake" — these are diet logs, not biomarkers
+- Duplicate marker names: if the same marker appears with slightly different names (e.g. "SHBG" and "SHBG (Sex Hormone Binding Globulin)"), extract it ONCE with the shorter clean name
+- Aggregate counts without clinical meaning: "pathogenic variants count", "variants of uncertain significance count" — extract the specific named gene variants instead`
 
 export default async function handler(req) {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
