@@ -319,8 +319,8 @@ function TrendChart({ history, markerName, unit, profile, allMarkers, userId, pl
               Aellux is reading this moment in your biology…
             </div>
           ) : analysis ? (
-            <p style={{ fontSize: 15, color: 'rgba(220,255,235,.92)', lineHeight: 1.75, margin: 0, fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic' }}>
-              {analysis}
+            <p style={{ fontSize: 16, color: 'rgba(220,255,235,.95)', lineHeight: 1.8, margin: 0, fontFamily: 'Inter, sans-serif', fontStyle: 'normal', fontWeight: 300 }}>
+              {analysis.replace(/^#+\s*/gm, '').replace(/\*\*/g, '')}
             </p>
           ) : null}
           {!analysisLoading && (

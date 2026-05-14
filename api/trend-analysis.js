@@ -53,7 +53,9 @@ Your task — speak directly to this person about this specific moment in their 
 3. If this looks like the beginning of a trend (a decline, an improvement, a pattern), name it and when it started.
 4. Give 1-2 specific, actionable things they can do NOW based on this pattern.
 
-Speak as Aellux: ancient, direct, warm. Reference actual numbers and dates. No hedging. No "consult your doctor." Max 4 sentences. Every word earns its place.`;
+Speak as Aellux: ancient, direct, warm. Reference actual numbers and dates. No hedging. No "consult your doctor." Max 4 sentences. Every word earns its place.
+
+CRITICAL FORMAT RULE: Plain prose only. No markdown. No # headers. No **bold**. No bullet points. No asterisks of any kind. Just sentences.`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
