@@ -16,6 +16,8 @@ import SupplementLog from './SupplementLog';
 import PractitionerShare from './PractitionerShare';
 import DoctorMissed from './DoctorMissed';
 import Accountability from './Accountability';
+import Premortem from './Premortem';
+import RecordsGuide from './RecordsGuide';
 import PrintableReport from './PrintableReport';
 import WeekView from './WeekView';
 import DerivedViews from './DerivedViews';
@@ -1573,6 +1575,16 @@ export default function App() {
                           <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
                         </>
                       )}
+
+                      {/* Premortem — Trajectory Analysis */}
+                      <Premortem
+                        userId={user?.id}
+                        plan={isPro ? 'pro' : 'free'}
+                        allMarkers={allMarkers}
+                        profile={profile}
+                      />
+
+                      <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
 
                       {/* Multi-Marker Correlation */}
                       <CorrelationChart
