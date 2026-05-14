@@ -459,6 +459,7 @@ export default function App() {
   const [bpMealPrep, setBpMealPrep] = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [authModalView, setAuthModalView] = useState<'signin' | 'signup-free' | 'signup-pro'>('signin');
   const isMobile = useIsMobile();
   const [dashTab, setDashTab] = useState<'markers' | 'intelligence'>('markers');
   const [patterns, setPatterns] = useState<any[]>([]);
@@ -1006,12 +1007,12 @@ export default function App() {
   if (!user) {
     return (
       <>
-        <LandingPage onAuth={() => setShowAuthModal(true)} />
+        <LandingPage onAuth={(variant) => { setAuthModalView(variant || 'signin'); setShowAuthModal(true); }} />
         {showAuthModal && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,8,18,0.92)', backdropFilter: 'blur(8px)' }}
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,8,18,0.92)', backdropFilter: 'blur(8px)', overflowY: 'auto', padding: '40px 20px' }}
             onClick={() => setShowAuthModal(false)}>
-            <div onClick={e => e.stopPropagation()}>
-              <AuthPaywall />
+            <div onClick={e => e.stopPropagation()} style={{ maxWidth: 480, width: '100%' }}>
+              <AuthPaywall initialView={authModalView} />
             </div>
           </div>
         )}

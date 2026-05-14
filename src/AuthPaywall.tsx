@@ -103,10 +103,10 @@ const ghost: React.CSSProperties = {
 };
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function AuthPaywall() {
+export default function AuthPaywall({ initialView = 'signin' as View }: { initialView?: View } = {}) {
   const { signIn, signUp } = useAuth();
 
-  const [view, setView]     = useState<View>('landing');
+  const [view, setView]     = useState<View>(initialView);
   const [email, setEmail]   = useState('');
   const [password, setPassword]   = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

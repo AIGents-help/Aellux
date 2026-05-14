@@ -365,7 +365,8 @@ const css = `
   }
 `;
 
-interface Props { onAuth: () => void; }
+type AuthVariant = 'signin' | 'signup-free' | 'signup-pro';
+interface Props { onAuth: (variant?: AuthVariant) => void; }
 
 export default function LandingPage({ onAuth }: Props) {
   const [scrolled, setScrolled] = useState(false);
@@ -410,7 +411,7 @@ export default function LandingPage({ onAuth }: Props) {
           <li><a href="#how">How it works</a></li>
           <li><a href="#intelligence">Intelligence</a></li>
           <li><a href="#pricing">Pricing</a></li>
-          <li><button className="lp-nav-btn" onClick={onAuth}>Sign in</button></li>
+          <li><button className="lp-nav-btn" onClick={() => onAuth('signin')}>Sign in</button></li>
         </ul>
       </nav>
 
@@ -429,7 +430,7 @@ export default function LandingPage({ onAuth }: Props) {
           Upload your medical records and wearable data. Aellux reads everything and builds a 7-day operating system calibrated to your exact biology — not a template, not population averages. Yours.
         </p>
         <div className="lp-hero-actions">
-          <button className="lp-btn-primary" onClick={onAuth}>Get started free →</button>
+          <button className="lp-btn-primary" onClick={() => onAuth('signup-free')}>Get started free →</button>
           <a className="lp-btn-ghost" href="#how">See how it works</a>
         </div>
         <div className="lp-data-strip">
@@ -641,7 +642,7 @@ export default function LandingPage({ onAuth }: Props) {
               <ul className="lp-price-features">
                 {p.features.map(f => <li key={f}>{f}</li>)}
               </ul>
-              <button className={p.featured ? 'lp-btn-primary' : 'lp-btn-ghost'} onClick={onAuth} style={{ width: '100%', textAlign: 'center' }}>{p.cta}</button>
+              <button className={p.featured ? 'lp-btn-primary' : 'lp-btn-ghost'} onClick={() => onAuth(p.featured ? 'signup-pro' : 'signup-free')} style={{ width: '100%', textAlign: 'center' }}>{p.cta}</button>
             </div>
           ))}
         </div>
@@ -655,7 +656,7 @@ export default function LandingPage({ onAuth }: Props) {
         <p className="lp-eyebrow">Your biology is waiting</p>
         <h2 className="lp-h2" style={{ marginBottom: 20 }}>Upload your first record.<br /><em style={{ color: '#064e23' }}>See what your labs actually mean.</em></h2>
         <p className="lp-body" style={{ color: 'rgba(247,246,242,.6)', margin: '0 auto 40px', textAlign: 'center' }}>Free to start. No credit card. No generic templates.</p>
-        <button className="lp-final-btn" onClick={onAuth}>Upload my first record →</button>
+        <button className="lp-final-btn" onClick={() => onAuth('signup-free')}>Upload my first record →</button>
       </div>
 
       {/* FOOTER */}
