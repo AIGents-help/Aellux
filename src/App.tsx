@@ -1508,7 +1508,7 @@ export default function App() {
                           <div style={{ marginTop: 12 }}>
                             <div style={{ position:'relative',height:6,borderRadius:6,background:'var(--brand-ghost)' }}>
                               <div style={{ position:'absolute',top:0,height:'100%',borderRadius:6,left:`${pct(ref.low)}%`,width:`${Math.max(0,pct(ref.high)-pct(ref.low))}%`,background:'rgba(0,210,165,.14)' }} />
-                              <div style={{ position:'absolute',top:'50%',left:`${pct(numVal)}%`,transform:'translate(-50%,-50%)',width:12,height:12,borderRadius:'50%',background:statusColor,border:'2px solid rgba(2,12,22,1)',boxShadow:`0 0 6px ${statusColor}88`,zIndex:2 }} />
+                              <div style={{ position:'absolute',top:'50%',left:`${pct(numVal)}%`,transform:'translate(-50%,-50%)',width:12,height:12,borderRadius:'50%',background:statusColor,border:'2px solid #ffffff',boxShadow:`0 0 4px ${statusColor}66`,zIndex:2 }} />
                             </div>
                             <div style={{ display:'flex',justifyContent:'space-between',marginTop:4 }}>
                               <span style={{ fontSize:11,color:'var(--text-tertiary)' }}>Low {ref.low}</span>

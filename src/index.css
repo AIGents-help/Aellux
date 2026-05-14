@@ -17,21 +17,21 @@
 
   /* Text */
   --text-primary:   #0f1a0f;
-  --text-secondary: #4a5e4a;
-  --text-tertiary:  #8a9e8a;
+  --text-secondary: #1e321e;
+  --text-tertiary:  #3d5a3d;
   --text-inverse:   #ffffff;
 
   /* Brand — deep forest green */
-  --brand:          #052e16;
-  --brand-dim:      #064e23;
-  --brand-ghost:    rgba(5,46,22,.07);
-  --brand-border:   rgba(5,46,22,.18);
+  --brand:          #031a0d;
+  --brand-dim:      #052e16;
+  --brand-ghost:    rgba(3,26,13,.08);
+  --brand-border:   rgba(3,26,13,.22);
 
   /* Accent — for data, alerts, highlights */
-  --accent-elevated: #c0392b;
-  --accent-optimal:  #1a7a3a;
-  --accent-watch:    #c47c0a;
-  --accent-info:     #1a4a8a;
+  --accent-elevated: #7f1d1d;
+  --accent-optimal:  #14532d;
+  --accent-watch:    #78350f;
+  --accent-info:     #1e3a5f;
 
   /* Shadows */
   --shadow-card:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);

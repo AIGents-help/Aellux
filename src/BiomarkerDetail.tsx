@@ -64,7 +64,7 @@ function RangeBar({ value, markerName, unit, compact = false }: { value: number;
           <div style={{
             position: 'absolute', top: 0, height: '100%',
             left: `${optLowPct}%`, width: `${optHighPct - optLowPct}%`,
-            background: 'rgba(52,211,153,.25)',
+            background: 'rgba(20,83,45,.25)',
           }} />
         )}
         {/* Value marker */}
@@ -86,7 +86,7 @@ function RangeBar({ value, markerName, unit, compact = false }: { value: number;
           Low {ref.low}{unit ? ` ${unit}` : ''}
         </span>
         {ref.optLow != null && !compact && (
-          <span style={{ fontSize: 11, color: 'rgba(52,211,153,.6)' }}>
+          <span style={{ fontSize: 11, color: 'rgba(20,83,45,.6)' }}>
             Optimal {ref.optLow}–{ref.optHigh}{unit ? ` ${unit}` : ''}
           </span>
         )}
@@ -592,8 +592,8 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                 <InfoBlock title="If too high" text={info.high} bg="rgba(248,113,113,.05)" border="rgba(248,113,113,.18)" titleColor="rgba(248,113,113,.9)" textColor="rgba(255,190,180,.9)" />
                 <InfoBlock title="If too low" text={info.low} bg="rgba(251,146,60,.05)" border="rgba(251,146,60,.18)" titleColor="rgba(251,146,60,.9)" textColor="rgba(255,210,165,.9)" />
-                <div style={{ background: 'rgba(52,211,153,.04)', border: '1px solid rgba(52,211,153,.18)', borderRadius: 8, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, color: 'rgba(52,211,153,.85)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>To bring it down — natural first</div>
+                <div style={{ background: 'rgba(20,83,45,.04)', border: '1px solid rgba(52,211,153,.18)', borderRadius: 8, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 11, color: 'rgba(20,83,45,.85)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>To bring it down — natural first</div>
                   <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>{info.mitigateHigh}</p>
                   {info.mitigateHighMedical && info.mitigateHighMedical !== 'No medical intervention needed.' && (
                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(52,211,153,.12)' }}>
