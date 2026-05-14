@@ -97,63 +97,251 @@ function RangeBar({ value, markerName, unit, compact = false }: { value: number;
   );
 }
 
-// ── Sparkline with range bar ──────────────────────────────────────────────────
-function TrendLine({ history, markerName, unit, currentValue }: { history: { value: any; date: string }[]; markerName: string; unit?: string; currentValue: any }) {
-  const ref = REF[markerName];
-  const nums = history.map(h => parseFloat(h.value)).filter(n => !isNaN(n));
-  if (nums.length < 2) return null;
+// ── Interactive Trend Chart ────────────────────────────────────────────────────
+// Clickable data points open an AI-powered "what changed?" analysis
+function TrendChart({ history, markerName, unit, profile, allMarkers }: {
+  history: { value: any; date: string }[];
+  markerName: string;
+  unit?: string;
+  profile?: any;
+  allMarkers?: any[];
+}) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [analysis, setAnalysis] = useState<string | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const svgRef = React.useRef<SVGSVGElement>(null);
 
-  const padding = ref ? (ref.high - ref.low) * 0.2 : 0;
-  const chartMin = ref ? Math.max(0, ref.low - padding) : Math.min(...nums) * 0.9;
-  const chartMax = ref ? ref.high + padding : Math.max(...nums) * 1.1;
+  const ref = REF[markerName];
+  const sorted = [...history]
+    .filter(h => h.date && !isNaN(parseFloat(h.value)))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const nums = sorted.map(h => parseFloat(h.value));
+  if (nums.length < 1) return null;
+
+  const padding = ref ? (ref.high - ref.low) * 0.25 : 0;
+  const chartMin = ref ? Math.max(0, ref.low - padding) : Math.min(...nums) * 0.88;
+  const chartMax = ref ? ref.high + padding : Math.max(...nums) * 1.12;
   const span = chartMax - chartMin || 1;
 
-  const W = 280, H = 80, PAD = 16;
-  const px = (i: number) => PAD + (i / Math.max(nums.length - 1, 1)) * (W - PAD * 2);
-  const py = (v: number) => H - PAD - ((v - chartMin) / span) * (H - PAD * 2);
-
+  const W = 560, H = 160, PAD_X = 20, PAD_Y = 24;
+  const px = (i: number) => PAD_X + (i / Math.max(nums.length - 1, 1)) * (W - PAD_X * 2);
+  const py = (v: number) => H - PAD_Y - ((v - chartMin) / span) * (H - PAD_Y * 2);
   const pts = nums.map((v, i) => `${px(i)},${py(v)}`).join(' ');
 
+  // Detect significant changes (>15% jump between consecutive readings)
+  const significantChanges: number[] = [];
+  for (let i = 1; i < nums.length; i++) {
+    const pct = Math.abs((nums[i] - nums[i-1]) / (nums[i-1] || 1));
+    if (pct > 0.15) significantChanges.push(i);
+  }
+
   const last = nums[nums.length - 1];
-  const statusColor = ref
-    ? (last < ref.low ? '#fb923c' : last > ref.high ? '#f87171' : '#34d399')
+  const pointColor = (v: number) => !isNaN(v) && ref
+    ? (v < ref.low ? '#fb923c' : v > ref.high ? '#f87171' : '#34d399')
     : '#34d399';
 
   const optLowY = ref?.optLow != null ? py(ref.optLow) : null;
   const optHighY = ref?.optHigh != null ? py(ref.optHigh) : null;
 
+  const formatDate = (d: string) => {
+    if (!d) return '';
+    const dt = new Date(d + (d.length === 10 ? 'T12:00:00' : ''));
+    return dt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  };
+
+  const askAI = async (idx: number) => {
+    if (idx < 0 || idx >= sorted.length) return;
+    setSelectedIdx(idx);
+    setAnalysis(null);
+    setAnalysisLoading(true);
+
+    const point = sorted[idx];
+    const prev = idx > 0 ? sorted[idx - 1] : null;
+    const next = idx < sorted.length - 1 ? sorted[idx + 1] : null;
+    const delta = prev ? (parseFloat(point.value) - parseFloat(prev.value)) : null;
+    const pct = prev && parseFloat(prev.value) ? ((delta! / parseFloat(prev.value)) * 100).toFixed(1) : null;
+    const isSignificant = significantChanges.includes(idx);
+
+    // Build context about all markers around this date
+    const dateContext = point.date?.slice(0, 7) ?? '';
+    const markerSnapshot = (allMarkers || [])
+      .filter((m: any) => m.name !== markerName)
+      .map((m: any) => {
+        const nearbyReading = (m.history || [])
+          .filter((h: any) => h.date?.startsWith(dateContext.slice(0, 4)))
+          .sort((a: any, b: any) => Math.abs(new Date(a.date).getTime() - new Date(point.date).getTime()) - Math.abs(new Date(b.date).getTime() - new Date(point.date).getTime()))[0];
+        return nearbyReading ? `${m.name}: ${nearbyReading.value}${m.unit ? ' ' + m.unit : ''}` : null;
+      })
+      .filter(Boolean)
+      .slice(0, 12)
+      .join(', ');
+
+    const profileCtx = profile ? [
+      profile.biological_sex && `sex: ${profile.biological_sex}`,
+      profile.birth_year && `age: ${new Date().getFullYear() - profile.birth_year}`,
+      profile.weight_kg && `weight: ${profile.weight_kg}kg`,
+      profile.goal && `goal: ${profile.goal}`,
+      profile.activity_level && `activity: ${profile.activity_level}`,
+    ].filter(Boolean).join(', ') : '';
+
+    const prompt = `You are Aellux — an ancient health intelligence who reads biological patterns with precision and speaks directly.
+
+The user is examining their ${markerName} trend chart and has clicked on a specific data point to understand what happened.
+
+DATA POINT SELECTED:
+- Date: ${formatDate(point.date)} (${point.date})
+- Value: ${point.value}${unit ? ' ' + unit : ''}
+${prev ? `- Previous reading (${formatDate(prev.date)}): ${prev.value}${unit ? ' ' + unit : ''} — ${delta! > 0 ? 'increase' : 'decrease'} of ${Math.abs(delta!).toFixed(1)}${unit ? ' ' + unit : ''} (${pct}%)` : '- This is the first recorded reading'}
+${next ? `- Next reading (${formatDate(next.date)}): ${next.value}${unit ? ' ' + unit : ''}` : '- This is the most recent reading'}
+${isSignificant ? '- NOTE: This represents a SIGNIFICANT change (>15% shift)' : ''}
+
+ALL READINGS IN ORDER:
+${sorted.map((r, i) => `${formatDate(r.date)}: ${r.value}${unit ? ' ' + unit : ''}`).join(' | ')}
+
+OTHER MARKERS AROUND THIS PERIOD:
+${markerSnapshot || 'No other marker data available for this period'}
+
+USER PROFILE: ${profileCtx || 'Not provided'}
+
+Reference range for ${markerName}: ${ref ? `Low ${ref.low}, Optimal ${ref.optLow ?? ref.low}–${ref.optHigh ?? ref.high}, High ${ref.high}` : 'Not in reference database'}
+
+Your task:
+1. Tell the user what you observe at this specific data point — was it a concerning shift, a positive change, or stable?
+2. If there was a significant change, identify what biologically could have CAUSED it at that time — reference any correlated shifts in other markers if visible.
+3. If the trend suggests something began here (a decline, an improvement, a pattern), name it specifically.
+4. Give 1-2 specific, actionable things they can do NOW based on this pattern — tied to the actual numbers.
+5. If you see a correlation with another marker, call it out explicitly.
+
+Speak as Aellux: direct, warm, specific. No hedging. No "consult your doctor." Reference the actual numbers and dates. Max 4 sentences. Make every word count.`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 320,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+      const data = await res.json();
+      const text = data?.content?.[0]?.text || 'No analysis returned.';
+      setAnalysis(text);
+    } catch {
+      setAnalysis('Unable to reach Aellux analysis at this time.');
+    }
+    setAnalysisLoading(false);
+  };
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} style={{ display: 'block', overflow: 'visible' }}>
-      {/* Optimal zone band */}
-      {optLowY != null && optHighY != null && (
-        <rect x={PAD} y={optHighY} width={W - PAD * 2} height={optLowY - optHighY}
-          fill="rgba(52,211,153,.08)" rx="2" />
-      )}
-      {/* Low/high reference lines */}
-      {ref && (
-        <>
-          <line x1={PAD} x2={W - PAD} y1={py(ref.low)} y2={py(ref.low)} stroke="rgba(251,146,60,.3)" strokeWidth="1" strokeDasharray="3,3" />
-          <line x1={PAD} x2={W - PAD} y1={py(ref.high)} y2={py(ref.high)} stroke="rgba(248,113,113,.3)" strokeWidth="1" strokeDasharray="3,3" />
-        </>
-      )}
-      {/* Trend line */}
-      <polyline points={pts} fill="none" stroke={statusColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
-      {/* Data points */}
-      {nums.map((v, i) => (
-        <g key={i}>
-          <circle cx={px(i)} cy={py(v)} r="3" fill={statusColor} opacity="0.7" />
-          {history[i]?.date && (
-            <text x={px(i)} y={H - 2} textAnchor="middle" fontSize="9" fill="rgba(0,210,165,.4)" fontFamily="inherit">
-              {history[i].date?.slice(0, 7)}
-            </text>
+    <div>
+      {/* Chart hint */}
+      <div style={{ fontSize: 12, color: 'rgba(0,210,165,.5)', marginBottom: 8, letterSpacing: '0.04em' }}>
+        Tap any data point to ask Aellux what changed
+      </div>
+
+      {/* The chart */}
+      <div style={{ position: 'relative', background: 'rgba(0,6,14,.5)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8, padding: '16px 8px 8px', cursor: 'crosshair' }}>
+        <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', overflow: 'visible' }}>
+          {/* Optimal zone */}
+          {optLowY != null && optHighY != null && (
+            <rect x={PAD_X} y={optHighY} width={W - PAD_X * 2} height={Math.max(0, optLowY - optHighY)}
+              fill="rgba(52,211,153,.06)" rx="2" />
           )}
-        </g>
-      ))}
-      {/* Current value label */}
-      <text x={px(nums.length - 1)} y={py(last) - 8} textAnchor="middle" fontSize="11" fill={statusColor} fontFamily="inherit" fontWeight="600">
-        {last}
-      </text>
-    </svg>
+          {/* Reference lines */}
+          {ref && (
+            <>
+              <line x1={PAD_X} x2={W - PAD_X} y1={py(ref.low)} y2={py(ref.low)} stroke="rgba(251,146,60,.25)" strokeWidth="1" strokeDasharray="4,4" />
+              <line x1={PAD_X} x2={W - PAD_X} y1={py(ref.high)} y2={py(ref.high)} stroke="rgba(248,113,113,.25)" strokeWidth="1" strokeDasharray="4,4" />
+              <text x={PAD_X + 2} y={py(ref.high) - 4} fontSize="9" fill="rgba(248,113,113,.5)" fontFamily="inherit">High {ref.high}</text>
+              <text x={PAD_X + 2} y={py(ref.low) + 12} fontSize="9" fill="rgba(251,146,60,.5)" fontFamily="inherit">Low {ref.low}</text>
+            </>
+          )}
+          {/* Trend line */}
+          {nums.length > 1 && (
+            <polyline points={pts} fill="none" stroke="rgba(0,210,165,.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          )}
+          {/* Significant change highlights */}
+          {significantChanges.map(i => (
+            <line key={i} x1={px(i)} x2={px(i)} y1={PAD_Y} y2={H - PAD_Y}
+              stroke="rgba(255,200,80,.2)" strokeWidth="1" strokeDasharray="2,3" />
+          ))}
+          {/* Data points — clickable */}
+          {nums.map((v, i) => {
+            const col = pointColor(v);
+            const isHov = hoveredIdx === i;
+            const isSel = selectedIdx === i;
+            const isSig = significantChanges.includes(i);
+            return (
+              <g key={i} style={{ cursor: 'pointer' }}
+                onClick={() => askAI(i)}
+                onMouseEnter={() => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}>
+                {/* Hit area */}
+                <circle cx={px(i)} cy={py(v)} r="16" fill="transparent" />
+                {/* Glow ring on selected */}
+                {isSel && <circle cx={px(i)} cy={py(v)} r="10" fill="none" stroke={col} strokeWidth="1" opacity="0.4" />}
+                {/* Significant change ring */}
+                {isSig && !isSel && <circle cx={px(i)} cy={py(v)} r="7" fill="none" stroke="rgba(255,200,80,.5)" strokeWidth="1" />}
+                {/* Main dot */}
+                <circle cx={px(i)} cy={py(v)} r={isSel ? 6 : isHov ? 5 : 4}
+                  fill={col} stroke="rgba(2,12,22,1)" strokeWidth="2"
+                  style={{ transition: 'r .15s' }} />
+                {/* Date label */}
+                {sorted[i]?.date && (
+                  <text x={px(i)} y={H - 4} textAnchor="middle" fontSize="9"
+                    fill={isSel ? 'rgba(0,225,180,.8)' : 'rgba(0,210,165,.4)'} fontFamily="inherit">
+                    {sorted[i].date?.slice(0, 7)}
+                  </text>
+                )}
+                {/* Hover tooltip */}
+                {isHov && (
+                  <g>
+                    <rect x={px(i) - 28} y={py(v) - 28} width="56" height="22" rx="4"
+                      fill="rgba(0,8,18,.95)" stroke="rgba(0,210,165,.3)" strokeWidth="1" />
+                    <text x={px(i)} y={py(v) - 13} textAnchor="middle" fontSize="11"
+                      fill={col} fontFamily="inherit" fontWeight="600">
+                      {v}{unit ? ' ' + unit : ''}
+                    </text>
+                  </g>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* AI Analysis Panel */}
+      {(analysisLoading || analysis || selectedIdx !== null) && (
+        <div style={{ marginTop: 12, padding: '16px 18px', background: 'rgba(0,8,18,.6)', border: '1px solid rgba(0,210,165,.2)', borderLeft: '3px solid rgba(0,225,180,.6)', borderRadius: 8 }}>
+          {selectedIdx !== null && (
+            <div style={{ fontSize: 12, color: 'rgba(0,210,165,.6)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+              {formatDate(sorted[selectedIdx]?.date)} · {sorted[selectedIdx]?.value}{unit ? ' ' + unit : ''}
+              {selectedIdx > 0 && (() => {
+                const d = parseFloat(sorted[selectedIdx].value) - parseFloat(sorted[selectedIdx - 1].value);
+                const p = (d / parseFloat(sorted[selectedIdx - 1].value) * 100).toFixed(1);
+                return <span style={{ marginLeft: 10, color: d > 0 ? '#f87171' : '#34d399' }}>{d > 0 ? '▲' : '▼'} {Math.abs(d).toFixed(1)} ({Math.abs(parseFloat(p))}%)</span>;
+              })()}
+            </div>
+          )}
+          {analysisLoading ? (
+            <div style={{ fontSize: 14, color: 'rgba(0,210,165,.6)', fontStyle: 'italic' }}>
+              Aellux is reading this moment in your biology…
+            </div>
+          ) : analysis ? (
+            <p style={{ fontSize: 15, color: 'rgba(220,255,235,.92)', lineHeight: 1.75, margin: 0, fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic' }}>
+              {analysis}
+            </p>
+          ) : null}
+          {!analysisLoading && (
+            <div style={{ fontSize: 12, color: 'rgba(0,210,165,.35)', marginTop: 10 }}>
+              Tap another point to compare · Yellow markers = significant shift (&gt;15%)
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -368,15 +556,21 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
             <RangeBar value={numValue} markerName={marker.name} unit={marker.unit} />
           </div>
 
-          {/* Trend chart beside the value */}
-          {hasHistory && (
-            <div style={{ width: 180, flexShrink: 0, marginLeft: 20, paddingTop: 28 }}>
-              <TrendLine history={history} markerName={marker.name} unit={marker.unit} currentValue={marker.value} />
-            </div>
-          )}
-
           <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: 'rgba(0,210,165,.4)', fontSize: 24, cursor: 'pointer', lineHeight: 1, padding: 4 }}>×</button>
         </div>
+
+        {/* Full-width interactive trend chart */}
+        {history.length > 1 && (
+          <div style={{ marginBottom: 20 }}>
+            <TrendChart
+              history={history}
+              markerName={marker.name}
+              unit={marker.unit}
+              profile={profile}
+              allMarkers={(marker as any).allMarkers}
+            />
+          </div>
+        )}
 
         {/* Personalised context banner */}
         {personalContext && (
