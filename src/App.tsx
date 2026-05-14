@@ -10,6 +10,9 @@ import BiomarkerDetail from './BiomarkerDetail';
 import CorrelationChart from './CorrelationChart';
 import BiologicalAgeChart from './BiologicalAgeChart';
 import PatternInsights from './PatternInsights';
+import ProtocolOutcome from './ProtocolOutcome';
+import SupplementLog from './SupplementLog';
+import PractitionerShare from './PractitionerShare';
 import PrintableReport from './PrintableReport';
 import WeekView from './WeekView';
 import DerivedViews from './DerivedViews';
@@ -452,6 +455,7 @@ export default function App() {
   const [patterns, setPatterns] = useState<any[]>([]);
   const [patternsLoading, setPatternsLoading] = useState(false);
   const [patternsLoaded, setPatternsLoaded] = useState(false);
+  const [markerSnapshot, setMarkerSnapshot] = useState<any[]>([]);
   const [bpGoalExpanded, setBpGoalExpanded] = useState(false);
 
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
@@ -689,6 +693,10 @@ export default function App() {
         uploadedAt: new Date().toISOString(),
       };
 
+      // Store current marker snapshot before merging new doc (for protocol outcome comparison)
+      if (allMarkers.length > 0 && !markerSnapshot.length) {
+        setMarkerSnapshot(allMarkers.map(m => ({ name: m.name, value: m.value, unit: m.unit, status: m.status })));
+      }
       saveDocuments(newDoc);
       saveDocumentToDb(newDoc);
       setUploadStatus(`✓ ${file.name} — extracted ${newDoc.markers.length} markers`);
@@ -1528,6 +1536,32 @@ export default function App() {
                           }).catch(() => setPatternsLoading(false));
                         }}
                       />
+
+                      <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+
+                      {/* Protocol Outcome — Phase 2 */}
+                      {markerSnapshot.length > 0 && allMarkers.length > 0 && (
+                        <>
+                          <ProtocolOutcome
+                            userId={user?.id}
+                            plan={isPro ? 'pro' : 'free'}
+                            currentMarkers={allMarkers.map(m => ({ name: m.name, value: m.value, unit: m.unit, status: m.status }))}
+                            previousSnapshot={markerSnapshot}
+                            cycleStartDate={personalised.week ? undefined : undefined}
+                            protocolSummary={personalised.week?.key_insight}
+                            profile={profile}
+                          />
+                          <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+                        </>
+                      )}
+
+                      {/* Supplement Log — Phase 3 */}
+                      <SupplementLog userId={user?.id} allMarkers={allMarkers} />
+
+                      <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+
+                      {/* Practitioner Share — Phase 4 */}
+                      <PractitionerShare userId={user?.id} isPro={isPro} />
 
                       {!patternsLoaded && !patternsLoading && allMarkers.length <= 3 && (
                         <div style={{ padding: '16px 18px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8, fontSize: 14, color: 'rgba(0,210,165,.55)', lineHeight: 1.7, marginTop: 16 }}>
