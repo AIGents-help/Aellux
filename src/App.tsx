@@ -7,7 +7,9 @@ import ProtocolsSection from './ProtocolsSection';
 import ProfilePage from './ProfilePage';
 import BodyHero from './BodyHero';
 import BiomarkerDetail from './BiomarkerDetail';
-import AdminDashboard from './AdminDashboard';
+import CorrelationChart from './CorrelationChart';
+import BiologicalAgeChart from './BiologicalAgeChart';
+import PatternInsights from './PatternInsights';
 import PrintableReport from './PrintableReport';
 import WeekView from './WeekView';
 import DerivedViews from './DerivedViews';
@@ -446,6 +448,10 @@ export default function App() {
   const [bpMealPrep, setBpMealPrep] = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [dashTab, setDashTab] = useState<'markers' | 'intelligence'>('markers');
+  const [patterns, setPatterns] = useState<any[]>([]);
+  const [patternsLoading, setPatternsLoading] = useState(false);
+  const [patternsLoaded, setPatternsLoaded] = useState(false);
   const [bpGoalExpanded, setBpGoalExpanded] = useState(false);
 
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
@@ -1195,6 +1201,50 @@ export default function App() {
               ) : (
                 <>
                   <BodyHero personalised={personalised} />
+
+                  {/* ── DASHBOARD SUB-TABS ── */}
+                  <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '1px solid rgba(0,210,165,.12)' }}>
+                    {[
+                      { id: 'markers', label: 'Biomarkers' },
+                      { id: 'intelligence', label: '✦ Intelligence' },
+                    ].map(t => (
+                      <button key={t.id} onClick={() => {
+                        setDashTab(t.id as any);
+                        if (t.id === 'intelligence' && !patternsLoaded && allMarkers.length > 3) {
+                          setPatternsLoading(true);
+                          const profileCtx = profile ? [
+                            profile.biological_sex && `sex: ${profile.biological_sex}`,
+                            profile.birth_year && `age: ${new Date().getFullYear() - profile.birth_year}`,
+                            profile.goal && `goal: ${profile.goal}`,
+                          ].filter(Boolean).join(', ') : '';
+                          fetch('/api/pattern-detect', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              userId: user?.id, plan: isPro ? 'pro' : 'free',
+                              allMarkers, profileCtx,
+                            }),
+                          }).then(r => r.json()).then(d => {
+                            setPatterns(d.patterns || []);
+                            setPatternsLoaded(true);
+                            setPatternsLoading(false);
+                          }).catch(() => setPatternsLoading(false));
+                        }
+                      }}
+                        style={{
+                          flex: 1, padding: '12px 0', background: 'none', border: 'none',
+                          borderBottom: `2px solid ${dashTab === t.id ? 'rgba(0,225,180,.8)' : 'transparent'}`,
+                          color: dashTab === t.id ? 'rgba(0,240,190,1)' : 'rgba(0,210,165,.5)',
+                          fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
+                          letterSpacing: '0.04em', transition: 'all .2s',
+                        }}>
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* ── MARKERS TAB ── */}
+                  {dashTab === 'markers' && (<>
                   {/* ── AELLUX DEEP SYNTHESIS ── */}
                   {personalised.synthesis && (() => {
                     const syn = personalised.synthesis;
@@ -1429,6 +1479,61 @@ export default function App() {
                         style={{ fontSize: 16, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '12px 28px', cursor: 'pointer', fontFamily: 'inherit' }}>
                         {generatingType === 'synthesis' ? 'Aellux is synthesising...' : 'Generate full health synthesis →'}
                       </button>
+                    </div>
+                  )}
+                  </>)}
+
+                  {/* ── INTELLIGENCE TAB ── */}
+                  {dashTab === 'intelligence' && (
+                    <div>
+                      {/* Biological Age Trajectory */}
+                      {personalised.synthesis?.biological_age_estimate && (
+                        <>
+                          <BiologicalAgeChart
+                            userId={user?.id}
+                            chronologicalAge={profile?.birth_year ? new Date().getFullYear() - profile.birth_year : undefined}
+                            currentBioAge={personalised.synthesis.biological_age_estimate?.replace(/[^\d.]/g, '')}
+                          />
+                          <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+                        </>
+                      )}
+
+                      {/* Multi-Marker Correlation */}
+                      <CorrelationChart
+                        allMarkers={allMarkers}
+                        userId={user?.id}
+                        plan={isPro ? 'pro' : 'free'}
+                        profile={profile}
+                      />
+                      <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+
+                      {/* Pattern Intelligence */}
+                      <PatternInsights
+                        patterns={patterns}
+                        loading={patternsLoading}
+                        onRefresh={() => {
+                          setPatternsLoaded(false);
+                          setPatternsLoading(true);
+                          const profileCtx = profile ? [
+                            profile.biological_sex && `sex: ${profile.biological_sex}`,
+                            profile.birth_year && `age: ${new Date().getFullYear() - profile.birth_year}`,
+                            profile.goal && `goal: ${profile.goal}`,
+                          ].filter(Boolean).join(', ') : '';
+                          fetch('/api/pattern-detect', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userId: user?.id, plan: isPro ? 'pro' : 'free', allMarkers, profileCtx }),
+                          }).then(r => r.json()).then(d => {
+                            setPatterns(d.patterns || []); setPatternsLoaded(true); setPatternsLoading(false);
+                          }).catch(() => setPatternsLoading(false));
+                        }}
+                      />
+
+                      {!patternsLoaded && !patternsLoading && allMarkers.length <= 3 && (
+                        <div style={{ padding: '16px 18px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8, fontSize: 14, color: 'rgba(0,210,165,.55)', lineHeight: 1.7, marginTop: 16 }}>
+                          Intelligence features unlock with more data. Upload labs from multiple dates to see seasonal patterns, correlated markers, and your biological age trajectory.
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
