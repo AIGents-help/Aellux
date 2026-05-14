@@ -26,9 +26,11 @@ export default async function handler(req) {
     const userId = url.searchParams.get('userId');
     const status = url.searchParams.get('status'); // optional filter
     if (!userId) return json({ error: 'userId required' }, { status: 400 });
+    const today = new Date().toISOString().slice(0, 10);
     const filter = status
       ? `user_id=eq.${userId}&status=eq.${status}&order=created_at.desc&select=*`
-      : `user_id=eq.${userId}&order=created_at.desc&select=*&limit=50`;
+      // Exclude snoozed items where snooze hasn't expired yet
+      : `user_id=eq.${userId}&not.and=(status.eq.snoozed,snooze_until.gte.${today})&order=updated_at.desc&select=*&limit=50`;
     const rows = await sbSelect('recommendations', filter);
     return json({ recommendations: rows || [] });
   }
@@ -72,17 +74,79 @@ export default async function handler(req) {
   if (req.method === 'PATCH') {
     let body;
     try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, { status: 400 }); }
-    const { id, userId, status, userNote } = body || {};
+    const { id, userId, status, userNote, snoozeWeeks, declinedReasonCode, declinedReason } = body || {};
     if (!id || !userId || !status) return json({ error: 'Missing fields' }, { status: 400 });
-    const validStatuses = ['pending', 'doing', 'tried_not_working', 'not_doing', 'resolved'];
+    const validStatuses = ['pending', 'doing', 'tried_not_working', 'not_doing', 'snoozed', 'resolved'];
     if (!validStatuses.includes(status)) return json({ error: 'Invalid status' }, { status: 400 });
+
+    const update = {
+      status,
+      user_note: userNote || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (status === 'snoozed' && snoozeWeeks) {
+      const until = new Date(Date.now() + snoozeWeeks * 7 * 86400000);
+      update.snooze_until = until.toISOString().slice(0, 10);
+    }
+    if (status === 'not_doing') {
+      update.declined_reason_code = declinedReasonCode || null;
+      update.declined_reason = declinedReason || userNote || null;
+      // Increment approach_variant so next AI suggestion uses a different mechanism
+      update.approach_variant = null; // will be set via subquery below
+    }
+    if (status === 'doing') {
+      update.acceptance_date = new Date().toISOString();
+    }
+
+    // For declined: increment approach_variant
+    if (status === 'not_doing') {
+      // Get current variant first
+      const current = await sbSelect('recommendations', `id=eq.${id}&user_id=eq.${userId}&select=approach_variant`);
+      const currentVariant = current?.[0]?.approach_variant || 1;
+      update.approach_variant = currentVariant + 1;
+      delete update.approach_variant; // fix: set it properly
+      Object.assign(update, { approach_variant: currentVariant + 1 });
+    }
 
     const res = await fetch(`${SB}/rest/v1/recommendations?id=eq.${id}&user_id=eq.${userId}`, {
       method: 'PATCH',
       headers: headers({ Prefer: 'return=minimal' }),
-      body: JSON.stringify({ status, user_note: userNote || null, updated_at: new Date().toISOString() }),
+      body: JSON.stringify(update),
     });
     return json({ ok: res.ok });
+  }
+
+  // Check for snoozed recommendations that should resurface due to marker worsening
+  if (req.method === 'PUT') {
+    let body;
+    try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, { status: 400 }); }
+    const { userId, worseningMarkers } = body || {};
+    if (!userId || !worseningMarkers?.length) return json({ resurfaced: 0 });
+
+    // Find snoozed recs targeting these markers
+    const snoozed = await sbSelect('recommendations',
+      `user_id=eq.${userId}&status=eq.snoozed&select=id,target_marker,snooze_until`
+    );
+    const toReSurface = (snoozed || []).filter(r =>
+      r.target_marker && worseningMarkers.includes(r.target_marker)
+    );
+
+    let resurfaced = 0;
+    for (const rec of toReSurface) {
+      await fetch(`${SB}/rest/v1/recommendations?id=eq.${rec.id}`, {
+        method: 'PATCH',
+        headers: headers({ Prefer: 'return=minimal' }),
+        body: JSON.stringify({
+          status: 'pending',
+          snooze_until: null,
+          user_note: 'Resurfaced early: target marker worsened during snooze period.',
+          updated_at: new Date().toISOString(),
+        }),
+      });
+      resurfaced++;
+    }
+    return json({ resurfaced });
   }
 
   return new Response('Method not allowed', { status: 405 });

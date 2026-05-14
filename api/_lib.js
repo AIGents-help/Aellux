@@ -223,7 +223,8 @@ export async function getIntelligenceContext(userId) {
     const notDoing = recRows.filter(r => r.status === 'not_doing');
     const triedNotWorking = recRows.filter(r => r.status === 'tried_not_working');
     const resolved = recRows.filter(r => r.status === 'resolved');
-    ctx.recommendations = { pending, doing, notDoing, triedNotWorking, resolved, all: recRows };
+    const snoozedRecs = recRows.filter(r => r.status === 'snoozed');
+    ctx.recommendations = { pending, doing, notDoing, triedNotWorking, resolved, snoozed: snoozedRecs, all: recRows };
   }
 
   // Recent check-ins — how they're actually feeling and what's blocking them
@@ -276,24 +277,39 @@ export function formatIntelligenceForPrompt(intel) {
   }
 
   if (intel.recommendations) {
-    const { pending, doing, notDoing, triedNotWorking } = intel.recommendations;
+    const { pending, doing, notDoing, triedNotWorking, all } = intel.recommendations;
+    const snoozed = (all || []).filter(r => r.status === 'snoozed');
 
     if (doing.length > 0) {
-      parts.push(`CURRENTLY DOING (user confirmed): ${doing.map(r => r.recommendation).join(' | ')}`);
+      parts.push(`CURRENTLY DOING (user accepted — track marker response): ${doing.map(r => r.recommendation).join(' | ')}`);
     }
+
     if (triedNotWorking.length > 0) {
-      const details = triedNotWorking.map(r => `"${r.recommendation}"${r.user_note ? ' — user says: ' + r.user_note : ''}`);
-      parts.push(`TRIED BUT NOT WORKING — DO NOT RE-RECOMMEND WITHOUT ESCALATION: ${details.join(' | ')}`);
+      const details = triedNotWorking.map(r =>
+        `"${r.recommendation}" (variant ${r.approach_variant || 1} already tried${r.user_note ? ', user says: ' + r.user_note : ''})`
+      );
+      parts.push(`TRIED BUT NOT WORKING — USE A COMPLETELY DIFFERENT MECHANISM, DIFFERENT APPROACH, DIFFERENT FRAMING. Do not repeat the same suggestion. Acknowledge they tried it: ${details.join(' | ')}`);
     }
+
     if (notDoing.length > 0) {
-      const details = notDoing.map(r => `"${r.recommendation}"${r.user_note ? ' — reason: ' + r.user_note : ' (no reason given)'}`);
-      parts.push(`NOT DOING (user declined) — if markers still require it, recommend again with escalated urgency and explain why skipping it is affecting their results: ${details.join(' | ')}`);
+      const details = notDoing.map(r => {
+        const variant = r.approach_variant || 1;
+        const reason = r.declined_reason || r.user_note || 'no reason given';
+        const code = r.declined_reason_code || '';
+        return `"${r.recommendation}" declined ${variant} time(s). Reason: ${reason}${code ? ' [' + code + ']' : ''}. If marker still warrants it, suggest DIFFERENT MECHANISM addressing their stated reason.`;
+      });
+      parts.push(`USER DECLINED THESE — if markers still require action, re-approach with a different lever that addresses their reason for declining: ${details.join(' | ')}`);
     }
+
+    if (snoozed.length > 0) {
+      const details = snoozed.map(r => `"${r.recommendation}" (snoozed until ${r.snooze_until})`);
+      parts.push(`SNOOZED — do not re-recommend unless target marker has worsened >15%: ${details.join(' | ')}`);
+    }
+
     if (pending.length > 0) {
-      // Only include pending items targeting markers that are still out of range
       const unresolved = pending.filter(r => r.target_marker).map(r => r.recommendation);
       if (unresolved.length > 0) {
-        parts.push(`PREVIOUSLY RECOMMENDED (compliance unknown — markers may still need this): ${unresolved.slice(0, 5).join(' | ')}`);
+        parts.push(`PENDING (not yet started — user hasn't committed): ${unresolved.slice(0, 5).join(' | ')}`);
       }
     }
   }
