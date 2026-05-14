@@ -2006,7 +2006,7 @@ export default function App() {
 
         {selectedMarker && (
           <BiomarkerDetail
-            marker={{ ...selectedMarker, allMarkers }}
+            marker={{ ...selectedMarker, allMarkers, userId: user?.id, plan: isPro ? 'pro' : 'free' }}
             onClose={() => setSelectedMarker(null)}
             profile={profile}
           />

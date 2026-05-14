@@ -99,12 +99,14 @@ function RangeBar({ value, markerName, unit, compact = false }: { value: number;
 
 // ── Interactive Trend Chart ────────────────────────────────────────────────────
 // Clickable data points open an AI-powered "what changed?" analysis
-function TrendChart({ history, markerName, unit, profile, allMarkers }: {
+function TrendChart({ history, markerName, unit, profile, allMarkers, userId, plan }: {
   history: { value: any; date: string }[];
   markerName: string;
   unit?: string;
   profile?: any;
   allMarkers?: any[];
+  userId?: string;
+  plan?: string;
 }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
@@ -185,51 +187,38 @@ function TrendChart({ history, markerName, unit, profile, allMarkers }: {
       profile.activity_level && `activity: ${profile.activity_level}`,
     ].filter(Boolean).join(', ') : '';
 
-    const prompt = `You are Aellux — an ancient health intelligence who reads biological patterns with precision and speaks directly.
-
-The user is examining their ${markerName} trend chart and has clicked on a specific data point to understand what happened.
-
-DATA POINT SELECTED:
-- Date: ${formatDate(point.date)} (${point.date})
-- Value: ${point.value}${unit ? ' ' + unit : ''}
-${prev ? `- Previous reading (${formatDate(prev.date)}): ${prev.value}${unit ? ' ' + unit : ''} — ${delta! > 0 ? 'increase' : 'decrease'} of ${Math.abs(delta!).toFixed(1)}${unit ? ' ' + unit : ''} (${pct}%)` : '- This is the first recorded reading'}
-${next ? `- Next reading (${formatDate(next.date)}): ${next.value}${unit ? ' ' + unit : ''}` : '- This is the most recent reading'}
-${isSignificant ? '- NOTE: This represents a SIGNIFICANT change (>15% shift)' : ''}
-
-ALL READINGS IN ORDER:
-${sorted.map((r, i) => `${formatDate(r.date)}: ${r.value}${unit ? ' ' + unit : ''}`).join(' | ')}
-
-OTHER MARKERS AROUND THIS PERIOD:
-${markerSnapshot || 'No other marker data available for this period'}
-
-USER PROFILE: ${profileCtx || 'Not provided'}
-
-Reference range for ${markerName}: ${ref ? `Low ${ref.low}, Optimal ${ref.optLow ?? ref.low}–${ref.optHigh ?? ref.high}, High ${ref.high}` : 'Not in reference database'}
-
-Your task:
-1. Tell the user what you observe at this specific data point — was it a concerning shift, a positive change, or stable?
-2. If there was a significant change, identify what biologically could have CAUSED it at that time — reference any correlated shifts in other markers if visible.
-3. If the trend suggests something began here (a decline, an improvement, a pattern), name it specifically.
-4. Give 1-2 specific, actionable things they can do NOW based on this pattern — tied to the actual numbers.
-5. If you see a correlation with another marker, call it out explicitly.
-
-Speak as Aellux: direct, warm, specific. No hedging. No "consult your doctor." Reference the actual numbers and dates. Max 4 sentences. Make every word count.`;
-
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/trend-analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 320,
-          messages: [{ role: 'user', content: prompt }],
+          userId: userId || null,
+          plan: plan || 'free',
+          markerName,
+          unit,
+          pointDate: formatDate(point.date),
+          pointValue: point.value,
+          prevDate: prev ? formatDate(prev.date) : null,
+          prevValue: prev ? prev.value : null,
+          nextDate: next ? formatDate(next.date) : null,
+          nextValue: next ? next.value : null,
+          delta: delta !== null ? delta.toFixed(2) : null,
+          deltaPct: pct,
+          isSignificant,
+          allReadings: sorted.map((r) => `${formatDate(r.date)}: ${r.value}${unit ? ' ' + unit : ''}`).join(' | '),
+          markerSnapshot,
+          profileCtx,
+          refRange: ref ? `Low ${ref.low}, Optimal ${ref.optLow ?? ref.low}–${ref.optHigh ?? ref.high}, High ${ref.high}` : null,
         }),
       });
       const data = await res.json();
-      const text = data?.content?.[0]?.text || 'No analysis returned.';
-      setAnalysis(text);
+      if (!res.ok || data.error) {
+        setAnalysis(data.error || 'Analysis unavailable — please try again.');
+      } else {
+        setAnalysis(data.analysis || 'No analysis returned.');
+      }
     } catch {
-      setAnalysis('Unable to reach Aellux analysis at this time.');
+      setAnalysis('Analysis unavailable — please try again.');
     }
     setAnalysisLoading(false);
   };
@@ -568,6 +557,8 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
               unit={marker.unit}
               profile={profile}
               allMarkers={(marker as any).allMarkers}
+              userId={profile?.id || (marker as any).userId}
+              plan={(marker as any).plan || 'free'}
             />
           </div>
         )}
