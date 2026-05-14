@@ -1178,27 +1178,115 @@ export default function App() {
               ) : (
                 <>
                   <BodyHero personalised={personalised} />
-                  {/* Synthesis banner */}
-                  {personalised.synthesis && (
-                    <div style={{ ...S.card, padding: '18px 22px', marginBottom: 22, borderColor: 'rgba(0,195,155,.2)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-                        <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(0,175,140,.6)' }}>Aellux Synthesis</div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button onClick={() => triggerPrint('synthesis')} style={{ fontSize: 11, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ PDF</button>
-                          <button onClick={() => triggerPrint('all')} style={{ fontSize: 11, color: 'rgba(0,225,180,.85)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Report</button>
+                  {/* ── AELLUX DEEP SYNTHESIS ── */}
+                  {personalised.synthesis && (() => {
+                    const syn = personalised.synthesis;
+                    return (
+                      <div style={{ marginBottom: 28 }}>
+                        {/* Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                          <div>
+                            <div style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(0,210,165,.55)', marginBottom: 4 }}>Aellux Synthesis</div>
+                            <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'rgba(220,255,235,.95)', fontWeight: 500 }}>Your Biologic Read</div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button onClick={() => triggerPrint('synthesis')} style={{ fontSize: 12, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.35)', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>↓ PDF</button>
+                            <button onClick={() => triggerPrint('all')} style={{ fontSize: 12, color: 'rgba(0,225,180,.75)', background: 'rgba(0,195,155,.06)', border: '1px solid rgba(0,195,155,.2)', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>Full Report</button>
+                          </div>
                         </div>
-                      </div>
-                      <p style={{ ...S.italic, margin: '0 0 14px', fontSize: 20, lineHeight: 1.75 }}>{personalised.synthesis.aellux_voice}</p>
-                      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                        {personalised.synthesis.biological_age_estimate && (
-                          <div style={{ fontSize: 16, color: 'rgba(0,210,165,.9)' }}>Bio age: <strong style={{ color: 'rgba(0,235,185,1)' }}>{personalised.synthesis.biological_age_estimate}</strong></div>
+
+                        {/* Opening voice */}
+                        <div style={{ padding: '22px 26px', background: 'rgba(0,8,18,.6)', border: '1px solid rgba(0,210,165,.2)', borderLeft: '3px solid rgba(0,225,180,.6)', borderRadius: 8, marginBottom: 14 }}>
+                          <p style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 20, color: 'rgba(220,255,235,.97)', lineHeight: 1.85, margin: 0, fontStyle: 'italic' }}>{syn.aellux_voice}</p>
+                        </div>
+
+                        {/* Bio age + focus strip */}
+                        <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+                          {syn.biological_age_estimate && (
+                            <div style={{ flex: 1, minWidth: 140, padding: '12px 16px', background: 'rgba(0,210,165,.06)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 7 }}>
+                              <div style={{ fontSize: 11, color: 'rgba(0,210,165,.55)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Biological age</div>
+                              <div style={{ fontSize: 24, color: 'rgba(0,240,190,1)', fontFamily: 'EB Garamond, Georgia, serif', fontWeight: 500 }}>{syn.biological_age_estimate}</div>
+                              {syn.bio_age_gap && <div style={{ fontSize: 13, color: 'rgba(0,210,165,.65)', marginTop: 2 }}>{syn.bio_age_gap}</div>}
+                            </div>
+                          )}
+                          {syn.focus_priority && (
+                            <div style={{ flex: 3, minWidth: 200, padding: '12px 16px', background: 'rgba(255,190,60,.05)', border: '1px solid rgba(255,190,60,.25)', borderRadius: 7 }}>
+                              <div style={{ fontSize: 11, color: 'rgba(255,190,80,.7)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Your focus this week</div>
+                              <div style={{ fontSize: 16, color: 'rgba(255,220,120,1)', lineHeight: 1.5, fontWeight: 500 }}>{syn.focus_priority}</div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* What you are feeling */}
+                        {syn.what_you_are_feeling && (
+                          <div style={{ padding: '18px 22px', background: 'rgba(167,139,250,.04)', border: '1px solid rgba(167,139,250,.2)', borderRadius: 8, marginBottom: 14 }}>
+                            <div style={{ fontSize: 11, color: 'rgba(167,139,250,.8)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>What you are likely feeling right now</div>
+                            <p style={{ fontSize: 16, color: 'rgba(220,200,255,.92)', lineHeight: 1.75, margin: 0 }}>{syn.what_you_are_feeling}</p>
+                          </div>
                         )}
-                        {personalised.synthesis.focus_priority && (
-                          <div style={{ fontSize: 16, color: 'rgba(255,190,80,.9)' }}>Priority: <strong style={{ color: 'rgba(255,210,100,1)' }}>{personalised.synthesis.focus_priority}</strong></div>
+
+                        {/* The real story */}
+                        {syn.the_real_story && (
+                          <div style={{ padding: '18px 22px', background: 'rgba(0,8,18,.5)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 8, marginBottom: 14 }}>
+                            <div style={{ fontSize: 11, color: 'rgba(0,210,165,.65)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>The real story — what your markers are saying together</div>
+                            <p style={{ fontSize: 16, color: 'rgba(200,245,225,.9)', lineHeight: 1.8, margin: 0 }}>{syn.the_real_story}</p>
+                          </div>
+                        )}
+
+                        {/* System dance — marker interactions */}
+                        {syn.system_dance && syn.system_dance.length > 0 && (
+                          <div style={{ marginBottom: 14 }}>
+                            <div style={{ fontSize: 11, color: 'rgba(0,210,165,.55)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>How your systems are dancing together</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                              {syn.system_dance.map((dance: any, i: number) => (
+                                <div key={i} style={{ padding: '16px 20px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                                    <div style={{ fontSize: 15, color: 'rgba(220,255,235,.95)', fontWeight: 500 }}>{dance.title}</div>
+                                    {dance.markers_involved && dance.markers_involved.map((mk: string) => (
+                                      <span key={mk} style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(0,210,165,.1)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 10, color: 'rgba(0,225,180,.85)', letterSpacing: '0.04em' }}>{mk}</span>
+                                    ))}
+                                  </div>
+                                  <p style={{ fontSize: 15, color: 'rgba(180,240,210,.88)', lineHeight: 1.7, margin: '0 0 6px' }}>{dance.explanation}</p>
+                                  {dance.impact && <p style={{ fontSize: 14, color: 'rgba(255,200,100,.8)', lineHeight: 1.6, margin: 0, fontStyle: 'italic' }}>→ {dance.impact}</p>}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Honest combat */}
+                        {syn.honest_combat && syn.honest_combat.length > 0 && (
+                          <div style={{ marginBottom: 14 }}>
+                            <div style={{ fontSize: 11, color: 'rgba(0,210,165,.55)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>How to honestly move the needle</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                              {syn.honest_combat.sort((a: any, b: any) => (a.priority || 9) - (b.priority || 9)).map((combat: any, i: number) => (
+                                <div key={i} style={{ padding: '16px 20px', background: 'rgba(52,211,153,.04)', border: '1px solid rgba(52,211,153,.18)', borderRadius: 8, display: 'flex', gap: 14 }}>
+                                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(52,211,153,.12)', border: '1px solid rgba(52,211,153,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 13, color: 'rgba(52,211,153,.9)', fontFamily: 'EB Garamond, Georgia, serif', fontWeight: 600 }}>{i + 1}</div>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ fontSize: 15, color: 'rgba(180,255,210,.95)', fontWeight: 500, marginBottom: 6 }}>{combat.lever}</div>
+                                    <p style={{ fontSize: 14, color: 'rgba(140,230,180,.8)', lineHeight: 1.65, margin: '0 0 6px', fontStyle: 'italic' }}>{combat.why_it_works}</p>
+                                    <p style={{ fontSize: 15, color: 'rgba(200,245,220,.9)', lineHeight: 1.7, margin: 0 }}>{combat.how}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* What's working */}
+                        {syn.what_is_working && syn.what_is_working.length > 0 && (
+                          <div style={{ padding: '16px 20px', background: 'rgba(0,210,165,.05)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 8 }}>
+                            <div style={{ fontSize: 11, color: 'rgba(0,210,165,.65)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>What is working — protect these</div>
+                            {syn.what_is_working.map((win: string, i: number) => (
+                              <div key={i} style={{ fontSize: 15, color: 'rgba(180,255,220,.9)', lineHeight: 1.65, marginBottom: 5, display: 'flex', gap: 8 }}>
+                                <span style={{ color: 'rgba(52,211,153,.8)', flexShrink: 0 }}>✓</span> {win}
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Flags */}
                   {flaggedMarkers.length > 0 && (
