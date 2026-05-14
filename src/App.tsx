@@ -155,7 +155,7 @@ function SparkChart({ values, color, width = 80, height = 30 }: { values: number
 // ── FULL TREND CHART ─────────────────────────────────────────────────────────
 
 function TrendChart({ marker, history }: { marker: string; history: Array<{ date: string; value: number; unit: string }> }) {
-  if (history.length < 2) return <div style={{ color: 'rgba(0,165,132,.5)', fontSize: 14, padding: 20 }}>Need at least 2 data points to show trend.</div>;
+  if (history.length < 2) return <div style={{ color: 'var(--text-tertiary)', fontSize: 14, padding: 20 }}>Need at least 2 data points to show trend.</div>;
   const sorted = [...history].sort((a, b) => a.date.localeCompare(b.date));
   const vals = sorted.map(d => d.value);
   const min = Math.min(...vals) * 0.9, max = Math.max(...vals) * 1.1;
@@ -172,17 +172,17 @@ function TrendChart({ marker, history }: { marker: string; history: Array<{ date
     <div style={{ background: 'rgba(0,6,14,.85)', border: '1px solid rgba(0,175,138,.14)', borderRadius: 7, padding: '20px 24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 13, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(0,185,148,.65)', marginBottom: 4 }}>{marker}</div>
+          <div style={{ fontSize: 13, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 4 }}>{marker}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <span style={{ fontSize: 38, color: '#00d2a5', fontWeight: 500 }}>{last}</span>
-            <span style={{ fontSize: 15, color: 'rgba(0,175,140,.5)' }}>{sorted[0].unit}</span>
+            <span style={{ fontSize: 15, color: 'var(--text-tertiary)' }}>{sorted[0].unit}</span>
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 22, fontWeight: 500, color: change.startsWith('-') ? 'rgba(255,120,80,.9)' : 'var(--brand-dim)' }}>
             {Number(change) > 0 ? '+' : ''}{change}%
           </div>
-          <div style={{ fontSize: 13, color: 'rgba(0,160,130,.5)' }}>{sorted[0].date} → {sorted[sorted.length - 1].date}</div>
+          <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>{sorted[0].date} → {sorted[sorted.length - 1].date}</div>
         </div>
       </div>
       <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
@@ -197,7 +197,7 @@ function TrendChart({ marker, history }: { marker: string; history: Array<{ date
           return (
             <g key={t}>
               <line x1={pl} y1={py(yv)} x2={pl + iW} y2={py(yv)} stroke="rgba(0,175,138,.07)" strokeWidth="1" />
-              <text x={pl - 5} y={py(yv) + 4} textAnchor="end" fontSize="10" fill="rgba(0,175,138,.4)" fontFamily="EB Garamond, Georgia, serif">{yv.toFixed(1)}</text>
+              <text x={pl - 5} y={py(yv) + 4} textAnchor="end" fontSize="10" fill="rgba(0,0,0,.35)" fontFamily="EB Garamond, Georgia, serif">{yv.toFixed(1)}</text>
             </g>
           );
         })}
@@ -207,7 +207,7 @@ function TrendChart({ marker, history }: { marker: string; history: Array<{ date
           <g key={i}>
             <circle cx={px(i)} cy={py(d.value)} r="5" fill="#00d2a5" opacity="0.9" />
             <title>{d.date}: {d.value} {d.unit}</title>
-            <text x={px(i)} y={H - 8} textAnchor="middle" fontSize="11" fill="rgba(0,175,138,.55)" fontFamily="EB Garamond, Georgia, serif">
+            <text x={px(i)} y={H - 8} textAnchor="middle" fontSize="11" fill="rgba(0,0,0,.4)" fontFamily="EB Garamond, Georgia, serif">
               {d.date.slice(5)}
             </text>
           </g>
@@ -242,12 +242,12 @@ function MultiTrendChart({ markers, activeKeys, allDates }: {
   };
   const py = (norm: number) => pt + iH - (norm / 100) * iH;
   if (activeMarkers.length === 0) return (
-    <div style={{ background: 'rgba(0,4,12,.9)', border: '1px solid rgba(0,175,138,.12)', borderRadius: 8, padding: '48px 0', textAlign: 'center', color: 'rgba(0,165,132,.4)', fontSize: 14 }}>
+    <div style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '48px 0', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 14 }}>
       Toggle markers below to display trends
     </div>
   );
   return (
-    <div style={{ background: 'rgba(0,4,12,.9)', border: '1px solid rgba(0,175,138,.12)', borderRadius: 8, padding: '0 0 4px' }}>
+    <div style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '0 0 4px' }}>
       <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible', display: 'block' }}>
         <defs>
           {activeMarkers.map(m => (
@@ -260,11 +260,11 @@ function MultiTrendChart({ markers, activeKeys, allDates }: {
         {[0, 25, 50, 75, 100].map(pct => (
           <g key={pct}>
             <line x1={pl} y1={py(pct)} x2={pl + iW} y2={py(pct)} stroke="rgba(0,175,138,.06)" strokeWidth="1" />
-            <text x={pl - 6} y={py(pct) + 4} textAnchor="end" fontSize="9" fill="rgba(0,175,138,.3)" fontFamily="EB Garamond, Georgia, serif">{pct === 0 ? 'low' : pct === 100 ? 'high' : ''}</text>
+            <text x={pl - 6} y={py(pct) + 4} textAnchor="end" fontSize="9" fill="rgba(0,0,0,.25)" fontFamily="EB Garamond, Georgia, serif">{pct === 0 ? 'low' : pct === 100 ? 'high' : ''}</text>
           </g>
         ))}
         {allDates.map((d) => (
-          <text key={d} x={px(d)} y={H - 8} textAnchor="middle" fontSize="10" fill="rgba(0,175,138,.5)" fontFamily="EB Garamond, Georgia, serif">
+          <text key={d} x={px(d)} y={H - 8} textAnchor="middle" fontSize="10" fill="rgba(0,0,0,.35)" fontFamily="EB Garamond, Georgia, serif">
             {d.slice(0, 7)}
           </text>
         ))}
@@ -319,26 +319,26 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,8,16,.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: 'rgba(0,10,22,.98)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 10, padding: '40px 36px', maxWidth: 440, width: '90%', textAlign: 'center' }}>
+      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 10, padding: '40px 36px', maxWidth: 440, width: '90%', textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>✦</div>
         <h2 style={{ fontSize: 26, color: 'rgba(0,215,172,.95)', fontWeight: 400, margin: '0 0 12px' }}>Aellux Pro</h2>
-        <p style={{ fontSize: 16, color: 'rgba(0,185,150,.68)', lineHeight: 1.75, marginBottom: 28 }}>
+        <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.75, marginBottom: 28 }}>
           Unlock AI-generated meal protocols, supplement stacks, daily protocols, and unlimited Aellux conversations — all personalised to your actual biomarkers.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
           {['Personalised meal protocol from your markers', 'Supplement stack with full dosing rationale', 'Daily protocol ranked by biomarker impact', 'Unlimited AI conversations with your data'].map(f => (
             <div key={f} style={{ fontSize: 15, color: 'rgba(0,205,165,.82)', textAlign: 'left', display: 'flex', gap: 10 }}>
-              <span style={{ color: 'rgba(0,195,155,.7)' }}>✦</span>{f}
+              <span style={{ color: 'var(--text-secondary)' }}>✦</span>{f}
             </div>
           ))}
         </div>
-        <div style={{ fontSize: 32, color: 'rgba(0,215,172,.96)', marginBottom: 6, fontWeight: 400 }}>$29<span style={{ fontSize: 16, color: 'rgba(0,175,142,.5)', fontWeight: 400 }}>/month</span></div>
-        <div style={{ fontSize: 14, color: 'rgba(0,155,125,.45)', marginBottom: 24 }}>Cancel anytime · Powered by Stripe</div>
+        <div style={{ fontSize: 32, color: 'var(--brand)', marginBottom: 6, fontWeight: 400 }}>$29<span style={{ fontSize: 16, color: 'var(--text-tertiary)', fontWeight: 400 }}>/month</span></div>
+        <div style={{ fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 24 }}>Cancel anytime · Powered by Stripe</div>
         <button onClick={handleUpgrade} disabled={loading}
           style={{ width: '100%', fontSize: 17, color: '#020810', background: 'rgba(0,200,160,.88)', border: 'none', borderRadius: 5, padding: '14px 0', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500, marginBottom: 12 }}>
           {loading ? 'Opening Stripe...' : 'Upgrade to Pro →'}
         </button>
-        <button onClick={onClose} style={{ fontSize: 14, color: 'rgba(0,155,125,.45)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Maybe later</button>
+        <button onClick={onClose} style={{ fontSize: 14, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Maybe later</button>
       </div>
     </div>
   );
@@ -350,8 +350,8 @@ function ProGate({ isPro, onUpgrade, feature }: { isPro: boolean; onUpgrade: () 
   return (
     <div style={{ background: 'rgba(0,8,16,.85)', border: '1px solid rgba(0,195,155,.2)', borderRadius: 8, padding: '36px 28px', textAlign: 'center', marginBottom: 24 }}>
       <div style={{ fontSize: 28, marginBottom: 14 }}>✦</div>
-      <div style={{ fontSize: 20, color: 'rgba(0,215,172,.92)', marginBottom: 10, fontWeight: 500 }}>{feature} is a Pro feature</div>
-      <p style={{ fontSize: 16, color: 'rgba(0,175,142,.65)', lineHeight: 1.75, marginBottom: 24, maxWidth: 360, margin: '0 auto 24px' }}>
+      <div style={{ fontSize: 20, color: 'var(--brand-dim)', marginBottom: 10, fontWeight: 500 }}>{feature} is a Pro feature</div>
+      <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.75, marginBottom: 24, maxWidth: 360, margin: '0 auto 24px' }}>
         Upgrade to Aellux Pro to get this personalised to your actual biomarkers.
       </p>
       <button onClick={onUpgrade}
@@ -1023,7 +1023,7 @@ export default function App() {
     <div style={{ height: '100vh', background: 'var(--bg-page)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 30 }}>
       <div style={{ opacity: awakePhase >= 1 ? 1 : 0, transform: awakePhase >= 1 ? 'scale(1)' : 'scale(0.82)', transition: 'all 1.6s cubic-bezier(.16,1,.3,1)' }}><Orb state={orbState} size={160} /></div>
       {awakePhase >= 2 && <p style={{ color: 'rgba(0,190,152,.65)', fontSize: 13, letterSpacing: 4, textTransform: 'uppercase' }}>Ancient intelligence. Present clarity.</p>}
-      {awakePhase >= 3 && response && <p style={{ color: 'rgba(0,215,172,.9)', fontSize: 19, fontStyle: 'italic', maxWidth: 400, textAlign: 'center', lineHeight: 1.85, padding: '0 24px' }}>{response}</p>}
+      {awakePhase >= 3 && response && <p style={{ color: 'var(--text-secondary)', fontSize: 19, fontStyle: 'italic', maxWidth: 400, textAlign: 'center', lineHeight: 1.85, padding: '0 24px' }}>{response}</p>}
     </div>
   );
 
@@ -1091,7 +1091,7 @@ export default function App() {
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: panel === id ? 'var(--brand-dim)' : 'rgba(0,130,105,.3)', flexShrink: 0, display: 'inline-block' }} />
               <span style={{ flex: 1 }}>{label}</span>
               {count !== undefined && count > 0 && (
-                <span style={{ fontSize: 10, background: 'rgba(0,195,155,.12)', color: 'rgba(0,195,155,.65)', padding: '1px 6px', borderRadius: 10, letterSpacing: 0 }}>{count}</span>
+                <span style={{ fontSize: 10, background: 'rgba(0,195,155,.12)', color: 'var(--text-secondary)', padding: '1px 6px', borderRadius: 10, letterSpacing: 0 }}>{count}</span>
               )}
             </button>
           ))}
@@ -1103,7 +1103,7 @@ export default function App() {
         {documents.length > 0 && (
           <div style={{ padding: '0 14px', width: '100%', marginBottom: 14 }}>
             <div style={{ background: 'var(--bg-surface)', border: '1px solid rgba(0,165,132,.1)', borderRadius: 4, padding: '10px 12px' }}>
-              <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(0,165,132,.5)', marginBottom: 6 }}>Health Profile</div>
+              <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 6 }}>Health Profile</div>
               <div style={{ fontSize: 14, color: 'rgba(0,200,165,.75)', marginBottom: 3 }}>{allMarkers.length} biomarkers</div>
               <div style={{ fontSize: 14, color: 'rgba(0,185,150,.6)', marginBottom: 3 }}>{documents.length} documents</div>
               {flaggedMarkers.length > 0 && <div style={{ fontSize: 14, color: 'rgba(255,160,60,.8)' }}>⚠ {flaggedMarkers.length} need attention</div>}
@@ -1193,11 +1193,11 @@ export default function App() {
               >
                 <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.6 }}>⊕</div>
                 <div style={{ fontSize: 20, color: 'var(--brand-dim)', marginBottom: 8, fontWeight: 500 }}>Drop your health records here</div>
-                <div style={{ fontSize: 16, color: 'rgba(0,175,142,.6)', marginBottom: 16, lineHeight: 1.7 }}>
+                <div style={{ fontSize: 16, color: 'var(--text-tertiary)', marginBottom: 16, lineHeight: 1.7 }}>
                   Blood panels · DEXA scans · Sleep reports · Microbiome results<br />
                   Wearable exports · Physician notes · Lab results
                 </div>
-                <div style={{ fontSize: 14, color: 'rgba(0,155,125,.45)' }}>PDF · CSV · JPG · PNG · TXT — Aellux reads everything</div>
+                <div style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>PDF · CSV · JPG · PNG · TXT — Aellux reads everything</div>
                 <input ref={fileInputRef} type="file" multiple accept=".pdf,.csv,.txt,.json,.jpg,.jpeg,.png,.xml" style={{ display: 'none' }} onChange={e => e.target.files && handleFiles(e.target.files)} />
               </div>
 
@@ -1213,22 +1213,29 @@ export default function App() {
               {/* Uploaded documents */}
               {documents.length > 0 && (
                 <div>
-                  <p style={{ ...S.label, marginBottom: 14 }}>Uploaded Documents ({documents.length})</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {documents.map(doc => (
+                  {(() => {
+                    const GPS_DOC = /\.gpx$|route_|gps.?track|gps.?route/i;
+                    const healthDocs = documents.filter(d => !GPS_DOC.test(d.name) && !(d.markers?.length === 0 && GPS_DOC.test(d.name)));
+                    const noiseDocs = documents.filter(d => GPS_DOC.test(d.name) || (d.markers?.length === 0 && d.document_type === 'wearable' && GPS_DOC.test(d.name)));
+                    const showDocs = healthDocs.length > 0 ? healthDocs : documents;
+                    return (
+                      <>
+                        <p style={{ ...S.label, marginBottom: 14 }}>Uploaded Documents ({showDocs.length})</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          {showDocs.map(doc => (
                       <div key={doc.id} style={{ ...S.card, padding: '16px 20px' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
-                              <span style={{ fontSize: 17, color: 'rgba(0,215,172,.92)', fontWeight: 500 }}>{doc.name}</span>
-                              <span style={{ fontSize: 11, padding: '2px 8px', border: '1px solid rgba(0,175,138,.25)', borderRadius: 2, color: 'rgba(0,185,148,.6)', letterSpacing: 1, textTransform: 'uppercase' }}>{doc.document_type}</span>
+                              <span style={{ fontSize: 16, color: 'var(--text-primary)', fontWeight: 500 }}>{doc.name}</span>
+                              <span style={{ fontSize: 11, padding: '2px 8px', border: '1px solid var(--border-medium)', borderRadius: 2, color: 'var(--text-tertiary)', letterSpacing: 1, textTransform: 'uppercase' }}>{doc.document_type}</span>
                             </div>
-                            <div style={{ fontSize: 14, color: 'rgba(0,175,142,.6)', marginBottom: 8 }}>{doc.date} · {doc.markers.length} markers extracted</div>
-                            {doc.summary && <div style={{ fontSize: 15, fontStyle: 'italic', color: 'rgba(0,195,160,.72)', lineHeight: 1.75 }}>{doc.summary}</div>}
+                            <div style={{ fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 8 }}>{doc.date} · {doc.markers.length} markers extracted</div>
+                            {doc.summary && <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.65 }}>{doc.summary}</div>}
                             {doc.flags.length > 0 && (
                               <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                 {doc.flags.map((f, i) => (
-                                  <span key={i} style={{ fontSize: 13, padding: '3px 10px', background: 'rgba(255,130,60,.08)', border: '1px solid rgba(255,130,60,.25)', borderRadius: 3, color: 'rgba(255,160,80,.85)' }}>⚠ {f}</span>
+                                  <span key={i} style={{ fontSize: 13, padding: '3px 10px', background: 'rgba(120,53,15,.07)', border: '1px solid rgba(120,53,15,.2)', borderRadius: 3, color: 'var(--accent-watch)' }}>⚠ {f}</span>
                                 ))}
                               </div>
                             )}
@@ -1240,11 +1247,19 @@ export default function App() {
                               profile={profile}
                             />
                           </div>
-                          <button onClick={() => saveDocuments(documents.filter(d => d.id !== doc.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,150,120,.35)', fontSize: 16, padding: 4 }}>✕</button>
+                          <button onClick={() => saveDocuments(documents.filter(d => d.id !== doc.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', fontSize: 16, padding: 4 }}>✕</button>
                         </div>
                       </div>
                     ))}
                   </div>
+                  {noiseDocs.length > 0 && (
+                    <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 10, fontStyle: 'italic' }}>
+                      {noiseDocs.length} GPS route file{noiseDocs.length > 1 ? 's' : ''} hidden — no health biomarkers extracted.
+                    </p>
+                  )}
+                </>
+              );
+              })()}
                 </div>
               )}
 
@@ -1260,9 +1275,9 @@ export default function App() {
                       ['🦠 Microbiome', 'Gut bacteria ratios, diversity scores, pathogen flags'],
                       ['📋 Physician Notes', 'Clinical observations, diagnoses, medication effects'],
                     ].map(([title, desc]) => (
-                      <div key={String(title)} style={{ padding: '14px 16px', background: 'rgba(0,8,16,.5)', border: '1px solid rgba(0,165,132,.1)', borderRadius: 5 }}>
-                        <div style={{ fontSize: 16, color: 'rgba(0,210,170,.85)', marginBottom: 5 }}>{title}</div>
-                        <div style={{ fontSize: 14, color: 'rgba(0,165,132,.6)', lineHeight: 1.6 }}>{desc}</div>
+                      <div key={String(title)} style={{ padding: '14px 16px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 5 }}>
+                        <div style={{ fontSize: 16, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 5 }}>{title}</div>
+                        <div style={{ fontSize: 14, color: 'var(--text-tertiary)', lineHeight: 1.6 }}>{desc}</div>
                       </div>
                     ))}
                   </div>
@@ -1404,7 +1419,7 @@ export default function App() {
                                     ))}
                                   </div>
                                   <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: '0 0 6px' }}>{dance.explanation}</p>
-                                  {dance.impact && <p style={{ fontSize: 14, color: 'rgba(255,200,100,.8)', lineHeight: 1.6, margin: 0, fontStyle: 'italic' }}>→ {dance.impact}</p>}
+                                  {dance.impact && <p style={{ fontSize: 14, color: 'var(--accent-watch)', lineHeight: 1.6, margin: 0, fontStyle: 'italic' }}>→ {dance.impact}</p>}
                                 </div>
                               ))}
                             </div>
@@ -1421,7 +1436,7 @@ export default function App() {
                                   <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(52,211,153,.12)', border: '1px solid rgba(52,211,153,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 13, color: 'rgba(52,211,153,.9)', fontFamily: 'EB Garamond, Georgia, serif', fontWeight: 600 }}>{i + 1}</div>
                                   <div style={{ flex: 1 }}>
                                     <div style={{ fontSize: 15, color: 'rgba(180,255,210,.95)', fontWeight: 500, marginBottom: 6 }}>{combat.lever}</div>
-                                    <p style={{ fontSize: 14, color: 'rgba(140,230,180,.8)', lineHeight: 1.65, margin: '0 0 6px', fontStyle: 'italic' }}>{combat.why_it_works}</p>
+                                    <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.65, margin: '0 0 6px', fontStyle: 'italic' }}>{combat.why_it_works}</p>
                                     <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>{combat.how}</p>
                                   </div>
                                 </div>
@@ -1456,10 +1471,10 @@ export default function App() {
                             <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,185,100,.8)', marginBottom: 6 }}>{m.category}</div>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                               <span style={{ fontSize: 26, color: STATUS_COLORS[m.status] || 'rgba(255,140,60,.9)', fontWeight: 500 }}>{m.value}</span>
-                              <span style={{ fontSize: 13, color: 'rgba(0,160,130,.5)' }}>{m.unit}</span>
+                              <span style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>{m.unit}</span>
                             </div>
                             {m.reference_range_low !== undefined && (
-                              <div style={{ fontSize: 13, color: 'rgba(0,155,125,.45)', marginTop: 4 }}>Ref: {m.reference_range_low}–{m.reference_range_high}</div>
+                              <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4 }}>Ref: {m.reference_range_low}–{m.reference_range_high}</div>
                             )}
                           </div>
                         ))}
@@ -1566,7 +1581,7 @@ export default function App() {
                         </div>
                       )}
                       <button onClick={() => generatePersonalised('synthesis')} disabled={generatingType === 'synthesis'}
-                        style={{ fontSize: 16, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '12px 28px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ fontSize: 16, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid var(--border-medium)', borderRadius: 5, padding: '12px 28px', cursor: 'pointer', fontFamily: 'inherit' }}>
                         {generatingType === 'synthesis' ? 'Aellux is synthesising...' : 'Generate full health synthesis →'}
                       </button>
                     </div>
@@ -1686,7 +1701,7 @@ export default function App() {
                   <p style={{ fontSize: 18, color: 'rgba(0,190,155,.75)', marginBottom: 10, lineHeight: 1.7 }}>
                     {allMarkers.length === 0 ? 'Upload your health documents first.' : `Aellux will design your meal protocol from your ${allMarkers.length} biomarkers.`}
                   </p>
-                  <p style={{ fontSize: 15, color: 'rgba(0,165,132,.5)', marginBottom: 28, lineHeight: 1.7 }}>
+                  <p style={{ fontSize: 15, color: 'var(--text-tertiary)', marginBottom: 28, lineHeight: 1.7 }}>
                     Every meal will be specifically engineered to address your actual results — not a generic template.
                   </p>
                   {generationError && (
@@ -1696,7 +1711,7 @@ export default function App() {
                     </div>
                   )}
                   <button onClick={() => generatePersonalised('meals')} disabled={generatingType === 'meals' || allMarkers.length === 0}
-                    style={{ fontSize: 17, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ fontSize: 17, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid var(--border-medium)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {generatingType === 'meals' ? '⟳ Aellux is designing your meals...' : 'Generate my personalised meal protocol →'}
                   </button>
                 </div>
@@ -1712,7 +1727,7 @@ export default function App() {
                     <div style={{ display: 'flex', gap: 12, marginBottom: 22 }}>
                       {Object.entries(personalised.meals.daily_targets).map(([k, v]) => (
                         <div key={k} style={{ ...S.card, flex: 1, padding: '14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 24, color: 'rgba(0,215,172,.9)', fontWeight: 500 }}>{String(v)}</div>
+                          <div style={{ fontSize: 24, color: 'var(--brand-dim)', fontWeight: 500 }}>{String(v)}</div>
                           <div style={{ ...S.label, fontSize: 11, marginTop: 4 }}>{k}</div>
                         </div>
                       ))}
@@ -1726,7 +1741,7 @@ export default function App() {
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
                               <span style={{ ...S.label }}>{meal.time}</span>
-                              {meal.targets?.map((t: string, ti: number) => <span key={ti} style={{ fontSize: 11, padding: '2px 8px', border: '1px solid rgba(0,175,138,.25)', borderRadius: 2, color: 'rgba(0,185,148,.65)', letterSpacing: 1 }}>{t}</span>)}
+                              {meal.targets?.map((t: string, ti: number) => <span key={ti} style={{ fontSize: 11, padding: '2px 8px', border: '1px solid var(--border-medium)', borderRadius: 2, color: 'var(--text-tertiary)', letterSpacing: 1 }}>{t}</span>)}
                             </div>
                             <div style={{ fontSize: 20, color: 'rgba(0,215,172,.94)', fontWeight: 500 }}>{meal.name}</div>
                           </div>
@@ -1740,7 +1755,7 @@ export default function App() {
                         </div>
                         {isOpen && (
                           <div style={{ padding: '0 22px 22px', borderTop: '1px solid rgba(0,165,132,.1)' }}>
-                            <p style={{ fontSize: 16, fontStyle: 'italic', color: 'rgba(0,200,162,.78)', lineHeight: 1.8, margin: '16px 0 18px', paddingLeft: 14, borderLeft: '2px solid rgba(0,190,152,.28)' }}>{meal.why}</p>
+                            <p style={{ fontSize: 16, fontStyle: 'italic', color: 'var(--text-secondary)', lineHeight: 1.8, margin: '16px 0 18px', paddingLeft: 14, borderLeft: '2px solid var(--border-medium)' }}>{meal.why}</p>
                             {meal.items && (
                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 18 }}>
                                 {meal.items.map((item: string, ii: number) => (
@@ -1776,7 +1791,7 @@ export default function App() {
                   </div>
                   <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <button onClick={() => triggerPrint('meals')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
-                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
+                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.08)', border: '1px solid var(--border-medium)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
                     <button onClick={() => { setPersonalised(p => ({ ...p, meals: undefined })); }} style={{ fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
                   </div>
                 </div>
@@ -1792,7 +1807,7 @@ export default function App() {
                   <p style={{ fontSize: 18, color: 'rgba(0,190,155,.75)', marginBottom: 10, lineHeight: 1.7 }}>
                     {allMarkers.length === 0 ? 'Upload your health documents first.' : `Aellux will build your supplement stack from your ${allMarkers.length} biomarkers.`}
                   </p>
-                  <p style={{ fontSize: 15, color: 'rgba(0,165,132,.5)', marginBottom: 28, lineHeight: 1.7 }}>No generic recommendations. Only what your actual biology requires.</p>
+                  <p style={{ fontSize: 15, color: 'var(--text-tertiary)', marginBottom: 28, lineHeight: 1.7 }}>No generic recommendations. Only what your actual biology requires.</p>
                   {generationError && (
                     <div style={{ marginBottom: 20, padding: '12px 18px', background: 'rgba(80,12,12,.4)', border: '1px solid rgba(255,120,80,.45)', borderRadius: 6, color: 'rgba(255,200,180,1)', fontSize: 14, textAlign: 'left', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
                       <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,160,100,.85)', marginBottom: 4 }}>⚠ Generation Error</div>
@@ -1800,7 +1815,7 @@ export default function App() {
                     </div>
                   )}
                   <button onClick={() => generatePersonalised('supps')} disabled={generatingType === 'supps' || allMarkers.length === 0}
-                    style={{ fontSize: 17, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ fontSize: 17, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid var(--border-medium)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {generatingType === 'supps' ? '⟳ Aellux is building your stack...' : 'Generate my personalised supplement stack →'}
                   </button>
                 </div>
@@ -1830,7 +1845,7 @@ export default function App() {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
                                       <span style={{ fontSize: 19, fontWeight: 500, color: 'rgba(0,215,172,.94)' }}>{s.name}</span>
                                       <span style={{ fontSize: 11, padding: '2px 8px', border: `1px solid ${sc}`, borderRadius: 2, color: sc, letterSpacing: 1, textTransform: 'uppercase' }}>{s.status}</span>
-                                      {s.evidence_level && <span style={{ fontSize: 11, color: 'rgba(0,165,132,.5)', letterSpacing: 1 }}>{s.evidence_level} evidence</span>}
+                                      {s.evidence_level && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: 1 }}>{s.evidence_level} evidence</span>}
                                     </div>
                                     <div style={{ fontSize: 15, color: 'rgba(0,178,145,.72)' }}>{s.dose} · {s.timing}</div>
                                   </div>
@@ -1842,8 +1857,8 @@ export default function App() {
                                 </div>
                                 {isOpen && (
                                   <div style={{ padding: '0 22px 22px', borderTop: '1px solid rgba(0,165,132,.1)' }}>
-                                    <p style={{ fontSize: 16, color: 'rgba(0,205,165,.84)', lineHeight: 1.88, margin: '16px 0 12px', fontStyle: 'italic', paddingLeft: 14, borderLeft: '2px solid rgba(0,190,152,.28)' }}>{s.why}</p>
-                                    {s.synergies?.length > 0 && <div style={{ fontSize: 14, color: 'rgba(0,175,142,.6)' }}>Synergises with: {s.synergies.join(', ')}</div>}
+                                    <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.88, margin: '16px 0 12px', fontStyle: 'italic', paddingLeft: 14, borderLeft: '2px solid var(--border-medium)' }}>{s.why}</p>
+                                    {s.synergies?.length > 0 && <div style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>Synergises with: {s.synergies.join(', ')}</div>}
                                     {s.contraindications?.length > 0 && <div style={{ fontSize: 14, color: 'rgba(255,150,60,.65)', marginTop: 6 }}>⚠ {s.contraindications.join('; ')}</div>}
                                   </div>
                                 )}
@@ -1858,13 +1873,13 @@ export default function App() {
                     <div style={{ ...S.card, padding: '16px 22px', marginTop: 8 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ fontSize: 16, color: 'rgba(0,178,145,.7)' }}>Foundation stack total</div>
-                        <div style={{ fontSize: 28, color: 'rgba(0,215,172,.92)', fontWeight: 500 }}>{personalised.supps.total_foundation_cost}</div>
+                        <div style={{ fontSize: 28, color: 'var(--brand-dim)', fontWeight: 500 }}>{personalised.supps.total_foundation_cost}</div>
                       </div>
                     </div>
                   )}
                   <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <button onClick={() => triggerPrint('supps')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
-                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
+                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.08)', border: '1px solid var(--border-medium)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
                     <button onClick={() => { setPersonalised(p => ({ ...p, supps: undefined })); }} style={{ fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
                   </div>
                 </div>
@@ -1880,7 +1895,7 @@ export default function App() {
                   <p style={{ fontSize: 18, color: 'rgba(0,190,155,.75)', marginBottom: 10, lineHeight: 1.7 }}>
                     {allMarkers.length === 0 ? 'Upload your health documents first.' : `Aellux will design your daily protocol from your ${allMarkers.length} biomarkers.`}
                   </p>
-                  <p style={{ fontSize: 15, color: 'rgba(0,165,132,.5)', marginBottom: 28, lineHeight: 1.7 }}>What you should actually do every day — ranked by impact on your specific biology.</p>
+                  <p style={{ fontSize: 15, color: 'var(--text-tertiary)', marginBottom: 28, lineHeight: 1.7 }}>What you should actually do every day — ranked by impact on your specific biology.</p>
                   {generationError && (
                     <div style={{ marginBottom: 20, padding: '12px 18px', background: 'rgba(80,12,12,.4)', border: '1px solid rgba(255,120,80,.45)', borderRadius: 6, color: 'rgba(255,200,180,1)', fontSize: 14, textAlign: 'left', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
                       <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,160,100,.85)', marginBottom: 4 }}>⚠ Generation Error</div>
@@ -1888,7 +1903,7 @@ export default function App() {
                     </div>
                   )}
                   <button onClick={() => generatePersonalised('protocol')} disabled={generatingType === 'protocol' || allMarkers.length === 0}
-                    style={{ fontSize: 17, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ fontSize: 17, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid var(--border-medium)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {generatingType === 'protocol' ? '⟳ Aellux is designing your protocol...' : 'Generate my daily protocol →'}
                   </button>
                 </div>
@@ -1911,7 +1926,7 @@ export default function App() {
                       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, color: 'rgba(0,200,160,.88)', fontWeight: 500 }}>{done.size}/{(personalised.protocol.protocols || []).length}</div>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 20, color: 'rgba(0,215,172,.9)', marginBottom: 4 }}>Your Daily Protocol</div>
+                      <div style={{ fontSize: 20, color: 'var(--brand-dim)', marginBottom: 4 }}>Your Daily Protocol</div>
                       <div style={{ fontSize: 13, letterSpacing: 2, color: 'rgba(0,165,132,.55)', textTransform: 'uppercase' }}>Generated from your biomarkers</div>
                     </div>
                     <button onClick={() => setDone(new Set())} style={{ fontSize: 13, color: 'rgba(0,150,120,.48)', background: 'none', border: '1px solid rgba(0,150,120,.22)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Reset</button>
@@ -1925,11 +1940,11 @@ export default function App() {
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
-                            <span style={{ fontSize: 17, color: done.has(p.id || String(i)) ? 'rgba(0,175,140,.5)' : 'rgba(0,215,172,.92)', lineHeight: 1.4 }}>{p.action}</span>
+                            <span style={{ fontSize: 17, color: done.has(p.id || String(i)) ? 'var(--text-tertiary)' : 'var(--brand-dim)', lineHeight: 1.4 }}>{p.action}</span>
                             {p.tier && <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 2, background: 'var(--brand-ghost)', color: 'rgba(0,195,155,.68)', border: '1px solid rgba(0,195,155,.18)', letterSpacing: 1, flexShrink: 0 }}>T{p.tier}</span>}
-                            {p.time_of_day && <span style={{ fontSize: 11, color: 'rgba(0,165,132,.5)', letterSpacing: 1, textTransform: 'uppercase' }}>{p.time_of_day}</span>}
+                            {p.time_of_day && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: 1, textTransform: 'uppercase' }}>{p.time_of_day}</span>}
                           </div>
-                          <p style={{ fontSize: 15, color: 'rgba(0,178,145,.65)', margin: '0 0 4px', lineHeight: 1.7, fontStyle: 'italic' }}>{p.why}</p>
+                          <p style={{ fontSize: 15, color: 'var(--text-secondary)', margin: '0 0 4px', lineHeight: 1.7, fontStyle: 'italic' }}>{p.why}</p>
                           {p.expected_impact && <div style={{ fontSize: 14, color: 'rgba(0,200,162,.65)' }}>Expected: {p.expected_impact}</div>}
                         </div>
                         <div style={{ fontSize: 13, color: 'rgba(0,155,125,.48)', letterSpacing: 1, textTransform: 'uppercase', flexShrink: 0, textAlign: 'right' }}>{p.frequency}</div>
@@ -1946,7 +1961,7 @@ export default function App() {
                   )}
                   <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <button onClick={() => triggerPrint('protocol')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
-                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
+                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.08)', border: '1px solid var(--border-medium)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
                     <button onClick={() => { setPersonalised(p => ({ ...p, protocol: undefined })); }} style={{ fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
                   </div>
                 </div>
@@ -2188,7 +2203,7 @@ export default function App() {
           {panel === 'ask' && (
             <div>
               <p style={{ ...S.label, marginBottom: 8 }}>Ask Aellux anything about your health</p>
-              <p style={{ fontSize: 16, color: 'rgba(0,175,142,.6)', marginBottom: 24, lineHeight: 1.7 }}>
+              <p style={{ fontSize: 16, color: 'var(--text-tertiary)', marginBottom: 24, lineHeight: 1.7 }}>
                 {allMarkers.length > 0 ? `Aellux has ${allMarkers.length} of your biomarkers in context from ${documents.length} documents.` : 'Upload health documents first for personalised answers.'}
               </p>
               <div style={{ display: 'flex', gap: 12, marginBottom: 28 }}>
@@ -2199,7 +2214,7 @@ export default function App() {
                   onKeyDown={e => e.key === 'Enter' && handleAsk()}
                 />
                 <button onClick={handleAsk} disabled={asking || !input.trim()}
-                  style={{ fontSize: 16, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 22px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                  style={{ fontSize: 16, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid var(--border-medium)', borderRadius: 5, padding: '14px 22px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
                   {asking ? '⟳' : 'Ask →'}
                 </button>
               </div>
