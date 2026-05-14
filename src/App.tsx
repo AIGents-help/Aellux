@@ -20,6 +20,7 @@ import Premortem from './Premortem';
 import RecordsGuide from './RecordsGuide';
 import Onboarding from './Onboarding';
 import EmptyDashboard from './EmptyDashboard';
+import AdminDashboard from './AdminDashboard';
 import PrintableReport from './PrintableReport';
 import WeekView from './WeekView';
 import DerivedViews from './DerivedViews';
