@@ -1286,7 +1286,7 @@ export default function App() {
                   <BodyHero personalised={personalised} />
 
                   {/* ── DASHBOARD SUB-TABS ── */}
-                  <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '1px solid rgba(0,210,165,.12)' }}>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 28, padding: '5px', background: 'rgba(0,0,0,.06)', borderRadius: 10 }}>
                     {[
                       { id: 'markers', label: 'Biomarkers' },
                       { id: 'intelligence', label: '✦ Intelligence' },
@@ -1315,11 +1315,18 @@ export default function App() {
                         }
                       }}
                         style={{
-                          flex: 1, padding: isMobile ? '14px 0' : '12px 0', background: 'none', border: 'none',
-                          borderBottom: `2px solid ${dashTab === t.id ? 'var(--brand-dim)' : 'transparent'}`,
+                          flex: 1, padding: isMobile ? '11px 12px' : '11px 16px',
+                          background: dashTab === t.id ? '#ffffff' : 'transparent',
+                          border: 'none',
+                          borderRadius: 7,
                           color: dashTab === t.id ? 'var(--brand)' : 'var(--text-tertiary)',
-                          fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
-                          letterSpacing: '0.04em', transition: 'all .2s',
+                          fontSize: 14,
+                          fontWeight: dashTab === t.id ? 600 : 400,
+                          cursor: 'pointer',
+                          fontFamily: 'var(--font-body)',
+                          letterSpacing: '0.01em',
+                          transition: 'all .15s',
+                          boxShadow: dashTab === t.id ? '0 1px 4px rgba(0,0,0,.12)' : 'none',
                         }}>
                         {t.label}
                       </button>
