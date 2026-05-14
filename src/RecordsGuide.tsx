@@ -27,7 +27,7 @@ const SOURCES = [
     link: AFFILIATE.function_health,
     cta: 'Order Function Health →',
     badge: 'Most recommended',
-    badgeColor: 'rgba(0,225,180,.9)',
+    badgeColor: 'var(--brand)',
     markers: ['Full hormone panel', 'Metabolic markers', 'Cardiovascular risk', 'Thyroid (T3, T4, TSH)', 'Inflammatory markers', 'Vitamins & minerals'],
   },
   {
@@ -185,11 +185,11 @@ export default function RecordsGuide() {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, color: 'rgba(0,210,165,.65)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>Get Your Health Data</div>
-        <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 24, color: 'rgba(220,255,235,.97)', marginBottom: 10 }}>
+        <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>Get Your Health Data</div>
+        <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 24, color: 'var(--text-primary)', marginBottom: 10 }}>
           Aellux is only as powerful as the data you give it.
         </div>
-        <p style={{ fontSize: 15, color: 'rgba(0,210,165,.65)', lineHeight: 1.75, margin: 0 }}>
+        <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.75, margin: 0 }}>
           Most people don't have their medical records — not because they don't exist, but because the system makes retrieval inconvenient. Here is every path to getting your biology into Aellux, ranked by completeness.
         </p>
       </div>
@@ -198,50 +198,50 @@ export default function RecordsGuide() {
         <div key={group.tier} style={{ marginBottom: 28 }}>
           <div style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 13, color: 'rgba(220,255,235,.7)', fontWeight: 500, marginBottom: 2 }}>{group.label}</div>
-            <div style={{ fontSize: 12, color: 'rgba(0,210,165,.45)' }}>{group.sub}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{group.sub}</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {SOURCES.filter(s => s.tier === group.tier).map(source => {
               const isOpen = expanded === source.id;
               return (
-                <div key={source.id} style={{ background: 'rgba(0,8,18,.5)', border: `1px solid ${isOpen ? 'rgba(0,210,165,.35)' : 'rgba(0,210,165,.14)'}`, borderRadius: 10, overflow: 'hidden', transition: 'border-color .2s' }}>
+                <div key={source.id} style={{ background: 'var(--bg-surface)', border: `1px solid ${isOpen ? 'var(--text-tertiary)' : 'var(--border-subtle)'}`, borderRadius: 10, overflow: 'hidden', transition: 'border-color .2s' }}>
                   {/* Header */}
                   <div onClick={() => setExpanded(isOpen ? null : source.id)}
                     style={{ padding: '16px 18px', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
-                        <span style={{ fontSize: 16, color: 'rgba(220,255,235,.95)', fontWeight: 500 }}>{source.name}</span>
+                        <span style={{ fontSize: 16, color: 'var(--text-primary)', fontWeight: 500 }}>{source.name}</span>
                         {source.badge && (
                           <span style={{ fontSize: 11, padding: '2px 8px', background: source.badgeColor + '20', border: `1px solid ${source.badgeColor}55`, borderRadius: 10, color: source.badgeColor, letterSpacing: '0.06em' }}>
                             {source.badge}
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 13, color: 'rgba(0,210,165,.55)' }}>{source.tagline}</div>
+                      <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>{source.tagline}</div>
                     </div>
                     <div style={{ flexShrink: 0, textAlign: 'right' }}>
                       <div style={{ fontSize: 15, color: 'rgba(220,255,235,.8)', fontWeight: 500 }}>{source.price}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(0,210,165,.4)' }}>{source.turnaround}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{source.turnaround}</div>
                     </div>
                     <span style={{ fontSize: 16, color: 'rgba(0,210,165,.3)', flexShrink: 0, marginTop: 2, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>⌄</span>
                   </div>
 
                   {/* Expanded */}
                   {isOpen && (
-                    <div style={{ padding: '0 18px 18px', borderTop: '1px solid rgba(0,210,165,.1)' }}>
+                    <div style={{ padding: '0 18px 18px', borderTop: '1px solid var(--brand-ghost)' }}>
                       <p style={{ fontSize: 14, color: 'rgba(180,240,210,.8)', lineHeight: 1.75, margin: '16px 0 10px', fontWeight: 300 }}>{source.what}</p>
 
-                      <div style={{ padding: '10px 14px', background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 6, fontSize: 13, color: 'rgba(0,210,165,.7)', lineHeight: 1.65, marginBottom: 14 }}>
-                        <strong style={{ color: 'rgba(0,225,180,.85)' }}>Why Aellux recommends this: </strong>{source.why}
+                      <div style={{ padding: '10px 14px', background: 'var(--brand-ghost)', border: '1px solid var(--border-subtle)', borderRadius: 6, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65, marginBottom: 14 }}>
+                        <strong style={{ color: 'var(--brand)' }}>Why Aellux recommends this: </strong>{source.why}
                       </div>
 
                       {/* Markers covered */}
                       {source.markers && (
                         <div style={{ marginBottom: 14 }}>
-                          <div style={{ fontSize: 11, color: 'rgba(0,210,165,.45)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Markers covered</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Markers covered</div>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                             {source.markers.map(m => (
-                              <span key={m} style={{ fontSize: 12, padding: '3px 10px', background: 'rgba(0,210,165,.06)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 10, color: 'rgba(0,225,180,.75)' }}>{m}</span>
+                              <span key={m} style={{ fontSize: 12, padding: '3px 10px', background: 'var(--brand-ghost)', border: '1px solid var(--border-subtle)', borderRadius: 10, color: 'rgba(0,225,180,.75)' }}>{m}</span>
                             ))}
                           </div>
                         </div>
@@ -250,11 +250,11 @@ export default function RecordsGuide() {
                       {/* Wearable instructions */}
                       {source.instructions && (
                         <div style={{ marginBottom: 14 }}>
-                          <div style={{ fontSize: 11, color: 'rgba(0,210,165,.45)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>How to export</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>How to export</div>
                           {source.instructions.map(inst => (
-                            <div key={inst.device} style={{ marginBottom: 8, padding: '10px 14px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.1)', borderRadius: 6 }}>
-                              <div style={{ fontSize: 13, color: 'rgba(220,255,235,.85)', fontWeight: 500, marginBottom: 4 }}>{inst.device}</div>
-                              <div style={{ fontSize: 13, color: 'rgba(0,210,165,.6)' }}>{inst.steps}</div>
+                            <div key={inst.device} style={{ marginBottom: 8, padding: '10px 14px', background: 'var(--bg-sunken)', border: '1px solid var(--brand-ghost)', borderRadius: 6 }}>
+                              <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500, marginBottom: 4 }}>{inst.device}</div>
+                              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{inst.steps}</div>
                             </div>
                           ))}
                         </div>
@@ -263,12 +263,12 @@ export default function RecordsGuide() {
                       {/* Doctor email template */}
                       {source.emailTemplate && (
                         <div style={{ marginBottom: 14 }}>
-                          <div style={{ fontSize: 11, color: 'rgba(0,210,165,.45)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Email template — copy and send</div>
-                          <div style={{ padding: '14px 16px', background: 'rgba(0,4,12,.7)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 6, fontFamily: 'monospace', fontSize: 12, color: 'rgba(0,225,180,.75)', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 10 }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Email template — copy and send</div>
+                          <div style={{ padding: '14px 16px', background: 'rgba(0,4,12,.7)', border: '1px solid var(--border-subtle)', borderRadius: 6, fontFamily: 'monospace', fontSize: 12, color: 'rgba(0,225,180,.75)', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 10 }}>
                             {source.emailTemplate}
                           </div>
                           <button onClick={() => copyTemplate(source.emailTemplate)}
-                            style={{ fontSize: 13, padding: '7px 16px', background: copied ? 'rgba(52,211,153,.12)' : 'rgba(0,210,165,.06)', border: `1px solid ${copied ? 'rgba(52,211,153,.4)' : 'rgba(0,210,165,.2)'}`, borderRadius: 5, color: copied ? '#34d399' : 'rgba(0,225,180,.8)', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' }}>
+                            style={{ fontSize: 13, padding: '7px 16px', background: copied ? 'rgba(52,211,153,.12)' : 'var(--brand-ghost)', border: `1px solid ${copied ? 'rgba(52,211,153,.4)' : 'var(--border-subtle)'}`, borderRadius: 5, color: copied ? 'var(--accent-optimal)' : 'var(--brand-dim)', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' }}>
                             {copied ? '✓ Copied to clipboard' : 'Copy email template'}
                           </button>
                         </div>
@@ -278,7 +278,7 @@ export default function RecordsGuide() {
                       {source.link && source.cta && (
                         <div>
                           <a href={source.link} target="_blank" rel="noopener noreferrer"
-                            style={{ display: 'inline-block', fontSize: 14, color: 'rgba(0,20,14,1)', background: 'rgba(0,225,180,.9)', padding: '11px 24px', borderRadius: 6, textDecoration: 'none', fontFamily: 'inherit', fontWeight: 600, transition: 'background .2s' }}>
+                            style={{ display: 'inline-block', fontSize: 14, color: 'rgba(0,20,14,1)', background: 'var(--brand)', padding: '11px 24px', borderRadius: 6, textDecoration: 'none', fontFamily: 'inherit', fontWeight: 600, transition: 'background .2s' }}>
                             {source.cta}
                           </a>
                           {source.affiliate && (
@@ -300,18 +300,18 @@ export default function RecordsGuide() {
         <div onClick={() => setShowSupps(!showSupps)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showSupps ? 14 : 0 }}>
           <div>
             <div style={{ fontSize: 13, color: 'rgba(220,255,235,.7)', fontWeight: 500, marginBottom: 2 }}>Supplement sourcing</div>
-            <div style={{ fontSize: 12, color: 'rgba(0,210,165,.45)' }}>Where to buy what Aellux recommends</div>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Where to buy what Aellux recommends</div>
           </div>
-          <span style={{ fontSize: 16, color: 'rgba(0,210,165,.35)', transform: showSupps ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>⌄</span>
+          <span style={{ fontSize: 16, color: 'var(--text-tertiary)', transform: showSupps ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>⌄</span>
         </div>
         {showSupps && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {SUPPLEMENT_AFFILIATES.map(s => (
-              <div key={s.name} style={{ padding: '14px 16px', background: 'rgba(0,8,18,.45)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8 }}>
-                <div style={{ fontSize: 15, color: 'rgba(220,255,235,.9)', fontWeight: 500, marginBottom: 6 }}>{s.name}</div>
-                <div style={{ fontSize: 13, color: 'rgba(0,210,165,.6)', lineHeight: 1.65, marginBottom: 12 }}>{s.desc}</div>
+              <div key={s.name} style={{ padding: '14px 16px', background: 'rgba(0,8,18,.45)', border: '1px solid var(--border-subtle)', borderRadius: 8 }}>
+                <div style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 6 }}>{s.name}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65, marginBottom: 12 }}>{s.desc}</div>
                 <a href={s.link} target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: 13, color: 'rgba(0,225,180,.85)', background: 'rgba(0,210,165,.06)', border: '1px solid rgba(0,210,165,.2)', padding: '7px 16px', borderRadius: 5, textDecoration: 'none', fontFamily: 'inherit', transition: 'all .2s' }}>
+                  style={{ fontSize: 13, color: 'var(--brand)', background: 'var(--brand-ghost)', border: '1px solid var(--border-subtle)', padding: '7px 16px', borderRadius: 5, textDecoration: 'none', fontFamily: 'inherit', transition: 'all .2s' }}>
                   {s.cta}
                 </a>
               </div>

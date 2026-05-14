@@ -40,7 +40,7 @@ function PasswordInput({
         placeholder={placeholder}
         style={{
           background: 'rgba(0,8,18,.9)',
-          border: '1.5px solid rgba(0,200,160,.4)',
+          border: '1.5px solid var(--border-medium)',
           borderRadius: 6,
           color: '#e0fff8',
           fontSize: 17,
@@ -73,7 +73,7 @@ function PasswordInput({
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 const inp: React.CSSProperties = {
-  background: 'rgba(0,8,18,.9)', border: '1.5px solid rgba(0,200,160,.4)', borderRadius: 6,
+  background: 'rgba(0,8,18,.9)', border: '1.5px solid var(--border-medium)', borderRadius: 6,
   color: '#e0fff8', fontSize: 17, fontFamily: 'inherit', padding: '12px 16px',
   outline: 'none', width: '100%', boxSizing: 'border-box',
 };
@@ -82,7 +82,7 @@ const btn: React.CSSProperties = {
   padding: '13px 0', cursor: 'pointer', width: '100%', border: 'none',
 };
 const wrap: React.CSSProperties = {
-  minHeight: '100vh', background: '#030d14', fontFamily: '"EB Garamond",Georgia,serif',
+  minHeight: '100vh', background: 'var(--bg-page)', fontFamily: '"EB Garamond",Georgia,serif',
   display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto',
 };
 const orb: React.CSSProperties = {
@@ -94,8 +94,8 @@ const errorBox: React.CSSProperties = {
   background: 'rgba(255,80,40,.08)', borderRadius: 4, border: '1px solid rgba(255,80,40,.2)',
 };
 const successBox: React.CSSProperties = {
-  fontSize: 14, color: '#4dd4a8', padding: '8px 12px',
-  background: 'rgba(0,210,165,.08)', borderRadius: 4, border: '1px solid rgba(0,210,165,.2)',
+  fontSize: 14, color: 'var(--brand)', padding: '8px 12px',
+  background: 'var(--brand-ghost)', borderRadius: 4, border: '1px solid rgba(0,210,165,.2)',
 };
 const ghost: React.CSSProperties = {
   marginTop: 16, background: 'none', border: 'none',
@@ -222,7 +222,7 @@ export default function AuthPaywall() {
     <div style={wrap}>
       <div style={{ textAlign: 'center', padding: '56px 24px 32px', maxWidth: 480, width: '100%' }}>
         <div style={orb} />
-        <h1 style={{ fontSize: 42, color: '#a8ffe8', fontWeight: 500, margin: '0 0 6px' }}>Aellux</h1>
+        <h1 style={{ fontSize: 42, color: 'var(--brand)', fontWeight: 500, margin: '0 0 6px' }}>Aellux</h1>
         <p style={{ fontSize: 15, color: 'rgba(0,210,165,.55)', marginBottom: 32, letterSpacing: 3, textTransform: 'uppercase' }}>Member Sign In</p>
         <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input
@@ -237,7 +237,7 @@ export default function AuthPaywall() {
           />
           {error   && <div style={errorBox}>{error}</div>}
           {success && <div style={successBox}>{success}</div>}
-          <button type="submit" disabled={loading} style={{ ...btn, color: '#030d14', background: 'rgba(0,210,165,.9)', opacity: loading ? .7 : 1 }}>
+          <button type="submit" disabled={loading} style={{ ...btn, color: 'var(--bg-page)', background: 'var(--brand)', opacity: loading ? .7 : 1 }}>
             {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
@@ -258,7 +258,7 @@ export default function AuthPaywall() {
       <div style={wrap}>
         <div style={{ textAlign: 'center', padding: '56px 24px 32px', maxWidth: 480, width: '100%' }}>
           <div style={orb} />
-          <h1 style={{ fontSize: 42, color: '#a8ffe8', fontWeight: 500, margin: '0 0 6px' }}>Aellux</h1>
+          <h1 style={{ fontSize: 42, color: 'var(--brand)', fontWeight: 500, margin: '0 0 6px' }}>Aellux</h1>
           <p style={{ fontSize: 15, color: 'rgba(0,210,165,.55)', marginBottom: 32, letterSpacing: 3, textTransform: 'uppercase' }}>
             {isPro ? 'Pro Account' : 'Free Account'}
           </p>
@@ -282,7 +282,7 @@ export default function AuthPaywall() {
             <button
               onClick={() => handleSignUp(isPro ? 'pro' : 'free')}
               disabled={loading}
-              style={{ ...btn, color: '#030d14', background: isPro ? 'rgba(0,210,165,.9)' : 'rgba(0,190,150,.8)', opacity: loading ? .7 : 1 }}
+              style={{ ...btn, color: 'var(--bg-page)', background: isPro ? 'var(--brand)' : 'rgba(0,190,150,.8)', opacity: loading ? .7 : 1 }}
             >
               {loading ? 'Creating account…' : isPro ? 'Create Account & Subscribe — $29/mo' : 'Create Free Account'}
             </button>
@@ -300,7 +300,7 @@ export default function AuthPaywall() {
     <div style={wrap}>
       <div style={{ textAlign: 'center', padding: '56px 24px 32px', maxWidth: 480, width: '100%' }}>
         <div style={orb} />
-        <h1 style={{ fontSize: 42, color: '#a8ffe8', fontWeight: 500, margin: '0 0 6px' }}>Aellux</h1>
+        <h1 style={{ fontSize: 42, color: 'var(--brand)', fontWeight: 500, margin: '0 0 6px' }}>Aellux</h1>
         <p style={{ fontSize: 15, color: 'rgba(0,210,165,.55)', marginBottom: 12, letterSpacing: 3, textTransform: 'uppercase' }}>Password Reset</p>
         <p style={{ fontSize: 15, color: 'rgba(120,210,175,.6)', marginBottom: 28, lineHeight: 1.6 }}>
           Enter your email and we'll send a reset link. It expires in 1 hour.
@@ -314,7 +314,7 @@ export default function AuthPaywall() {
           {error   && <div style={errorBox}>{error}</div>}
           {success && <div style={successBox}>{success}</div>}
           {!success && (
-            <button type="submit" disabled={loading} style={{ ...btn, color: '#030d14', background: 'rgba(0,210,165,.9)', opacity: loading ? .7 : 1 }}>
+            <button type="submit" disabled={loading} style={{ ...btn, color: 'var(--bg-page)', background: 'var(--brand)', opacity: loading ? .7 : 1 }}>
               {loading ? 'Sending…' : 'Send Reset Link'}
             </button>
           )}
@@ -331,7 +331,7 @@ export default function AuthPaywall() {
     <div style={wrap}>
       <div style={{ textAlign: 'center', padding: '56px 24px 32px', maxWidth: 480, width: '100%' }}>
         <div style={orb} />
-        <h1 style={{ fontSize: 42, color: '#a8ffe8', fontWeight: 500, margin: '0 0 6px' }}>Aellux</h1>
+        <h1 style={{ fontSize: 42, color: 'var(--brand)', fontWeight: 500, margin: '0 0 6px' }}>Aellux</h1>
         <p style={{ fontSize: 15, color: 'rgba(0,210,165,.55)', marginBottom: 12, letterSpacing: 3, textTransform: 'uppercase' }}>Set New Password</p>
         <p style={{ fontSize: 15, color: 'rgba(120,210,175,.6)', marginBottom: 28, lineHeight: 1.6 }}>
           Resetting password for <strong style={{ color: 'rgba(0,210,165,.8)' }}>{resetEmail}</strong>
@@ -350,7 +350,7 @@ export default function AuthPaywall() {
           {error   && <div style={errorBox}>{error}</div>}
           {success && <div style={successBox}>{success}</div>}
           {!success && (
-            <button type="submit" disabled={loading} style={{ ...btn, color: '#030d14', background: 'rgba(0,210,165,.9)', opacity: loading ? .7 : 1 }}>
+            <button type="submit" disabled={loading} style={{ ...btn, color: 'var(--bg-page)', background: 'var(--brand)', opacity: loading ? .7 : 1 }}>
               {loading ? 'Updating…' : 'Update Password'}
             </button>
           )}
@@ -370,14 +370,14 @@ export default function AuthPaywall() {
         <div style={{ fontSize: 12, letterSpacing: 6, textTransform: 'uppercase', color: 'rgba(0,210,165,.65)', marginBottom: 12, fontWeight: 600 }}>
           Ancient Intelligence. Present Clarity.
         </div>
-        <h1 style={{ fontSize: 58, color: '#a8ffe8', fontWeight: 500, margin: '0 0 20px' }}>Aellux</h1>
+        <h1 style={{ fontSize: 58, color: 'var(--brand)', fontWeight: 500, margin: '0 0 20px' }}>Aellux</h1>
         <p style={{ fontSize: 20, color: '#8ae8d0', maxWidth: 500, margin: '0 auto 12px', lineHeight: 1.7 }}>
           Upload your medical records. Aellux reads everything and synthesises your complete biology.
         </p>
         <p style={{ fontSize: 17, color: 'rgba(120,220,190,.7)', maxWidth: 420, margin: '0 auto 28px', lineHeight: 1.65 }}>
           Personalised meals, supplements, and daily protocols. Not templates.
         </p>
-        <button onClick={() => reset('signin')} style={{ background: 'rgba(0,200,160,.15)', border: '1.5px solid rgba(0,200,160,.4)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontSize: 15, color: '#7de8cc', padding: '10px 28px', fontWeight: 600 }}>
+        <button onClick={() => reset('signin')} style={{ background: 'rgba(0,200,160,.15)', border: '1.5px solid var(--border-medium)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontSize: 15, color: 'var(--brand)', padding: '10px 28px', fontWeight: 600 }}>
           Already a member? Sign in
         </button>
       </div>
@@ -386,16 +386,16 @@ export default function AuthPaywall() {
         {/* Free plan */}
         <div style={{ flex: '1 1 360px', background: 'rgba(0,18,28,.85)', border: '1.5px solid rgba(0,170,130,.25)', borderRadius: 12, padding: '32px 28px' }}>
           <div style={{ fontSize: 13, letterSpacing: 4, textTransform: 'uppercase', color: 'rgba(0,190,150,.65)', marginBottom: 10, fontWeight: 700 }}>Free</div>
-          <div style={{ fontSize: 52, color: '#a8ffe8', fontWeight: 500, marginBottom: 4 }}>$0</div>
+          <div style={{ fontSize: 52, color: 'var(--brand)', fontWeight: 500, marginBottom: 4 }}>$0</div>
           <div style={{ fontSize: 17, color: 'rgba(120,210,175,.6)', marginBottom: 28 }}>Forever free</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 32 }}>
             {FREE.map(f => (
               <div key={f} style={{ display: 'flex', gap: 12, fontSize: 16, color: '#8ae8d0', lineHeight: 1.4 }}>
-                <span style={{ color: '#4dd4a8', fontWeight: 700, flexShrink: 0 }}>&#10003;</span>{f}
+                <span style={{ color: 'var(--brand)', fontWeight: 700, flexShrink: 0 }}>&#10003;</span>{f}
               </div>
             ))}
           </div>
-          <button onClick={() => reset('signup-free')} style={{ ...btn, color: '#a8ffe8', background: 'rgba(0,190,150,.12)', border: '1.5px solid rgba(0,190,150,.4)' }}>
+          <button onClick={() => reset('signup-free')} style={{ ...btn, color: 'var(--brand)', background: 'var(--brand-ghost)', border: '1.5px solid var(--border-medium)' }}>
             Get started free
           </button>
         </div>
@@ -407,7 +407,7 @@ export default function AuthPaywall() {
           </div>
           <div style={{ fontSize: 13, letterSpacing: 4, textTransform: 'uppercase', color: 'rgba(0,215,165,.75)', marginBottom: 10, fontWeight: 700 }}>Pro</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontSize: 52, color: '#c0fff0', fontWeight: 500 }}>$29</span>
+            <span style={{ fontSize: 52, color: 'var(--text-primary)', fontWeight: 500 }}>$29</span>
             <span style={{ fontSize: 18, color: 'rgba(140,220,190,.6)' }}>/month</span>
           </div>
           <div style={{ fontSize: 12, color: 'rgba(0,210,165,.5)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -417,12 +417,12 @@ export default function AuthPaywall() {
           <div style={{ fontSize: 17, color: 'rgba(120,210,175,.6)', marginBottom: 28 }}>Full biological intelligence</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 32 }}>
             {PRO.map(f => (
-              <div key={f} style={{ display: 'flex', gap: 12, fontSize: 16, color: '#c0fff0', lineHeight: 1.4 }}>
-                <span style={{ color: '#4dd4a8', fontWeight: 700, flexShrink: 0 }}>&#10022;</span>{f}
+              <div key={f} style={{ display: 'flex', gap: 12, fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                <span style={{ color: 'var(--brand)', fontWeight: 700, flexShrink: 0 }}>&#10022;</span>{f}
               </div>
             ))}
           </div>
-          <button onClick={() => reset('signup-pro')} style={{ ...btn, color: '#030d14', background: 'rgba(0,210,165,.9)' }}>
+          <button onClick={() => reset('signup-pro')} style={{ ...btn, color: 'var(--bg-page)', background: 'var(--brand)' }}>
             Start with Pro
           </button>
           <div style={{ fontSize: 13, color: 'rgba(100,200,160,.4)', textAlign: 'center', marginTop: 10 }}>

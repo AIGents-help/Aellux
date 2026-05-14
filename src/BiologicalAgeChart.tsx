@@ -37,7 +37,7 @@ export default function BiologicalAgeChart({ userId, chronologicalAge, currentBi
 
   const latestBio = bioAges[bioAges.length - 1];
   const gap = chronologicalAge ? latestBio - chronologicalAge : null;
-  const gapColor = gap === null ? '#34d399' : gap < -2 ? '#34d399' : gap > 2 ? '#f87171' : '#f59e0b';
+  const gapColor = gap === null ? 'var(--accent-optimal)' : gap < -2 ? 'var(--accent-optimal)' : gap > 2 ? 'var(--accent-elevated)' : 'var(--accent-watch)';
   const gapLabel = gap === null ? '' : gap < 0 ? `${Math.abs(gap).toFixed(1)} years younger` : gap > 0 ? `${gap.toFixed(1)} years older` : 'Exact chronological age';
 
   const formatDate = (d: string) => {
@@ -49,8 +49,8 @@ export default function BiologicalAgeChart({ userId, chronologicalAge, currentBi
     <div style={{ padding: '20px 0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
         <div>
-          <div style={{ fontSize: 11, color: 'rgba(0,210,165,.65)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>Biological Age Trajectory</div>
-          <div style={{ fontSize: 13, color: 'rgba(0,210,165,.5)' }}>How your cellular age is moving over time</div>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>Biological Age Trajectory</div>
+          <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>How your cellular age is moving over time</div>
         </div>
         {gap !== null && (
           <div style={{ textAlign: 'right' }}>
@@ -61,7 +61,7 @@ export default function BiologicalAgeChart({ userId, chronologicalAge, currentBi
       </div>
 
       {all.length > 1 ? (
-        <div style={{ background: 'rgba(0,6,14,.5)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8, padding: '12px 8px 6px' }}>
+        <div style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '12px 8px 6px' }}>
           <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', overflow: 'visible' }}>
             {/* Chronological age reference line */}
             {chronologicalAge && (
@@ -74,11 +74,11 @@ export default function BiologicalAgeChart({ userId, chronologicalAge, currentBi
             <polyline points={pts} fill="none" stroke={gapColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             {all.map((r, i) => (
               <g key={i}>
-                <circle cx={px(i)} cy={py(parseFloat(r.biological_age))} r="4" fill={gapColor} stroke="rgba(2,12,22,1)" strokeWidth="2" />
+                <circle cx={px(i)} cy={py(parseFloat(r.biological_age))} r="4" fill={gapColor} stroke="var(--bg-surface)" strokeWidth="2" />
                 <text x={px(i)} y={py(parseFloat(r.biological_age)) - 10} textAnchor="middle" fontSize="10" fill={gapColor} fontFamily="inherit" fontWeight="600">
                   {parseFloat(r.biological_age).toFixed(1)}
                 </text>
-                <text x={px(i)} y={H - 2} textAnchor="middle" fontSize="8" fill="rgba(0,210,165,.35)" fontFamily="inherit">
+                <text x={px(i)} y={H - 2} textAnchor="middle" fontSize="8" fill="var(--text-tertiary)" fontFamily="inherit">
                   {formatDate(r.created_at)}
                 </text>
               </g>
@@ -90,7 +90,7 @@ export default function BiologicalAgeChart({ userId, chronologicalAge, currentBi
           </div>
         </div>
       ) : (
-        <div style={{ padding: '14px 16px', background: 'rgba(0,8,18,.5)', border: '1px solid rgba(0,210,165,.14)', borderRadius: 8, fontSize: 14, color: 'rgba(0,210,165,.6)' }}>
+        <div style={{ padding: '14px 16px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 8, fontSize: 14, color: 'var(--text-secondary)' }}>
           Generate your Biologic Synthesis again to add another data point. Once you have 2+ readings, your biological age trajectory will appear here.
         </div>
       )}

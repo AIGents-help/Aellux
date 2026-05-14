@@ -78,7 +78,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  optimal:    'rgba(0,210,165,.9)',
+  optimal:    'var(--brand-dim)',
   normal:     'rgba(0,190,155,.8)',
   borderline: 'rgba(255,190,60,.9)',
   elevated:   'rgba(255,130,60,.9)',
@@ -178,7 +178,7 @@ function TrendChart({ marker, history }: { marker: string; history: Array<{ date
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 22, fontWeight: 500, color: change.startsWith('-') ? 'rgba(255,120,80,.9)' : 'rgba(0,210,165,.9)' }}>
+          <div style={{ fontSize: 22, fontWeight: 500, color: change.startsWith('-') ? 'rgba(255,120,80,.9)' : 'var(--brand-dim)' }}>
             {Number(change) > 0 ? '+' : ''}{change}%
           </div>
           <div style={{ fontSize: 13, color: 'rgba(0,160,130,.5)' }}>{sorted[0].date} → {sorted[sorted.length - 1].date}</div>
@@ -1019,7 +1019,7 @@ export default function App() {
   }
 
   if (!awakened) return (
-    <div style={{ height: '100vh', background: '#020810', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 30 }}>
+    <div style={{ height: '100vh', background: 'var(--bg-page)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 30 }}>
       <div style={{ opacity: awakePhase >= 1 ? 1 : 0, transform: awakePhase >= 1 ? 'scale(1)' : 'scale(0.82)', transition: 'all 1.6s cubic-bezier(.16,1,.3,1)' }}><Orb state={orbState} size={160} /></div>
       {awakePhase >= 2 && <p style={{ color: 'rgba(0,190,152,.65)', fontSize: 13, letterSpacing: 4, textTransform: 'uppercase' }}>Ancient intelligence. Present clarity.</p>}
       {awakePhase >= 3 && response && <p style={{ color: 'rgba(0,215,172,.9)', fontSize: 19, fontStyle: 'italic', maxWidth: 400, textAlign: 'center', lineHeight: 1.85, padding: '0 24px' }}>{response}</p>}
@@ -1042,9 +1042,9 @@ export default function App() {
   ];
 
   const S = {
-    label:  { fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' as const, color: 'rgba(0,175,140,.65)' },
-    card:   { background: 'rgba(0,6,14,.82)', border: '1px solid rgba(0,165,132,.14)', borderRadius: 6 },
-    italic: { fontSize: 17, fontStyle: 'italic' as const, color: 'rgba(0,210,170,.88)', lineHeight: 1.9 },
+    label:  { fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'var(--text-tertiary)', fontFamily: 'var(--font-body)', fontWeight: 500 },
+    card:   { background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-card)' },
+    italic: { fontSize: 17, fontStyle: 'italic' as const, color: 'var(--text-secondary)', lineHeight: 1.9, fontFamily: 'var(--font-display)' },
   };
 
   const categories = Object.keys(markersByCategory);
@@ -1087,7 +1087,7 @@ export default function App() {
         <div style={{ width: '100%', padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 18 }}>
           {NAV.map(({ id, label, count }) => (
             <button key={id} className={`aellux-nav-item ${panel === id ? 'active' : ''}`} onClick={() => { setPanel(id); setDrawerOpen(false); }}>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: panel === id ? 'rgba(0,210,165,.9)' : 'rgba(0,130,105,.3)', flexShrink: 0, display: 'inline-block' }} />
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: panel === id ? 'var(--brand-dim)' : 'rgba(0,130,105,.3)', flexShrink: 0, display: 'inline-block' }} />
               <span style={{ flex: 1 }}>{label}</span>
               {count !== undefined && count > 0 && (
                 <span style={{ fontSize: 10, background: 'rgba(0,195,155,.12)', color: 'rgba(0,195,155,.65)', padding: '1px 6px', borderRadius: 10, letterSpacing: 0 }}>{count}</span>
@@ -1101,7 +1101,7 @@ export default function App() {
         {/* Stats summary */}
         {documents.length > 0 && (
           <div style={{ padding: '0 14px', width: '100%', marginBottom: 14 }}>
-            <div style={{ background: 'rgba(0,8,18,.6)', border: '1px solid rgba(0,165,132,.1)', borderRadius: 4, padding: '10px 12px' }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid rgba(0,165,132,.1)', borderRadius: 4, padding: '10px 12px' }}>
               <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(0,165,132,.5)', marginBottom: 6 }}>Health Profile</div>
               <div style={{ fontSize: 14, color: 'rgba(0,200,165,.75)', marginBottom: 3 }}>{allMarkers.length} biomarkers</div>
               <div style={{ fontSize: 14, color: 'rgba(0,185,150,.6)', marginBottom: 3 }}>{documents.length} documents</div>
@@ -1138,13 +1138,13 @@ export default function App() {
           <div style={{ background: 'rgba(0,6,14,.7)', border: '1px solid rgba(0,165,132,.1)', borderRadius: 4, padding: '10px 12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <div style={{ fontSize: 13, color: 'rgba(0,190,155,.72)' }}>{user?.email?.split('@')[0]}</div>
-              <div style={{ fontSize: 11, padding: '2px 8px', border: isPro ? '1px solid rgba(0,195,155,.4)' : '1px solid rgba(0,155,125,.2)', borderRadius: 10, color: isPro ? 'rgba(0,210,165,.85)' : 'rgba(0,155,125,.5)', letterSpacing: 1, textTransform: 'uppercase' }}>{isPro ? 'Pro' : 'Free'}</div>
+              <div style={{ fontSize: 11, padding: '2px 8px', border: isPro ? '1px solid rgba(0,195,155,.4)' : '1px solid rgba(0,155,125,.2)', borderRadius: 10, color: isPro ? 'var(--brand-dim)' : 'rgba(0,155,125,.5)', letterSpacing: 1, textTransform: 'uppercase' }}>{isPro ? 'Pro' : 'Free'}</div>
             </div>
             {!isPro && (
-              <button onClick={() => setShowUpgrade(true)} style={{ width: '100%', fontSize: 13, color: 'rgba(0,210,165,.85)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.25)', borderRadius: 3, padding: '6px 0', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>Upgrade to Pro →</button>
+              <button onClick={() => setShowUpgrade(true)} style={{ width: '100%', fontSize: 13, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.25)', borderRadius: 3, padding: '6px 0', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>Upgrade to Pro →</button>
             )}
             <div style={{ marginTop: 12, borderTop: '1px solid rgba(0,210,165,.14)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <button onClick={() => setPanel('profile')} style={{ width: '100%', fontSize: 13, color: 'rgba(0,225,180,.9)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,210,165,.2)', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button onClick={() => setPanel('profile')} style={{ width: '100%', fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,210,165,.2)', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 15 }}>⚙</span> Profile &amp; Settings
               </button>
               <button onClick={signOut} style={{ width: '100%', fontSize: 13, color: 'rgba(255,110,110,.9)', background: 'rgba(255,80,80,.06)', border: '1px solid rgba(255,90,90,.2)', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1161,7 +1161,7 @@ export default function App() {
       </div>
 
       {/* ── MAIN PANEL ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: '#020810' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg-page)' }}>
         <div className="aellux-topbar">
           <span style={{ fontSize: 15, letterSpacing: 2.5, textTransform: 'uppercase', color: 'rgba(0,195,155,.78)' }}>
             {NAV.find(n => n.id === panel)?.label}
@@ -1184,14 +1184,14 @@ export default function App() {
                 onDrop={e => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
                 onClick={() => fileInputRef.current?.click()}
                 style={{
-                  border: `2px dashed ${dragOver ? 'rgba(0,210,165,.6)' : 'rgba(0,175,138,.2)'}`,
+                  border: `2px dashed ${dragOver ? 'var(--text-secondary)' : 'rgba(0,175,138,.2)'}`,
                   borderRadius: 8, padding: '48px 32px', textAlign: 'center', cursor: 'pointer',
                   background: dragOver ? 'rgba(0,40,32,.3)' : 'rgba(0,6,14,.6)',
                   transition: 'all .2s', marginBottom: 28,
                 }}
               >
                 <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.6 }}>⊕</div>
-                <div style={{ fontSize: 20, color: 'rgba(0,210,165,.85)', marginBottom: 8, fontWeight: 500 }}>Drop your health records here</div>
+                <div style={{ fontSize: 20, color: 'var(--brand-dim)', marginBottom: 8, fontWeight: 500 }}>Drop your health records here</div>
                 <div style={{ fontSize: 16, color: 'rgba(0,175,142,.6)', marginBottom: 16, lineHeight: 1.7 }}>
                   Blood panels · DEXA scans · Sleep reports · Microbiome results<br />
                   Wearable exports · Physician notes · Lab results
@@ -1315,8 +1315,8 @@ export default function App() {
                       }}
                         style={{
                           flex: 1, padding: isMobile ? '14px 0' : '12px 0', background: 'none', border: 'none',
-                          borderBottom: `2px solid ${dashTab === t.id ? 'rgba(0,225,180,.8)' : 'transparent'}`,
-                          color: dashTab === t.id ? 'rgba(0,240,190,1)' : 'rgba(0,210,165,.5)',
+                          borderBottom: `2px solid ${dashTab === t.id ? 'var(--brand-dim)' : 'transparent'}`,
+                          color: dashTab === t.id ? 'var(--brand)' : 'var(--text-tertiary)',
                           fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
                           letterSpacing: '0.04em', transition: 'all .2s',
                         }}>
@@ -1335,27 +1335,27 @@ export default function App() {
                         {/* Header */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                           <div>
-                            <div style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(0,210,165,.55)', marginBottom: 4 }}>Aellux Synthesis</div>
-                            <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'rgba(220,255,235,.95)', fontWeight: 500 }}>Your Biologic Read</div>
+                            <div style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 4 }}>Aellux Synthesis</div>
+                            <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'var(--text-primary)', fontWeight: 500 }}>Your Biologic Read</div>
                           </div>
                           <div style={{ display: 'flex', gap: isMobile ? 6 : 8 }}>
-                            <button onClick={() => triggerPrint('synthesis')} style={{ fontSize: 12, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.35)', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>↓ PDF</button>
+                            <button onClick={() => triggerPrint('synthesis')} style={{ fontSize: 12, color: 'var(--brand)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.35)', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>↓ PDF</button>
                             <button onClick={() => triggerPrint('all')} style={{ fontSize: 12, color: 'rgba(0,225,180,.75)', background: 'rgba(0,195,155,.06)', border: '1px solid rgba(0,195,155,.2)', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>Full Report</button>
                           </div>
                         </div>
 
                         {/* Opening voice */}
-                        <div style={{ padding: '22px 26px', background: 'rgba(0,8,18,.6)', border: '1px solid rgba(0,210,165,.2)', borderLeft: '3px solid rgba(0,225,180,.6)', borderRadius: 8, marginBottom: 14 }}>
-                          <p style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 20, color: 'rgba(220,255,235,.97)', lineHeight: 1.85, margin: 0, fontStyle: 'italic' }}>{syn.aellux_voice}</p>
+                        <div style={{ padding: '22px 26px', background: 'var(--bg-surface)', border: '1px solid rgba(0,210,165,.2)', borderLeft: '3px solid rgba(0,225,180,.6)', borderRadius: 8, marginBottom: 14 }}>
+                          <p style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 20, color: 'var(--text-primary)', lineHeight: 1.85, margin: 0, fontStyle: 'italic' }}>{syn.aellux_voice}</p>
                         </div>
 
                         {/* Bio age + focus strip */}
                         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 10, marginBottom: 14 }}>
                           {syn.biological_age_estimate && (
-                            <div style={{ flex: 1, minWidth: 140, padding: '12px 16px', background: 'rgba(0,210,165,.06)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 7 }}>
-                              <div style={{ fontSize: 11, color: 'rgba(0,210,165,.55)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Biological age</div>
-                              <div style={{ fontSize: 24, color: 'rgba(0,240,190,1)', fontFamily: 'EB Garamond, Georgia, serif', fontWeight: 500 }}>{syn.biological_age_estimate}</div>
-                              {syn.bio_age_gap && <div style={{ fontSize: 13, color: 'rgba(0,210,165,.65)', marginTop: 2 }}>{syn.bio_age_gap}</div>}
+                            <div style={{ flex: 1, minWidth: 140, padding: '12px 16px', background: 'var(--brand-ghost)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 7 }}>
+                              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Biological age</div>
+                              <div style={{ fontSize: 24, color: 'var(--brand)', fontFamily: 'EB Garamond, Georgia, serif', fontWeight: 500 }}>{syn.biological_age_estimate}</div>
+                              {syn.bio_age_gap && <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>{syn.bio_age_gap}</div>}
                             </div>
                           )}
                           {syn.focus_priority && (
@@ -1376,8 +1376,8 @@ export default function App() {
 
                         {/* The real story */}
                         {syn.the_real_story && (
-                          <div style={{ padding: '18px 22px', background: 'rgba(0,8,18,.5)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 8, marginBottom: 14 }}>
-                            <div style={{ fontSize: 11, color: 'rgba(0,210,165,.65)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>The real story — what your markers are saying together</div>
+                          <div style={{ padding: '18px 22px', background: 'var(--bg-surface)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 8, marginBottom: 14 }}>
+                            <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>The real story — what your markers are saying together</div>
                             <p style={{ fontSize: 16, color: 'rgba(200,245,225,.9)', lineHeight: 1.8, margin: 0 }}>{syn.the_real_story}</p>
                           </div>
                         )}
@@ -1385,17 +1385,17 @@ export default function App() {
                         {/* System dance — marker interactions */}
                         {syn.system_dance && syn.system_dance.length > 0 && (
                           <div style={{ marginBottom: 14 }}>
-                            <div style={{ fontSize: 11, color: 'rgba(0,210,165,.55)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>How your systems are dancing together</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>How your systems are dancing together</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                               {syn.system_dance.map((dance: any, i: number) => (
-                                <div key={i} style={{ padding: '16px 20px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8 }}>
+                                <div key={i} style={{ padding: '16px 20px', background: 'var(--bg-sunken)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                                    <div style={{ fontSize: 15, color: 'rgba(220,255,235,.95)', fontWeight: 500 }}>{dance.title}</div>
+                                    <div style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 500 }}>{dance.title}</div>
                                     {dance.markers_involved && dance.markers_involved.map((mk: string) => (
-                                      <span key={mk} style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(0,210,165,.1)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 10, color: 'rgba(0,225,180,.85)', letterSpacing: '0.04em' }}>{mk}</span>
+                                      <span key={mk} style={{ fontSize: 11, padding: '2px 8px', background: 'var(--brand-ghost)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 10, color: 'var(--brand)', letterSpacing: '0.04em' }}>{mk}</span>
                                     ))}
                                   </div>
-                                  <p style={{ fontSize: 15, color: 'rgba(180,240,210,.88)', lineHeight: 1.7, margin: '0 0 6px' }}>{dance.explanation}</p>
+                                  <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: '0 0 6px' }}>{dance.explanation}</p>
                                   {dance.impact && <p style={{ fontSize: 14, color: 'rgba(255,200,100,.8)', lineHeight: 1.6, margin: 0, fontStyle: 'italic' }}>→ {dance.impact}</p>}
                                 </div>
                               ))}
@@ -1406,7 +1406,7 @@ export default function App() {
                         {/* Honest combat */}
                         {syn.honest_combat && syn.honest_combat.length > 0 && (
                           <div style={{ marginBottom: 14 }}>
-                            <div style={{ fontSize: 11, color: 'rgba(0,210,165,.55)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>How to honestly move the needle</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>How to honestly move the needle</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                               {syn.honest_combat.sort((a: any, b: any) => (a.priority || 9) - (b.priority || 9)).map((combat: any, i: number) => (
                                 <div key={i} style={{ padding: '16px 20px', background: 'rgba(52,211,153,.04)', border: '1px solid rgba(52,211,153,.18)', borderRadius: 8, display: 'flex', gap: 14 }}>
@@ -1414,7 +1414,7 @@ export default function App() {
                                   <div style={{ flex: 1 }}>
                                     <div style={{ fontSize: 15, color: 'rgba(180,255,210,.95)', fontWeight: 500, marginBottom: 6 }}>{combat.lever}</div>
                                     <p style={{ fontSize: 14, color: 'rgba(140,230,180,.8)', lineHeight: 1.65, margin: '0 0 6px', fontStyle: 'italic' }}>{combat.why_it_works}</p>
-                                    <p style={{ fontSize: 15, color: 'rgba(200,245,220,.9)', lineHeight: 1.7, margin: 0 }}>{combat.how}</p>
+                                    <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>{combat.how}</p>
                                   </div>
                                 </div>
                               ))}
@@ -1424,8 +1424,8 @@ export default function App() {
 
                         {/* What's working */}
                         {syn.what_is_working && syn.what_is_working.length > 0 && (
-                          <div style={{ padding: '16px 20px', background: 'rgba(0,210,165,.05)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 8 }}>
-                            <div style={{ fontSize: 11, color: 'rgba(0,210,165,.65)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>What is working — protect these</div>
+                          <div style={{ padding: '16px 20px', background: 'var(--brand-ghost)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 8 }}>
+                            <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>What is working — protect these</div>
                             {syn.what_is_working.map((win: string, i: number) => (
                               <div key={i} style={{ fontSize: 15, color: 'rgba(180,255,220,.9)', lineHeight: 1.65, marginBottom: 5, display: 'flex', gap: 8 }}>
                                 <span style={{ color: 'rgba(52,211,153,.8)', flexShrink: 0 }}>✓</span> {win}
@@ -1487,8 +1487,8 @@ export default function App() {
                       };
                       const ref = REF_CARD[m.name] || (m.reference_range_low != null ? {low: m.reference_range_low!, high: m.reference_range_high!} : null);
                       const statusColor = !isNaN(numVal) && ref
-                        ? (numVal < ref.low ? '#fb923c' : numVal > ref.high ? '#f87171' : '#34d399')
-                        : (m.status === 'elevated' || m.status === 'high' ? '#f87171' : m.status === 'low' ? '#fb923c' : 'rgba(0,210,165,.8)');
+                        ? (numVal < ref.low ? 'var(--accent-watch)' : numVal > ref.high ? 'var(--accent-elevated)' : 'var(--accent-optimal)')
+                        : (m.status === 'elevated' || m.status === 'high' ? 'var(--accent-elevated)' : m.status === 'low' ? 'var(--accent-watch)' : 'var(--brand-dim)');
                       const trend = nums.length > 1 ? nums[nums.length-1] - nums[0] : 0;
                       const tLabel = trend === 0 ? '' : (trend > 0 ? '▲' : '▼') + ' ' + Math.abs(trend).toFixed(1);
                       const sMin = nums.length ? Math.min(...nums) : 0;
@@ -1505,32 +1505,32 @@ export default function App() {
                         const pct = (v:number) => Math.min(100,Math.max(0,((v-dMin)/dSpan)*100));
                         barEl = (
                           <div style={{ marginTop: 12 }}>
-                            <div style={{ position:'relative',height:6,borderRadius:6,background:'rgba(0,210,165,.08)' }}>
+                            <div style={{ position:'relative',height:6,borderRadius:6,background:'var(--brand-ghost)' }}>
                               <div style={{ position:'absolute',top:0,height:'100%',borderRadius:6,left:`${pct(ref.low)}%`,width:`${Math.max(0,pct(ref.high)-pct(ref.low))}%`,background:'rgba(0,210,165,.14)' }} />
                               <div style={{ position:'absolute',top:'50%',left:`${pct(numVal)}%`,transform:'translate(-50%,-50%)',width:12,height:12,borderRadius:'50%',background:statusColor,border:'2px solid rgba(2,12,22,1)',boxShadow:`0 0 6px ${statusColor}88`,zIndex:2 }} />
                             </div>
                             <div style={{ display:'flex',justifyContent:'space-between',marginTop:4 }}>
-                              <span style={{ fontSize:11,color:'rgba(0,210,165,.4)' }}>Low {ref.low}</span>
-                              <span style={{ fontSize:11,color:'rgba(0,210,165,.4)' }}>High {ref.high}{m.unit ? ' '+m.unit : ''}</span>
+                              <span style={{ fontSize:11,color:'var(--text-tertiary)' }}>Low {ref.low}</span>
+                              <span style={{ fontSize:11,color:'var(--text-tertiary)' }}>High {ref.high}{m.unit ? ' '+m.unit : ''}</span>
                             </div>
                           </div>
                         );
                       }
                       return (
                         <div key={m.name} onClick={() => setSelectedMarker(m)}
-                          style={{ background:'rgba(0,210,165,.04)', border:`1px solid ${isFlagged ? 'rgba(255,150,60,.3)' : 'rgba(0,210,165,.16)'}`, borderRadius:10, padding:'16px 18px', cursor:'pointer', transition:'border-color .2s,background .2s' }}
-                          onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(0,225,180,.45)';e.currentTarget.style.background='rgba(0,210,165,.08)';}}
-                          onMouseLeave={e=>{e.currentTarget.style.borderColor=isFlagged?'rgba(255,150,60,.3)':'rgba(0,210,165,.16)';e.currentTarget.style.background='rgba(0,210,165,.04)';}}>
+                          style={{ background:'var(--brand-ghost)', border:`1px solid ${isFlagged ? 'rgba(255,150,60,.3)' : 'var(--border-subtle)'}`, borderRadius:10, padding:'16px 18px', cursor:'pointer', transition:'border-color .2s,background .2s' }}
+                          onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(0,225,180,.45)';e.currentTarget.style.background='var(--brand-ghost)';}}
+                          onMouseLeave={e=>{e.currentTarget.style.borderColor=isFlagged?'rgba(255,150,60,.3)':'var(--border-subtle)';e.currentTarget.style.background='var(--brand-ghost)';}}>
                           <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:3 }}>
-                            <div style={{ fontSize:16,color:'rgba(220,255,235,1)',fontFamily:'EB Garamond,Georgia,serif',fontWeight:500,lineHeight:1.3,flex:1,paddingRight:8 }}>{m.name}</div>
-                            {tLabel && <span style={{ fontSize:12,color:trend>0?'#34d399':'#f87171',flexShrink:0,marginTop:2 }}>{tLabel}</span>}
+                            <div style={{ fontSize:16,color:'var(--text-primary)',fontFamily:'EB Garamond,Georgia,serif',fontWeight:500,lineHeight:1.3,flex:1,paddingRight:8 }}>{m.name}</div>
+                            {tLabel && <span style={{ fontSize:12,color:trend>0?'var(--accent-optimal)':'var(--accent-elevated)',flexShrink:0,marginTop:2 }}>{tLabel}</span>}
                           </div>
-                          <div style={{ fontSize:11,color:'rgba(0,210,165,.45)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10 }}>{m.category}</div>
+                          <div style={{ fontSize:11,color:'var(--text-tertiary)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10 }}>{m.category}</div>
                           <div style={{ display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:8,marginBottom:2 }}>
                             <div>
                               <div style={{ display:'flex',alignItems:'baseline',gap:5 }}>
                                 <span style={{ fontSize:26,color:statusColor,fontFamily:'EB Garamond,Georgia,serif',fontWeight:500 }}>{m.value}</span>
-                                <span style={{ fontSize:13,color:'rgba(0,210,165,.4)' }}>{m.unit}</span>
+                                <span style={{ fontSize:13,color:'var(--text-tertiary)' }}>{m.unit}</span>
                               </div>
                               {m.status && <div style={{ fontSize:11,color:statusColor,letterSpacing:'0.06em',textTransform:'uppercase',marginTop:2 }}>{m.status}</div>}
                             </div>
@@ -1542,7 +1542,7 @@ export default function App() {
                             )}
                           </div>
                           {barEl}
-                          {!barEl && <div style={{ marginTop:10,height:4,borderRadius:4,background:'rgba(0,210,165,.06)' }} />}
+                          {!barEl && <div style={{ marginTop:10,height:4,borderRadius:4,background:'var(--brand-ghost)' }} />}
                         </div>
                       );
                     })}
@@ -1558,7 +1558,7 @@ export default function App() {
                         </div>
                       )}
                       <button onClick={() => generatePersonalised('synthesis')} disabled={generatingType === 'synthesis'}
-                        style={{ fontSize: 16, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '12px 28px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ fontSize: 16, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '12px 28px', cursor: 'pointer', fontFamily: 'inherit' }}>
                         {generatingType === 'synthesis' ? 'Aellux is synthesising...' : 'Generate full health synthesis →'}
                       </button>
                     </div>
@@ -1576,7 +1576,7 @@ export default function App() {
                             chronologicalAge={profile?.birth_year ? new Date().getFullYear() - profile.birth_year : undefined}
                             currentBioAge={personalised.synthesis.biological_age_estimate?.replace(/[^\d.]/g, '')}
                           />
-                          <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+                          <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
                         </>
                       )}
 
@@ -1588,7 +1588,7 @@ export default function App() {
                         profile={profile}
                       />
 
-                      <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+                      <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
 
                       {/* Multi-Marker Correlation */}
                       <CorrelationChart
@@ -1597,7 +1597,7 @@ export default function App() {
                         plan={isPro ? 'pro' : 'free'}
                         profile={profile}
                       />
-                      <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+                      <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
 
                       {/* Pattern Intelligence */}
                       <PatternInsights
@@ -1621,7 +1621,7 @@ export default function App() {
                         }}
                       />
 
-                      <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+                      <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
 
                       {/* Protocol Outcome — Phase 2 */}
                       {markerSnapshot.length > 0 && allMarkers.length > 0 && (
@@ -1635,29 +1635,29 @@ export default function App() {
                             protocolSummary={personalised.week?.key_insight}
                             profile={profile}
                           />
-                          <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+                          <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
                         </>
                       )}
 
                       {/* Supplement Log — Phase 3 */}
                       <SupplementLog userId={user?.id} allMarkers={allMarkers} />
 
-                      <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+                      <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
 
                       {/* Practitioner Share — Phase 4 */}
                       <PractitionerShare userId={user?.id} isPro={isPro} />
 
-                      <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+                      <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
 
                       {/* Accountability — Phase 5 */}
                       <div>
-                        <div style={{ fontSize: 11, color: 'rgba(0,210,165,.65)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>Accountability</div>
-                        <div style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', marginBottom: 16 }}>Track what you're doing, what isn't working, and check in weekly</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>Accountability</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginBottom: 16 }}>Track what you're doing, what isn't working, and check in weekly</div>
                         <Accountability userId={user?.id} plan={isPro ? 'pro' : 'free'} />
                       </div>
 
                       {!patternsLoaded && !patternsLoading && allMarkers.length <= 3 && (
-                        <div style={{ padding: '16px 18px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8, fontSize: 14, color: 'rgba(0,210,165,.55)', lineHeight: 1.7, marginTop: 16 }}>
+                        <div style={{ padding: '16px 18px', background: 'var(--bg-sunken)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8, fontSize: 14, color: 'var(--text-tertiary)', lineHeight: 1.7, marginTop: 16 }}>
                           Intelligence features unlock with more data. Upload labs from multiple dates to see seasonal patterns, correlated markers, and your biological age trajectory.
                         </div>
                       )}
@@ -1688,14 +1688,14 @@ export default function App() {
                     </div>
                   )}
                   <button onClick={() => generatePersonalised('meals')} disabled={generatingType === 'meals' || allMarkers.length === 0}
-                    style={{ fontSize: 17, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ fontSize: 17, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {generatingType === 'meals' ? '⟳ Aellux is designing your meals...' : 'Generate my personalised meal protocol →'}
                   </button>
                 </div>
               ) : (
                 <div>
                   {personalised.meals.key_insight && (
-                    <div style={{ ...S.card, padding: '18px 22px', marginBottom: 22, borderColor: 'rgba(0,195,155,.2)' }}>
+                    <div style={{ ...S.card, padding: '18px 22px', marginBottom: 22, borderColor: 'var(--brand-border)' }}>
                       <div style={{ ...S.label, marginBottom: 8 }}>Key Nutritional Insight</div>
                       <p style={{ ...S.italic, margin: 0 }}>{personalised.meals.key_insight}</p>
                     </div>
@@ -1756,19 +1756,19 @@ export default function App() {
                     </div>
                   )}
                   <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 12, color: 'rgba(0,210,165,.5)', letterSpacing: '0.08em', marginBottom: 10, textTransform: 'uppercase' }}>Diet Style</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.08em', marginBottom: 10, textTransform: 'uppercase' }}>Diet Style</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {[['none','No Preference'],['vegetarian','Vegetarian'],['vegan','Vegan'],['mediterranean','Mediterranean'],['paleo','Paleo'],['keto','Keto'],['indian','Indian'],['mexican','Mexican'],['japanese','Japanese'],['halal','Halal']].map(([val, label]) => (
                         <button key={val} onClick={() => setMealPreference(val)}
-                          style={{ padding: '5px 14px', borderRadius: 20, border: mealPreference === val ? '1px solid rgba(0,210,165,.7)' : '1px solid rgba(0,210,165,.2)', background: mealPreference === val ? 'rgba(0,210,165,.12)' : 'transparent', color: mealPreference === val ? 'rgba(0,210,165,.95)' : 'rgba(0,210,165,.5)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
+                          style={{ padding: '5px 14px', borderRadius: 20, border: mealPreference === val ? '1px solid rgba(0,210,165,.7)' : '1px solid rgba(0,210,165,.2)', background: mealPreference === val ? 'var(--border-subtle)' : 'transparent', color: mealPreference === val ? 'rgba(0,210,165,.95)' : 'var(--text-tertiary)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
                           {label}
                         </button>
                       ))}
                     </div>
                   </div>
                   <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <button onClick={() => triggerPrint('meals')} style={{ fontSize: 13, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
-                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'rgba(0,225,180,.85)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
+                    <button onClick={() => triggerPrint('meals')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
+                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
                     <button onClick={() => { setPersonalised(p => ({ ...p, meals: undefined })); }} style={{ fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
                   </div>
                 </div>
@@ -1792,14 +1792,14 @@ export default function App() {
                     </div>
                   )}
                   <button onClick={() => generatePersonalised('supps')} disabled={generatingType === 'supps' || allMarkers.length === 0}
-                    style={{ fontSize: 17, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ fontSize: 17, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {generatingType === 'supps' ? '⟳ Aellux is building your stack...' : 'Generate my personalised supplement stack →'}
                   </button>
                 </div>
               ) : (
                 <div>
                   {personalised.supps.key_insight && (
-                    <div style={{ ...S.card, padding: '18px 22px', marginBottom: 22, borderColor: 'rgba(0,195,155,.2)' }}>
+                    <div style={{ ...S.card, padding: '18px 22px', marginBottom: 22, borderColor: 'var(--brand-border)' }}>
                       <div style={{ ...S.label, marginBottom: 8 }}>Key Insight</div>
                       <p style={{ ...S.italic, margin: 0 }}>{personalised.supps.key_insight}</p>
                     </div>
@@ -1855,8 +1855,8 @@ export default function App() {
                     </div>
                   )}
                   <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <button onClick={() => triggerPrint('supps')} style={{ fontSize: 13, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
-                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'rgba(0,225,180,.85)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
+                    <button onClick={() => triggerPrint('supps')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
+                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
                     <button onClick={() => { setPersonalised(p => ({ ...p, supps: undefined })); }} style={{ fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
                   </div>
                 </div>
@@ -1880,7 +1880,7 @@ export default function App() {
                     </div>
                   )}
                   <button onClick={() => generatePersonalised('protocol')} disabled={generatingType === 'protocol' || allMarkers.length === 0}
-                    style={{ fontSize: 17, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ fontSize: 17, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 32px', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {generatingType === 'protocol' ? '⟳ Aellux is designing your protocol...' : 'Generate my daily protocol →'}
                   </button>
                 </div>
@@ -1918,7 +1918,7 @@ export default function App() {
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
                             <span style={{ fontSize: 17, color: done.has(p.id || String(i)) ? 'rgba(0,175,140,.5)' : 'rgba(0,215,172,.92)', lineHeight: 1.4 }}>{p.action}</span>
-                            {p.tier && <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 2, background: 'rgba(0,195,155,.1)', color: 'rgba(0,195,155,.68)', border: '1px solid rgba(0,195,155,.18)', letterSpacing: 1, flexShrink: 0 }}>T{p.tier}</span>}
+                            {p.tier && <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 2, background: 'var(--brand-ghost)', color: 'rgba(0,195,155,.68)', border: '1px solid rgba(0,195,155,.18)', letterSpacing: 1, flexShrink: 0 }}>T{p.tier}</span>}
                             {p.time_of_day && <span style={{ fontSize: 11, color: 'rgba(0,165,132,.5)', letterSpacing: 1, textTransform: 'uppercase' }}>{p.time_of_day}</span>}
                           </div>
                           <p style={{ fontSize: 15, color: 'rgba(0,178,145,.65)', margin: '0 0 4px', lineHeight: 1.7, fontStyle: 'italic' }}>{p.why}</p>
@@ -1937,8 +1937,8 @@ export default function App() {
                     </div>
                   )}
                   <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <button onClick={() => triggerPrint('protocol')} style={{ fontSize: 13, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
-                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'rgba(0,225,180,.85)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
+                    <button onClick={() => triggerPrint('protocol')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,195,155,.45)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
+                    <button onClick={() => triggerPrint('all')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.08)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Full Aellux Report</button>
                     <button onClick={() => { setPersonalised(p => ({ ...p, protocol: undefined })); }} style={{ fontSize: 13, color: 'rgba(0,150,120,.45)', background: 'none', border: '1px solid rgba(0,150,120,.2)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
                   </div>
                 </div>
@@ -1961,7 +1961,7 @@ export default function App() {
                 <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 60px' }}>
                   <div style={{ textAlign: 'center', marginBottom: 30 }}>
                     <div style={{ fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(0,225,180,.65)', marginBottom: 10 }}>The flagship Aellux output</div>
-                    <h1 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 36, color: 'rgba(220,255,235,1)', fontWeight: 500, margin: '0 0 14px', lineHeight: 1.15 }}>Your Biologic Protocol</h1>
+                    <h1 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 36, color: 'var(--text-primary)', fontWeight: 500, margin: '0 0 14px', lineHeight: 1.15 }}>Your Biologic Protocol</h1>
                     <p style={{ fontSize: 16, color: 'rgba(0,210,165,.78)', lineHeight: 1.7, margin: 0, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
                       {allMarkers.length === 0
                         ? 'Upload your health documents first to begin.'
@@ -1975,10 +1975,10 @@ export default function App() {
                   </div>
 
                   {allMarkers.length > 0 && (
-                    <div style={{ background: 'rgba(0,8,18,.5)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 8, padding: '22px 26px', marginBottom: 20 }}>
+                    <div style={{ background: 'var(--bg-surface)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 8, padding: '22px 26px', marginBottom: 20 }}>
                       {/* Meal style selector */}
                       <div style={{ marginBottom: 18 }}>
-                        <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(0,210,165,.7)', marginBottom: 8 }}>Meal style</div>
+                        <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 8 }}>Meal style</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                           {[
                             { val: 'none',        label: 'No preference' },
@@ -1994,10 +1994,10 @@ export default function App() {
                               style={{
                                 fontSize: 12,
                                 padding: '7px 13px',
-                                background: bpMealStyle === s.val ? 'rgba(0,225,180,.14)' : 'rgba(0,8,18,.5)',
+                                background: bpMealStyle === s.val ? 'rgba(0,225,180,.14)' : 'var(--bg-surface)',
                                 border: `1px solid ${bpMealStyle === s.val ? 'rgba(0,225,180,.55)' : 'rgba(0,210,165,.22)'}`,
                                 borderRadius: 14,
-                                color: bpMealStyle === s.val ? 'rgba(0,255,200,1)' : 'rgba(0,210,165,.65)',
+                                color: bpMealStyle === s.val ? 'rgba(0,255,200,1)' : 'var(--text-secondary)',
                                 cursor: 'pointer',
                                 fontFamily: 'inherit',
                                 letterSpacing: '0.02em',
@@ -2016,28 +2016,28 @@ export default function App() {
                           style={{
                             display: 'flex', alignItems: 'center', gap: 12, width: '100%',
                             padding: '12px 16px',
-                            background: bpMealPrep ? 'rgba(0,225,180,.1)' : 'rgba(0,8,18,.4)',
-                            border: `1px solid ${bpMealPrep ? 'rgba(0,225,180,.5)' : 'rgba(0,210,165,.2)'}`,
+                            background: bpMealPrep ? 'rgba(0,225,180,.1)' : 'var(--bg-sunken)',
+                            border: `1px solid ${bpMealPrep ? 'rgba(0,225,180,.5)' : 'var(--border-subtle)'}`,
                             borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
                           }}
                         >
                           <div style={{
                             width: 22, height: 22, borderRadius: 4, flexShrink: 0,
-                            background: bpMealPrep ? 'rgba(0,225,180,.9)' : 'transparent',
-                            border: `2px solid ${bpMealPrep ? 'rgba(0,225,180,.9)' : 'rgba(0,210,165,.4)'}`,
+                            background: bpMealPrep ? 'var(--brand)' : 'transparent',
+                            border: `2px solid ${bpMealPrep ? 'var(--brand)' : 'var(--text-tertiary)'}`,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}>
                             {bpMealPrep && <span style={{ color: '#000', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>✓</span>}
                           </div>
                           <div>
-                            <div style={{ fontSize: 15, color: bpMealPrep ? 'rgba(0,255,200,1)' : 'rgba(220,255,235,.85)', fontWeight: 500 }}>Meal Prepper mode</div>
-                            <div style={{ fontSize: 13, color: 'rgba(0,210,165,.6)', marginTop: 3, lineHeight: 1.5 }}>
+                            <div style={{ fontSize: 15, color: bpMealPrep ? 'rgba(0,255,200,1)' : 'var(--text-secondary)', fontWeight: 500 }}>Meal Prepper mode</div>
+                            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 3, lineHeight: 1.5 }}>
                               Cook once on Sunday, eat all week. Aellux designs your menu around 2 bulk proteins + 2 sides — portion into containers, grab and go.
                             </div>
                           </div>
                         </button>
                         {bpMealPrep && (
-                          <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(0,210,165,.05)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 6, fontSize: 13, color: 'rgba(0,210,165,.75)', lineHeight: 1.6 }}>
+                          <div style={{ marginTop: 10, padding: '10px 14px', background: 'var(--brand-ghost)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 6, fontSize: 13, color: 'var(--brand-dim)', lineHeight: 1.6 }}>
                             💡 You'll get a batch cook plan: 2 proteins, 2 carbs, 1–2 vegs, 21 containers. Flavor rotates daily so it doesn't get boring.
                           </div>
                         )}
@@ -2046,25 +2046,25 @@ export default function App() {
                       {/* Additional Goal toggle */}
                       <div>
                         <button type="button" onClick={() => setBpGoalExpanded(!bpGoalExpanded)}
-                          style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(0,210,165,.7)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em', textTransform: 'uppercase', padding: 0 }}>
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em', textTransform: 'uppercase', padding: 0 }}>
                           <span style={{ fontSize: 14, transform: bpGoalExpanded ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform .15s' }}>▸</span>
                           Add a focus for this week (optional)
                         </button>
                         {bpGoalExpanded && (
                           <div style={{ marginTop: 12 }}>
-                            <p style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', lineHeight: 1.6, margin: '0 0 10px' }}>
+                            <p style={{ fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.6, margin: '0 0 10px' }}>
                               Your profile already drives the primary goal. Add anything *specific* you want this particular week to optimize for — Aellux will weave it into the design alongside your biomarker priorities.
                             </p>
                             <input
                               value={bpAdditionalGoal}
                               onChange={e => setBpAdditionalGoal(e.target.value.slice(0, 240))}
                               placeholder="e.g. prepping for travel, training for a 10K, cutting sugar cravings"
-                              style={{ width: '100%', background: 'rgba(0,8,18,.7)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 5, color: 'rgba(220,255,235,.95)', fontSize: 14, fontFamily: 'inherit', padding: '10px 14px', outline: 'none', marginBottom: 8 }}
+                              style={{ width: '100%', background: 'rgba(0,8,18,.7)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 5, color: 'var(--text-primary)', fontSize: 14, fontFamily: 'inherit', padding: '10px 14px', outline: 'none', marginBottom: 8 }}
                             />
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                               {['More energy', 'Better sleep', 'Cut sugar cravings', 'Improve focus', 'Reduce stress', 'Prep for travel'].map(chip => (
                                 <button key={chip} type="button" onClick={() => setBpAdditionalGoal(chip)}
-                                  style={{ fontSize: 11, padding: '4px 10px', background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 12, color: 'rgba(0,210,165,.7)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                  style={{ fontSize: 11, padding: '4px 10px', background: 'var(--brand-ghost)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 12, color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}>
                                   {chip}
                                 </button>
                               ))}
@@ -2084,23 +2084,23 @@ export default function App() {
 
                   {/* Cycle commitment selector */}
                   {isPro && allMarkers.length > 0 && (
-                    <div style={{ marginBottom: 18, padding: '14px 18px', background: 'rgba(0,8,18,.5)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 6 }}>
-                      <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(0,210,165,.7)', marginBottom: 10 }}>How long will you run this protocol?</div>
+                    <div style={{ marginBottom: 18, padding: '14px 18px', background: 'var(--bg-surface)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 6 }}>
+                      <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>How long will you run this protocol?</div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         {[30, 60, 90].map(days => (
                           <button key={days} type="button" onClick={() => setBpCycleLengthDays(days)}
                             style={{
                               flex: 1, padding: '10px 0', fontSize: 15, fontFamily: 'EB Garamond, Georgia, serif',
-                              background: bpCycleLengthDays === days ? 'rgba(0,225,180,.14)' : 'rgba(0,8,18,.5)',
-                              border: `1px solid ${bpCycleLengthDays === days ? 'rgba(0,225,180,.6)' : 'rgba(0,210,165,.2)'}`,
-                              borderRadius: 6, color: bpCycleLengthDays === days ? 'rgba(0,255,200,1)' : 'rgba(0,210,165,.55)',
+                              background: bpCycleLengthDays === days ? 'rgba(0,225,180,.14)' : 'var(--bg-surface)',
+                              border: `1px solid ${bpCycleLengthDays === days ? 'rgba(0,225,180,.6)' : 'var(--border-subtle)'}`,
+                              borderRadius: 6, color: bpCycleLengthDays === days ? 'rgba(0,255,200,1)' : 'var(--text-tertiary)',
                               cursor: 'pointer',
                             }}>
                             {days} days
                           </button>
                         ))}
                       </div>
-                      <div style={{ fontSize: 11, color: 'rgba(0,210,165,.45)', marginTop: 8, lineHeight: 1.5 }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 8, lineHeight: 1.5 }}>
                         Your protocol is yours to keep. Regenerate when your cycle completes or when you upload new medical records.
                       </div>
                     </div>
@@ -2121,11 +2121,11 @@ export default function App() {
               ) : weekStreamDays.length > 0 && !personalised.week ? (
                 /* ============ STREAMING IN PROGRESS ============ */
                 <div>
-                  <div style={{ marginBottom: 18, padding: '14px 20px', background: 'rgba(0,210,165,.05)', border: '1px solid rgba(0,225,180,.3)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ marginBottom: 18, padding: '14px 20px', background: 'var(--brand-ghost)', border: '1px solid rgba(0,225,180,.3)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 14 }}>
                     <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%)', flexShrink: 0, animation: 'pulse 2s ease-in-out infinite' }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, color: 'rgba(0,225,180,.95)', letterSpacing: '0.04em', marginBottom: 2 }}>{weekStreamStatus || 'Aellux is designing your protocol…'}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(0,210,165,.55)' }}>{weekStreamDays.length} of {isPro ? 7 : 1} day{(isPro ? 7 : 1) === 1 ? '' : 's'} ready · Tap any meal once it appears for alternatives</div>
+                      <div style={{ fontSize: 13, color: 'var(--brand)', letterSpacing: '0.04em', marginBottom: 2 }}>{weekStreamStatus || 'Aellux is designing your protocol…'}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{weekStreamDays.length} of {isPro ? 7 : 1} day{(isPro ? 7 : 1) === 1 ? '' : 's'} ready · Tap any meal once it appears for alternatives</div>
                     </div>
                   </div>
                   <WeekView
@@ -2141,8 +2141,8 @@ export default function App() {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
                     <div>
-                      <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 26, color: 'rgba(220,255,235,1)', fontWeight: 500, lineHeight: 1.1 }}>{isPro ? 'Your Biologic Protocol' : 'Day 1 Preview'}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(0,210,165,.65)', marginTop: 4, letterSpacing: '0.04em' }}>
+                      <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 26, color: 'var(--text-primary)', fontWeight: 500, lineHeight: 1.1 }}>{isPro ? 'Your Biologic Protocol' : 'Day 1 Preview'}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, letterSpacing: '0.04em' }}>
                         Designed from your {allMarkers.length} biomarkers
                         {bpMealStyle !== 'none' && <> · {bpMealStyle.charAt(0).toUpperCase() + bpMealStyle.slice(1)}</>}
                         {bpAdditionalGoal && <> · Focus: {bpAdditionalGoal}</>}
@@ -2150,7 +2150,7 @@ export default function App() {
                     </div>
                     {isPro && (
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => triggerPrint('week')} style={{ fontSize: 13, color: 'rgba(0,225,180,1)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
+                        <button onClick={() => triggerPrint('week')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
                         <button onClick={() => setShowRegenConfirm(true)}
                           style={{ fontSize: 13, color: 'rgba(255,210,100,.85)', background: 'rgba(255,200,80,.05)', border: '1px solid rgba(255,200,80,.4)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}
                         >Regenerate</button>
@@ -2185,18 +2185,18 @@ export default function App() {
               </p>
               <div style={{ display: 'flex', gap: 12, marginBottom: 28 }}>
                 <input
-                  style={{ flex: 1, background: 'rgba(0,8,18,.8)', border: '1px solid rgba(0,175,138,.22)', borderRadius: 5, color: 'rgba(0,220,175,.92)', fontSize: 17, fontFamily: 'inherit', padding: '14px 18px', outline: 'none' }}
+                  style={{ flex: 1, background: 'var(--bg-surface)', border: '1px solid rgba(0,175,138,.22)', borderRadius: 5, color: 'rgba(0,220,175,.92)', fontSize: 17, fontFamily: 'inherit', padding: '14px 18px', outline: 'none' }}
                   placeholder="What should I focus on? Why is my CRP elevated? What does my testosterone trend mean?"
                   value={input} onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleAsk()}
                 />
                 <button onClick={handleAsk} disabled={asking || !input.trim()}
-                  style={{ fontSize: 16, color: 'rgba(0,210,165,.9)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 22px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                  style={{ fontSize: 16, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid rgba(0,195,155,.3)', borderRadius: 5, padding: '14px 22px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
                   {asking ? '⟳' : 'Ask →'}
                 </button>
               </div>
               {response && (
-                <div style={{ ...S.card, padding: '20px 24px', borderColor: 'rgba(0,195,155,.2)' }}>
+                <div style={{ ...S.card, padding: '20px 24px', borderColor: 'var(--brand-border)' }}>
                   <p style={{ ...S.italic, margin: 0, fontSize: 18 }}>{response}</p>
                 </div>
               )}
@@ -2273,15 +2273,15 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 1800, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(2,10,20,.85)', backdropFilter: 'blur(8px)' }} onClick={() => setAskSheetOpen(false)}>
           <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 720, background: 'rgba(2,12,22,.98)', borderTop: '1px solid rgba(0,225,180,.3)', borderRadius: '14px 14px 0 0', padding: '20px 18px calc(20px + env(safe-area-inset-bottom))', maxHeight: '85dvh', overflowY: 'auto' }}>
             <div style={{ width: 40, height: 4, background: 'rgba(0,225,180,.3)', borderRadius: 2, margin: '0 auto 14px' }} />
-            <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'rgba(220,255,235,1)', fontWeight: 500, marginBottom: 6 }}>Ask Aellux</div>
-            <div style={{ fontSize: 13, color: 'rgba(0,210,165,.65)', marginBottom: 14, lineHeight: 1.5 }}>
+            <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 6 }}>Ask Aellux</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 14, lineHeight: 1.5 }}>
               {allMarkers.length > 0 ? `${allMarkers.length} of your biomarkers in context from ${documents.length} documents.` : 'Upload health documents first for personalised answers.'}
             </div>
             <textarea
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder="What would you like to know about your health?"
-              style={{ width: '100%', minHeight: 80, padding: 12, background: 'rgba(0,8,18,.7)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 6, color: 'rgba(220,255,235,.95)', fontSize: 16, fontFamily: 'inherit', resize: 'vertical', outline: 'none', marginBottom: 12 }}
+              style={{ width: '100%', minHeight: 80, padding: 12, background: 'rgba(0,8,18,.7)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 6, color: 'var(--text-primary)', fontSize: 16, fontFamily: 'inherit', resize: 'vertical', outline: 'none', marginBottom: 12 }}
             />
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => { handleAsk(); setAskSheetOpen(false); }} disabled={asking || !input.trim()}
@@ -2294,7 +2294,7 @@ export default function App() {
               </button>
             </div>
             {response && (
-              <div style={{ marginTop: 16, padding: '12px 14px', background: 'rgba(0,210,165,.05)', border: '1px solid rgba(0,225,180,.2)', borderRadius: 6, color: 'rgba(220,255,235,.92)', fontSize: 14, lineHeight: 1.65 }}>
+              <div style={{ marginTop: 16, padding: '12px 14px', background: 'var(--brand-ghost)', border: '1px solid rgba(0,225,180,.2)', borderRadius: 6, color: 'var(--text-primary)', fontSize: 14, lineHeight: 1.65 }}>
                 {response}
               </div>
             )}
@@ -2340,9 +2340,9 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,10,20,0.92)', backdropFilter: 'blur(8px)', padding: 16 }}>
           <div style={{ background: 'rgba(2,12,22,0.98)', border: '1px solid rgba(0,210,165,.3)', borderRadius: 12, padding: '28px 32px', maxWidth: 480, width: '100%' }}>
             <div style={{ fontSize: 11, color: 'rgba(0,225,180,.75)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Start a new cycle</div>
-            <h3 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'rgba(220,255,235,1)', margin: '0 0 12px', fontWeight: 500 }}>Regenerate your Biologic Protocol?</h3>
+            <h3 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'var(--text-primary)', margin: '0 0 12px', fontWeight: 500 }}>Regenerate your Biologic Protocol?</h3>
             <p style={{ fontSize: 14, color: 'rgba(0,210,165,.78)', lineHeight: 1.6, margin: '0 0 12px' }}>
-              Protocols are designed to run <strong style={{ color: 'rgba(220,255,235,.95)' }}>30–90 days</strong>. Deep biological adaptation takes time — the same protocol, consistently applied, produces better results than frequent changes.
+              Protocols are designed to run <strong style={{ color: 'var(--text-primary)' }}>30–90 days</strong>. Deep biological adaptation takes time — the same protocol, consistently applied, produces better results than frequent changes.
             </p>
             <p style={{ fontSize: 13, color: 'rgba(0,210,165,.62)', lineHeight: 1.6, margin: '0 0 20px' }}>
               If you just want different meals, use the swap options inside each day — free and unlimited, no regeneration needed.

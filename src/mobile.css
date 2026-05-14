@@ -58,7 +58,7 @@
     display: block;
     position: fixed; inset: 0;
     z-index: 1400;
-    background: rgba(0,0,0,.6);
+    background: rgba(0,0,0,.35);
     backdrop-filter: blur(2px);
     opacity: 0;
     pointer-events: none;
@@ -80,9 +80,9 @@
     justify-content: space-between;
     height: 54px;
     padding: 0 14px;
-    background: rgba(0,4,10,.95);
+    background: var(--bg-surface);
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(0,180,140,.1);
+    border-bottom: 1px solid var(--border-subtle);
   }
   .aellux-hamburger {
     width: 44px; height: 44px;
@@ -91,11 +91,11 @@
     justify-content: center;
     background: none;
     border: none;
-    color: rgba(0,225,180,.95);
+    color: var(--brand);
     cursor: pointer;
     border-radius: 6px;
   }
-  .aellux-hamburger:active { background: rgba(0,225,180,.08); }
+  .aellux-hamburger:active { background: var(--brand-ghost); }
   .aellux-mobile-title {
     font-family: "EB Garamond", Georgia, serif;
     font-size: 16px;
@@ -131,9 +131,9 @@
     z-index: 1000;
     height: 64px;
     padding-bottom: env(safe-area-inset-bottom);
-    background: rgba(0,4,10,.96);
+    background: var(--bg-surface);
     backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(0,180,140,.15);
+    border-top: 1px solid var(--border-subtle);
     justify-content: space-around;
     align-items: stretch;
   }
@@ -146,7 +146,7 @@
     gap: 4px;
     background: none;
     border: none;
-    color: rgba(168,232,200,.5);
+    color: var(--text-tertiary);
     font-family: inherit;
     font-size: 10px;
     letter-spacing: 0.08em;
@@ -157,8 +157,8 @@
   }
   .aellux-tab:active { background: rgba(0,225,180,.06); }
   .aellux-tab-icon { font-size: 20px; line-height: 1; }
-  .aellux-tab.active { color: rgba(0,255,200,1); }
-  .aellux-tab.active .aellux-tab-icon { filter: drop-shadow(0 0 4px rgba(0,225,180,.6)); }
+  .aellux-tab.active { color: var(--brand); }
+  .aellux-tab.active .aellux-tab-icon { filter: drop-shadow(0 0 4px var(--brand)); }
 
   /* Floating action button */
   .aellux-mobile-fab {

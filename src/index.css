@@ -1,194 +1,311 @@
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap');
 @import "tailwindcss";
 
+/* ── DESIGN TOKENS ─────────────────────────────────────────────────────────── */
+:root {
+  /* Surfaces */
+  --bg-page:        #f7f6f2;
+  --bg-surface:     #ffffff;
+  --bg-raised:      #ffffff;
+  --bg-sunken:      #f0eeea;
+  --bg-sidebar:     #faf9f6;
+
+  /* Borders */
+  --border-subtle:  rgba(0,0,0,.07);
+  --border-medium:  rgba(0,0,0,.12);
+  --border-strong:  rgba(0,0,0,.18);
+
+  /* Text */
+  --text-primary:   #0f1a0f;
+  --text-secondary: #4a5e4a;
+  --text-tertiary:  #8a9e8a;
+  --text-inverse:   #ffffff;
+
+  /* Brand — deep forest green */
+  --brand:          #1a5c3a;
+  --brand-dim:      #2d7a52;
+  --brand-ghost:    rgba(26,92,58,.08);
+  --brand-border:   rgba(26,92,58,.2);
+
+  /* Accent — for data, alerts, highlights */
+  --accent-elevated: #c0392b;
+  --accent-optimal:  #1a7a3a;
+  --accent-watch:    #c47c0a;
+  --accent-info:     #1a4a8a;
+
+  /* Shadows */
+  --shadow-card:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-raised:  0 4px 16px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
+
+  /* Typography */
+  --font-display:   'EB Garamond', Georgia, serif;
+  --font-body:      'DM Sans', system-ui, sans-serif;
+
+  /* Radius */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+}
+
+/* ── RESET ─────────────────────────────────────────────────────────────────── */
 @layer base {
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   html {
-    background: #020810;
-    color: rgba(0,220,175,0.92);
-    font-family: "EB Garamond", Georgia, serif;
-    font-size: 18px;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
   }
 
   body, #root {
     min-height: 100vh;
-    background: #020810;
+    background: var(--bg-page);
   }
 
-  ::-webkit-scrollbar { width: 3px; }
-  ::-webkit-scrollbar-thumb { background: rgba(0,180,140,0.2); border-radius: 2px; }
-  ::selection { background: rgba(0,210,165,0.2); }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); border-radius: 2px; }
+  ::selection { background: rgba(26,92,58,.15); }
 }
 
+/* ── ANIMATIONS ────────────────────────────────────────────────────────────── */
 @keyframes aellux-fade-up {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes aellux-star-twinkle {
-  0%, 100% { opacity: 0; }
-  50%       { opacity: 0.35; }
+@keyframes orb-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(26,92,58,.2); }
+  50%       { box-shadow: 0 0 0 8px rgba(26,92,58,.0); }
 }
 
-/* ── APP LAYOUT — dashboard view only ── */
+/* ── APP LAYOUT ────────────────────────────────────────────────────────────── */
 .aellux-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 216px 1fr;
   height: 100vh;
-  overflow: hidden; /* only the dashboard shell is locked */
+  overflow: hidden;
 }
 
-/* ── LEFT COLUMN ── */
+/* ── LEFT COLUMN / SIDEBAR ─────────────────────────────────────────────────── */
 .aellux-lc {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 28px 0 20px;
-  border-right: 1px solid rgba(0,180,140,.1);
-  background: rgba(0,4,10,.85);
-  position: relative;
-  overflow: hidden;
+  align-items: flex-start;
+  padding: 24px 0 20px;
+  border-right: 1px solid var(--border-subtle);
+  background: var(--bg-sidebar);
   height: 100vh;
-}
-.aellux-lc::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 50% 35%, rgba(0,110,85,.06) 0%, transparent 65%);
-  pointer-events: none;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-/* ── NAV ITEMS ── */
+/* ── NAV ITEMS ─────────────────────────────────────────────────────────────── */
 .aellux-nav-item {
-  display: flex; align-items: center; gap: 8px;
-  padding: 9px 12px; border-radius: 3px;
-  border: 1px solid transparent; cursor: pointer;
-  transition: border-color .25s, background .25s, color .25s;
-  font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
-  color: rgba(0,160,130,.6); width: 176px; background: none;
-  font-family: inherit; text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 16px;
+  border-radius: 0;
+  border: none;
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  font-size: 13px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--text-tertiary);
+  width: 100%;
+  background: none;
+  text-align: left;
 }
-.aellux-nav-item:hover  { border-color: rgba(0,195,155,.25); background: rgba(0,18,30,.5); color: rgba(0,210,170,.88); }
-.aellux-nav-item.active { border-color: rgba(0,195,155,.38); background: rgba(0,20,34,.65); color: rgba(0,230,180,.96); }
+.aellux-nav-item:hover {
+  background: rgba(0,0,0,.03);
+  color: var(--text-secondary);
+}
+.aellux-nav-item.active {
+  border-left-color: var(--brand);
+  background: var(--brand-ghost);
+  color: var(--brand);
+  font-weight: 500;
+}
 
-/* ── INPUT ── */
+/* ── TOPBAR ────────────────────────────────────────────────────────────────── */
+.aellux-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 52px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  background: var(--bg-surface);
+}
+
+/* ── MAIN CONTENT ──────────────────────────────────────────────────────────── */
+.aellux-main {
+  background: var(--bg-page);
+  overflow-y: auto;
+  padding: 28px 32px;
+}
+
+/* ── CARDS ─────────────────────────────────────────────────────────────────── */
+.aellux-delta-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-card);
+  animation: aellux-fade-up .4s ease forwards;
+}
+
+/* ── INPUT ─────────────────────────────────────────────────────────────────── */
 .aellux-speak-input {
   width: 100%;
-  background: rgba(0,12,24,.75);
-  border: 1px solid rgba(0,175,138,.2); border-radius: 3px;
-  color: rgba(0,220,175,.92); font-size: 15px; font-family: inherit;
-  padding: 10px 34px 10px 12px; outline: none; letter-spacing: .3px;
-  transition: border-color .3s;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-body);
+  padding: 10px 34px 10px 14px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
 }
-.aellux-speak-input::placeholder { color: rgba(0,155,125,.38); font-size: 13px; }
-.aellux-speak-input:focus { border-color: rgba(0,200,160,.48); }
-
-/* ── TOPBAR ── */
-.aellux-topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; height: 50px;
-  border-bottom: 1px solid rgba(0,175,138,.08);
-  flex-shrink: 0;
-  background: rgba(0,3,8,.75);
+.aellux-speak-input::placeholder { color: var(--text-tertiary); font-size: 13px; }
+.aellux-speak-input:focus {
+  border-color: var(--brand-dim);
+  box-shadow: 0 0 0 3px rgba(26,92,58,.08);
 }
 
-/* ── CARDS ── */
-.aellux-delta-card {
-  border: 1px solid rgba(0,175,138,.15); border-radius: 5px;
-  background: rgba(0,9,18,.8); padding: 16px 18px;
-  animation: aellux-fade-up .5s ease forwards;
-}
-
-/* ── RESPONSE BOX ── */
+/* ── RESPONSE BOX ──────────────────────────────────────────────────────────── */
 .aellux-response {
-  padding: 12px 14px;
-  border: 1px solid rgba(0,195,155,.15);
-  border-left: 2px solid rgba(0,195,155,.45);
-  border-radius: 0 4px 4px 0;
-  background: rgba(0,12,22,.6);
-  font-size: 15px; line-height: 1.85;
-  color: rgba(0,210,170,.85); font-style: italic;
-  opacity: 0; transition: opacity .8s;
+  padding: 14px 18px;
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--brand);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  background: var(--bg-surface);
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-family: var(--font-display);
+  opacity: 0;
+  transition: opacity .6s;
 }
 .aellux-response.visible { opacity: 1; }
 
-/* ── SYNTHESIS BOX ── */
+/* ── SYNTHESIS BOX ─────────────────────────────────────────────────────────── */
 .aellux-syn-box {
-  border: 1px solid rgba(0,172,132,.15); border-radius: 5px;
-  background: rgba(0,9,18,.8); padding: 18px 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-card);
 }
 
-/* ── PROTOCOL ITEMS ── */
+/* ── PROTOCOL ITEMS ────────────────────────────────────────────────────────── */
 .aellux-proto-item {
-  display: flex; align-items: flex-start; gap: 12px;
-  padding: 16px 18px; border-radius: 4px;
-  border: 1px solid rgba(0,172,132,.15);
-  background: rgba(0,9,20,.75); cursor: pointer;
-  transition: border-color .25s, background .25s;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+  box-shadow: var(--shadow-card);
 }
-.aellux-proto-item:hover    { border-color: rgba(0,192,152,.28); background: rgba(0,16,29,.85); }
-.aellux-proto-item.completed { opacity: .4; }
+.aellux-proto-item:hover {
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-raised);
+}
+.aellux-proto-item.completed { opacity: .45; }
 
-/* ── RANGE TABS ── */
+/* ── RANGE TABS ────────────────────────────────────────────────────────────── */
 .aellux-rtab {
-  padding: 7px 16px; font-size: 12px; letter-spacing: 1.5px;
-  text-transform: uppercase; background: transparent;
-  border: 1px solid rgba(0,132,105,.25); color: rgba(0,160,130,.6);
-  border-radius: 3px; cursor: pointer; transition: all .25s; font-family: inherit;
+  padding: 7px 16px;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  color: var(--text-tertiary);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all .15s;
+  font-family: var(--font-body);
+  font-weight: 500;
 }
-.aellux-rtab:hover  { border-color: rgba(0,192,152,.45); color: rgba(0,210,170,.88); }
-.aellux-rtab.active { border-color: rgba(0,192,152,.58); color: rgba(0,225,180,.96); background: rgba(0,56,44,.3); }
+.aellux-rtab:hover { border-color: var(--brand-dim); color: var(--brand); }
+.aellux-rtab.active {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-ghost);
+}
 
-/* ── CHECK ── */
+/* ── CHECK ─────────────────────────────────────────────────────────────────── */
 .aellux-check {
-  width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
-  border: 1px solid rgba(0,172,132,.3);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: background .3s, border-color .3s; margin-top: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1.5px solid var(--border-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .15s;
+  margin-top: 2px;
 }
-.aellux-check:hover  { border-color: rgba(0,192,152,.55); }
-.aellux-check.checked { background: rgba(0,192,152,.18); border-color: rgba(0,192,152,.65); }
-
-/* ── DIVIDER ── */
-.aellux-divider { width: 48px; height: 1px; background: rgba(0,175,138,.12); }
-
-/* ── LANDING PAGE — full scroll ── */
-.aellux-landing {
-  min-height: 100vh;
-  background: #020810;
-  overflow-y: auto;
+.aellux-check:hover { border-color: var(--brand); }
+.aellux-check.checked {
+  background: var(--brand-ghost);
+  border-color: var(--brand);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   PRINT / PDF EXPORT (v1.3)
-   PrintableReport is portaled to document.body so it is a SIBLING of #root.
-   On screen: hidden via display:none.
-   In print: #root is hidden, .aellux-print-root is shown.
-   ───────────────────────────────────────────────────────────────────────────── */
-.aellux-print-root {
-  display: none;
+/* ── DIVIDER ───────────────────────────────────────────────────────────────── */
+.aellux-divider { width: 40px; height: 1px; background: var(--border-subtle); }
+
+/* ── MOBILE TABS ───────────────────────────────────────────────────────────── */
+.aellux-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 8px 4px;
+  transition: color .15s;
 }
+.aellux-tab.active { color: var(--brand); }
+.aellux-tab-icon { font-size: 18px; line-height: 1; }
+
+/* ── PRINT ─────────────────────────────────────────────────────────────────── */
+.aellux-print-root { display: none; }
 
 @media print {
-  @page {
-    size: letter;
-    margin: 14mm 12mm 18mm 12mm;
-  }
-  html, body {
-    background: #ffffff !important;
-    color: #1a3a30 !important;
-  }
-  /* Hide the live app */
+  @page { size: letter; margin: 14mm 12mm 18mm 12mm; }
+  html, body { background: #fff !important; color: #0f1a0f !important; }
   #root { display: none !important; }
-  /* Reveal the portaled print root */
   .aellux-print-root {
     display: block !important;
-    background: #ffffff !important;
-    color: #1a3a30 !important;
-    font-family: "EB Garamond", Georgia, serif !important;
+    background: #fff !important;
+    color: #0f1a0f !important;
+    font-family: var(--font-display) !important;
   }
-  /* Animations off (orb sparkle dots etc.) */
   .aellux-print-root [style*="animation:"] { animation: none !important; }
-  /* Section wrappers print white */
-  .aellux-print-page { background: #ffffff !important; }
+  .aellux-print-page { background: #fff !important; }
 }
-

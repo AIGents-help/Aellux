@@ -42,22 +42,22 @@ function RangeBar({ value, markerName, unit, compact = false }: { value: number;
   const optLowPct = ref.optLow != null ? pct(ref.optLow) : lowPct;
   const optHighPct = ref.optHigh != null ? pct(ref.optHigh) : highPct;
 
-  const statusColor = value < ref.low ? '#fb923c'
-    : value > ref.high ? '#f87171'
+  const statusColor = value < ref.low ? 'var(--accent-watch)'
+    : value > ref.high ? 'var(--accent-elevated)'
     : (ref.optLow != null && value < ref.optLow) || (ref.optHigh != null && value > ref.optHigh)
-      ? '#f59e0b'
-      : '#34d399';
+      ? 'var(--accent-watch)'
+      : 'var(--accent-optimal)';
 
   const h = compact ? 8 : 10;
 
   return (
     <div style={{ marginTop: compact ? 8 : 14 }}>
-      <div style={{ position: 'relative', height: h, borderRadius: h, background: 'rgba(0,210,165,.08)', overflow: 'visible' }}>
+      <div style={{ position: 'relative', height: h, borderRadius: h, background: 'var(--brand-ghost)', overflow: 'visible' }}>
         {/* Full lab range background */}
         <div style={{
           position: 'absolute', top: 0, height: '100%', borderRadius: h,
           left: `${lowPct}%`, width: `${highPct - lowPct}%`,
-          background: 'rgba(0,210,165,.15)',
+          background: 'var(--border-subtle)',
         }} />
         {/* Optimal zone */}
         {ref.optLow != null && (
@@ -75,14 +75,14 @@ function RangeBar({ value, markerName, unit, compact = false }: { value: number;
           width: compact ? 12 : 16, height: compact ? 12 : 16,
           borderRadius: '50%',
           background: statusColor,
-          border: `2px solid rgba(2,12,22,1)`,
+          border: `2px solid var(--bg-surface)`,
           boxShadow: `0 0 8px ${statusColor}88`,
           zIndex: 2,
         }} />
       </div>
       {/* Labels */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: compact ? 4 : 6 }}>
-        <span style={{ fontSize: compact ? 11 : 12, color: 'rgba(0,210,165,.5)' }}>
+        <span style={{ fontSize: compact ? 11 : 12, color: 'var(--text-tertiary)' }}>
           Low {ref.low}{unit ? ` ${unit}` : ''}
         </span>
         {ref.optLow != null && !compact && (
@@ -90,7 +90,7 @@ function RangeBar({ value, markerName, unit, compact = false }: { value: number;
             Optimal {ref.optLow}–{ref.optHigh}{unit ? ` ${unit}` : ''}
           </span>
         )}
-        <span style={{ fontSize: compact ? 11 : 12, color: 'rgba(0,210,165,.5)' }}>
+        <span style={{ fontSize: compact ? 11 : 12, color: 'var(--text-tertiary)' }}>
           High {ref.high}{unit ? ` ${unit}` : ''}
         </span>
       </div>
@@ -141,8 +141,8 @@ function TrendChart({ history, markerName, unit, profile, allMarkers, userId, pl
 
   const last = nums[nums.length - 1];
   const pointColor = (v: number) => !isNaN(v) && ref
-    ? (v < ref.low ? '#fb923c' : v > ref.high ? '#f87171' : '#34d399')
-    : '#34d399';
+    ? (v < ref.low ? 'var(--accent-watch)' : v > ref.high ? 'var(--accent-elevated)' : 'var(--accent-optimal)')
+    : 'var(--accent-optimal)';
 
   const optLowY = ref?.optLow != null ? py(ref.optLow) : null;
   const optHighY = ref?.optHigh != null ? py(ref.optHigh) : null;
@@ -227,12 +227,12 @@ function TrendChart({ history, markerName, unit, profile, allMarkers, userId, pl
   return (
     <div>
       {/* Chart hint */}
-      <div style={{ fontSize: 12, color: 'rgba(0,210,165,.5)', marginBottom: 8, letterSpacing: '0.04em' }}>
+      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 8, letterSpacing: '0.04em' }}>
         Tap any data point to ask Aellux what changed
       </div>
 
       {/* The chart */}
-      <div style={{ position: 'relative', background: 'rgba(0,6,14,.5)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8, padding: '16px 8px 8px', cursor: 'crosshair' }}>
+      <div style={{ position: 'relative', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '16px 8px 8px', cursor: 'crosshair' }}>
         <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', overflow: 'visible' }}>
           {/* Optimal zone */}
           {optLowY != null && optHighY != null && (
@@ -250,7 +250,7 @@ function TrendChart({ history, markerName, unit, profile, allMarkers, userId, pl
           )}
           {/* Trend line */}
           {nums.length > 1 && (
-            <polyline points={pts} fill="none" stroke="rgba(0,210,165,.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline points={pts} fill="none" stroke="var(--text-tertiary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           )}
           {/* Significant change highlights */}
           {significantChanges.map(i => (
@@ -276,12 +276,12 @@ function TrendChart({ history, markerName, unit, profile, allMarkers, userId, pl
                 {isSig && !isSel && <circle cx={px(i)} cy={py(v)} r="7" fill="none" stroke="rgba(255,200,80,.5)" strokeWidth="1" />}
                 {/* Main dot */}
                 <circle cx={px(i)} cy={py(v)} r={isSel ? 6 : isHov ? 5 : 4}
-                  fill={col} stroke="rgba(2,12,22,1)" strokeWidth="2"
+                  fill={col} stroke="var(--bg-surface)" strokeWidth="2"
                   style={{ transition: 'r .15s' }} />
                 {/* Date label */}
                 {sorted[i]?.date && (
                   <text x={px(i)} y={H - 4} textAnchor="middle" fontSize="9"
-                    fill={isSel ? 'rgba(0,225,180,.8)' : 'rgba(0,210,165,.4)'} fontFamily="inherit">
+                    fill={isSel ? 'var(--brand-dim)' : 'var(--text-tertiary)'} fontFamily="inherit">
                     {sorted[i].date?.slice(0, 7)}
                   </text>
                 )}
@@ -304,28 +304,28 @@ function TrendChart({ history, markerName, unit, profile, allMarkers, userId, pl
 
       {/* AI Analysis Panel */}
       {(analysisLoading || analysis || selectedIdx !== null) && (
-        <div style={{ marginTop: 12, padding: '16px 18px', background: 'rgba(0,8,18,.6)', border: '1px solid rgba(0,210,165,.2)', borderLeft: '3px solid rgba(0,225,180,.6)', borderRadius: 8 }}>
+        <div style={{ marginTop: 12, padding: '16px 18px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderLeft: '3px solid rgba(0,225,180,.6)', borderRadius: 8 }}>
           {selectedIdx !== null && (
-            <div style={{ fontSize: 12, color: 'rgba(0,210,165,.6)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
               {formatDate(sorted[selectedIdx]?.date)} · {sorted[selectedIdx]?.value}{unit ? ' ' + unit : ''}
               {selectedIdx > 0 && (() => {
                 const d = parseFloat(sorted[selectedIdx].value) - parseFloat(sorted[selectedIdx - 1].value);
                 const p = (d / parseFloat(sorted[selectedIdx - 1].value) * 100).toFixed(1);
-                return <span style={{ marginLeft: 10, color: d > 0 ? '#f87171' : '#34d399' }}>{d > 0 ? '▲' : '▼'} {Math.abs(d).toFixed(1)} ({Math.abs(parseFloat(p))}%)</span>;
+                return <span style={{ marginLeft: 10, color: d > 0 ? 'var(--accent-elevated)' : 'var(--accent-optimal)' }}>{d > 0 ? '▲' : '▼'} {Math.abs(d).toFixed(1)} ({Math.abs(parseFloat(p))}%)</span>;
               })()}
             </div>
           )}
           {analysisLoading ? (
-            <div style={{ fontSize: 14, color: 'rgba(0,210,165,.6)', fontStyle: 'italic' }}>
+            <div style={{ fontSize: 14, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
               Aellux is reading this moment in your biology…
             </div>
           ) : analysis ? (
-            <p style={{ fontSize: 16, color: 'rgba(220,255,235,.95)', lineHeight: 1.8, margin: 0, fontFamily: 'Inter, sans-serif', fontStyle: 'normal', fontWeight: 300 }}>
+            <p style={{ fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.8, margin: 0, fontFamily: 'Inter, sans-serif', fontStyle: 'normal', fontWeight: 300 }}>
               {analysis.replace(/^#+\s*/gm, '').replace(/\*\*/g, '')}
             </p>
           ) : null}
           {!analysisLoading && (
-            <div style={{ fontSize: 12, color: 'rgba(0,210,165,.35)', marginTop: 10 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 10 }}>
               Tap another point to compare · Yellow markers = significant shift (&gt;15%)
             </div>
           )}
@@ -509,8 +509,8 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
   const hasHistory = history.length > 1;
 
   const statusColor = !isNaN(numValue) && ref
-    ? (numValue < ref.low ? '#fb923c' : numValue > ref.high ? '#f87171' : '#34d399')
-    : (marker.status === 'high' || marker.status === 'elevated' ? '#f87171' : marker.status === 'low' ? '#fb923c' : '#34d399');
+    ? (numValue < ref.low ? 'var(--accent-watch)' : numValue > ref.high ? 'var(--accent-elevated)' : 'var(--accent-optimal)')
+    : (marker.status === 'high' || marker.status === 'elevated' ? 'var(--accent-elevated)' : marker.status === 'low' ? 'var(--accent-watch)' : 'var(--accent-optimal)');
 
   // Personalised context based on status
   const personalContext = !isNaN(numValue) && ref
@@ -532,11 +532,11 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
         {/* Header: value + trend side by side */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>{marker.category || 'Biomarker'}</div>
-            <h2 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 26, color: 'rgba(220,255,235,1)', margin: '0 0 10px', fontWeight: 500 }}>{marker.name}</h2>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>{marker.category || 'Biomarker'}</div>
+            <h2 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 26, color: 'var(--text-primary)', margin: '0 0 10px', fontWeight: 500 }}>{marker.name}</h2>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
               <span style={{ fontSize: 36, color: statusColor, fontFamily: 'EB Garamond, Georgia, serif', fontWeight: 500 }}>{marker.value}</span>
-              {marker.unit && <span style={{ fontSize: 15, color: 'rgba(0,210,165,.55)' }}>{marker.unit}</span>}
+              {marker.unit && <span style={{ fontSize: 15, color: 'var(--text-tertiary)' }}>{marker.unit}</span>}
               {marker.status && (
                 <span style={{ fontSize: 12, color: statusColor, letterSpacing: '0.08em', textTransform: 'uppercase', background: statusColor + '18', border: '1px solid ' + statusColor + '40', borderRadius: 12, padding: '3px 10px' }}>
                   {marker.status}
@@ -547,7 +547,7 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
             <RangeBar value={numValue} markerName={marker.name} unit={marker.unit} />
           </div>
 
-          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: 'rgba(0,210,165,.4)', fontSize: 24, cursor: 'pointer', lineHeight: 1, padding: 4 }}>×</button>
+          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: 24, cursor: 'pointer', lineHeight: 1, padding: 4 }}>×</button>
         </div>
 
         {/* Full-width interactive trend chart */}
@@ -567,16 +567,16 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
 
         {/* Personalised context banner */}
         {personalContext && (
-          <div style={{ padding: '12px 16px', background: statusColor + '0d', border: `1px solid ${statusColor}33`, borderRadius: 8, marginBottom: 20, fontSize: 15, color: 'rgba(220,255,235,.92)', lineHeight: 1.65 }}>
+          <div style={{ padding: '12px 16px', background: statusColor + '0d', border: `1px solid ${statusColor}33`, borderRadius: 8, marginBottom: 20, fontSize: 15, color: 'var(--text-primary)', lineHeight: 1.65 }}>
             {personalContext}
           </div>
         )}
 
-        <div style={{ borderTop: '1px solid rgba(0,210,165,.1)', paddingTop: 20 }}>
+        <div style={{ borderTop: '1px solid var(--brand-ghost)', paddingTop: 20 }}>
           {loading && (
             <div style={{ textAlign: 'center', padding: '40px 0' }}>
-              <div style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'rgba(0,210,165,.8)', animation: 'aellux-star-twinkle 1s ease-in-out infinite', marginBottom: 14 }} />
-              <div style={{ fontSize: 14, color: 'rgba(0,210,165,.65)', fontStyle: 'italic' }}>Researching {marker.name}…</div>
+              <div style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--brand-dim)', animation: 'aellux-star-twinkle 1s ease-in-out infinite', marginBottom: 14 }} />
+              <div style={{ fontSize: 14, color: 'var(--text-secondary)', fontStyle: 'italic' }}>Researching {marker.name}…</div>
             </div>
           )}
           {error && !loading && (
@@ -587,14 +587,14 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
           )}
           {info && !loading && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <InfoBlock title="What is it?" text={info.what} bg="rgba(0,210,165,.03)" border="rgba(0,210,165,.12)" titleColor="rgba(0,225,180,.75)" textColor="rgba(220,255,235,.9)" />
-              <InfoBlock title="Why it matters" text={info.why} bg="rgba(0,210,165,.03)" border="rgba(0,210,165,.1)" titleColor="rgba(0,200,160,.65)" textColor="rgba(220,255,235,.85)" />
+              <InfoBlock title="What is it?" text={info.what} bg="rgba(0,210,165,.03)" border="var(--border-subtle)" titleColor="rgba(0,225,180,.75)" textColor="var(--text-primary)" />
+              <InfoBlock title="Why it matters" text={info.why} bg="rgba(0,210,165,.03)" border="var(--brand-ghost)" titleColor="rgba(0,200,160,.65)" textColor="var(--text-secondary)" />
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                 <InfoBlock title="If too high" text={info.high} bg="rgba(248,113,113,.05)" border="rgba(248,113,113,.18)" titleColor="rgba(248,113,113,.9)" textColor="rgba(255,190,180,.9)" />
                 <InfoBlock title="If too low" text={info.low} bg="rgba(251,146,60,.05)" border="rgba(251,146,60,.18)" titleColor="rgba(251,146,60,.9)" textColor="rgba(255,210,165,.9)" />
                 <div style={{ background: 'rgba(52,211,153,.04)', border: '1px solid rgba(52,211,153,.18)', borderRadius: 8, padding: '14px 16px' }}>
                   <div style={{ fontSize: 11, color: 'rgba(52,211,153,.85)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>To bring it down — natural first</div>
-                  <p style={{ fontSize: 14, color: 'rgba(160,240,200,.9)', lineHeight: 1.7, margin: 0 }}>{info.mitigateHigh}</p>
+                  <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>{info.mitigateHigh}</p>
                   {info.mitigateHighMedical && info.mitigateHighMedical !== 'No medical intervention needed.' && (
                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(52,211,153,.12)' }}>
                       <div style={{ fontSize: 11, color: 'rgba(255,200,80,.75)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>When to involve a physician</div>
@@ -604,7 +604,7 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
                 </div>
                 <div style={{ background: 'rgba(56,189,248,.04)', border: '1px solid rgba(56,189,248,.15)', borderRadius: 8, padding: '14px 16px' }}>
                   <div style={{ fontSize: 11, color: 'rgba(56,189,248,.85)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>To bring it up — natural first</div>
-                  <p style={{ fontSize: 14, color: 'rgba(160,220,255,.9)', lineHeight: 1.7, margin: 0 }}>{info.mitigateLow}</p>
+                  <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>{info.mitigateLow}</p>
                   {info.mitigateLowMedical && info.mitigateLowMedical !== 'No medical intervention needed.' && (
                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(56,189,248,.12)' }}>
                       <div style={{ fontSize: 11, color: 'rgba(255,200,80,.75)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>When to involve a physician</div>
@@ -612,14 +612,14 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
                     </div>
                   )}
                 </div>
-                <InfoBlock title="Good for" text={info.goodFor} bg="rgba(0,210,165,.04)" border="rgba(0,210,165,.12)" titleColor="rgba(0,225,180,.85)" textColor="rgba(0,232,184,.9)" />
+                <InfoBlock title="Good for" text={info.goodFor} bg="var(--brand-ghost)" border="var(--border-subtle)" titleColor="var(--brand)" textColor="rgba(0,232,184,.9)" />
                 <InfoBlock title="Watch out for" text={info.badFor} bg="rgba(167,139,250,.04)" border="rgba(167,139,250,.15)" titleColor="rgba(167,139,250,.85)" textColor="rgba(200,180,255,.9)" />
               </div>
             </div>
           )}
         </div>
 
-        <div style={{ marginTop: 20, paddingTop: 14, borderTop: '1px solid rgba(0,210,165,.08)', fontSize: 12, color: 'rgba(0,210,165,.35)', lineHeight: 1.5 }}>
+        <div style={{ marginTop: 20, paddingTop: 14, borderTop: '1px solid var(--brand-ghost)', fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.5 }}>
           Educational context only — not medical advice. Consult your physician before making health decisions.
         </div>
       </div>

@@ -77,45 +77,45 @@ export default function SupplementLog({ userId, allMarkers }: Props) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <div>
-          <div style={{ fontSize: 11, color: 'rgba(0,210,165,.65)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>Supplement & Medication Log</div>
-          <div style={{ fontSize: 13, color: 'rgba(0,210,165,.5)' }}>Track what you take — Aellux correlates it against your biomarker changes</div>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>Supplement & Medication Log</div>
+          <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>Track what you take — Aellux correlates it against your biomarker changes</div>
         </div>
         <button onClick={() => setAdding(!adding)}
-          style={{ fontSize: 13, padding: '7px 14px', background: 'rgba(0,210,165,.08)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 5, color: 'rgba(0,225,180,.85)', cursor: 'pointer', fontFamily: 'inherit' }}>
+          style={{ fontSize: 13, padding: '7px 14px', background: 'var(--brand-ghost)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--brand)', cursor: 'pointer', fontFamily: 'inherit' }}>
           + Add
         </button>
       </div>
 
       {/* Add form */}
       {adding && (
-        <div style={{ padding: '16px 18px', background: 'rgba(0,8,18,.6)', border: '1px solid rgba(0,210,165,.2)', borderRadius: 8, marginBottom: 16 }}>
+        <div style={{ padding: '16px 18px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 8, marginBottom: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Supplement or medication name"
-              style={{ fontSize: 14, padding: '9px 12px', background: 'rgba(0,8,18,.8)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 5, color: 'rgba(220,255,235,.9)', fontFamily: 'inherit' }} />
+              style={{ fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit' }} />
             <input value={form.dose} onChange={e => setForm(f => ({ ...f, dose: e.target.value }))} placeholder="Dose (e.g. 300mg)"
-              style={{ fontSize: 14, padding: '9px 12px', background: 'rgba(0,8,18,.8)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 5, color: 'rgba(220,255,235,.9)', fontFamily: 'inherit' }} />
+              style={{ fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit' }} />
             <select value={form.frequency} onChange={e => setForm(f => ({ ...f, frequency: e.target.value }))}
-              style={{ fontSize: 14, padding: '9px 12px', background: 'rgba(0,8,18,.8)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 5, color: 'rgba(220,255,235,.9)', fontFamily: 'inherit' }}>
+              style={{ fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit' }}>
               {FREQS.map(f => <option key={f} value={f}>{f}</option>)}
             </select>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
             <div>
-              <label style={{ fontSize: 11, color: 'rgba(0,210,165,.55)', display: 'block', marginBottom: 4 }}>Started</label>
+              <label style={{ fontSize: 11, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>Started</label>
               <input type="date" value={form.started_date} onChange={e => setForm(f => ({ ...f, started_date: e.target.value }))}
-                style={{ width: '100%', fontSize: 14, padding: '9px 12px', background: 'rgba(0,8,18,.8)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 5, color: 'rgba(220,255,235,.9)', fontFamily: 'inherit' }} />
+                style={{ width: '100%', fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit' }} />
             </div>
             <div>
-              <label style={{ fontSize: 11, color: 'rgba(0,210,165,.55)', display: 'block', marginBottom: 4 }}>Ended (optional)</label>
+              <label style={{ fontSize: 11, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>Ended (optional)</label>
               <input type="date" value={form.ended_date || ''} onChange={e => setForm(f => ({ ...f, ended_date: e.target.value || undefined }))}
-                style={{ width: '100%', fontSize: 14, padding: '9px 12px', background: 'rgba(0,8,18,.8)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 5, color: 'rgba(220,255,235,.9)', fontFamily: 'inherit' }} />
+                style={{ width: '100%', fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit' }} />
             </div>
           </div>
           <input value={form.notes || ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Notes (optional)"
-            style={{ width: '100%', fontSize: 14, padding: '9px 12px', background: 'rgba(0,8,18,.8)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 5, color: 'rgba(220,255,235,.9)', fontFamily: 'inherit', marginBottom: 12 }} />
+            style={{ width: '100%', fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit', marginBottom: 12 }} />
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={save} style={{ fontSize: 14, color: 'rgba(0,20,14,1)', background: 'rgba(0,225,180,.9)', border: 'none', borderRadius: 5, padding: '9px 20px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>Save</button>
-            <button onClick={() => setAdding(false)} style={{ fontSize: 14, color: 'rgba(0,210,165,.6)', background: 'none', border: '1px solid rgba(0,210,165,.2)', borderRadius: 5, padding: '9px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+            <button onClick={save} style={{ fontSize: 14, color: 'rgba(0,20,14,1)', background: 'var(--brand)', border: 'none', borderRadius: 5, padding: '9px 20px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>Save</button>
+            <button onClick={() => setAdding(false)} style={{ fontSize: 14, color: 'var(--text-secondary)', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 5, padding: '9px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
           </div>
         </div>
       )}
@@ -124,11 +124,11 @@ export default function SupplementLog({ userId, allMarkers }: Props) {
       {supplements.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
           {supplements.map((s, i) => (
-            <div key={s.id || i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 7 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: s.ended_date ? 'rgba(0,210,165,.25)' : 'rgba(0,225,180,.85)', flexShrink: 0 }} />
+            <div key={s.id || i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 7 }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: s.ended_date ? 'var(--border-medium)' : 'var(--brand)', flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, color: 'rgba(220,255,235,.9)', fontWeight: 400 }}>{s.name}{s.dose ? ` — ${s.dose}` : ''}</div>
-                <div style={{ fontSize: 12, color: 'rgba(0,210,165,.5)', marginTop: 2 }}>
+                <div style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 400 }}>{s.name}{s.dose ? ` — ${s.dose}` : ''}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
                   {s.frequency} · Started {s.started_date}{s.ended_date ? ` · Ended ${s.ended_date}` : ' · Active'}
                 </div>
               </div>
@@ -136,7 +136,7 @@ export default function SupplementLog({ userId, allMarkers }: Props) {
           ))}
         </div>
       ) : !adding && (
-        <div style={{ padding: '14px 16px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.1)', borderRadius: 7, fontSize: 14, color: 'rgba(0,210,165,.5)', marginBottom: 16 }}>
+        <div style={{ padding: '14px 16px', background: 'var(--bg-sunken)', border: '1px solid var(--brand-ghost)', borderRadius: 7, fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 16 }}>
           No supplements logged yet. Add what you're taking and Aellux will correlate it against your biomarker changes over time.
         </div>
       )}
@@ -145,13 +145,13 @@ export default function SupplementLog({ userId, allMarkers }: Props) {
       {supplements.length > 0 && allMarkers?.some(m => m.history?.length > 1) && (
         <div>
           <button onClick={analyzeCorrelations} disabled={corrLoading}
-            style={{ fontSize: 13, padding: '8px 16px', background: 'rgba(0,210,165,.06)', border: '1px solid rgba(0,210,165,.2)', borderRadius: 5, color: 'rgba(0,225,180,.85)', cursor: 'pointer', fontFamily: 'inherit', marginBottom: corrLoading || correlation ? 12 : 0 }}>
+            style={{ fontSize: 13, padding: '8px 16px', background: 'var(--brand-ghost)', border: '1px solid var(--border-subtle)', borderRadius: 5, color: 'var(--brand)', cursor: 'pointer', fontFamily: 'inherit', marginBottom: corrLoading || correlation ? 12 : 0 }}>
             {corrLoading ? 'Analyzing…' : '✦ Correlate supplements with marker changes'}
           </button>
           {correlation && (
-            <div style={{ padding: '16px 18px', background: 'rgba(0,8,18,.6)', border: '1px solid rgba(129,140,248,.25)', borderLeft: '3px solid rgba(129,140,248,.6)', borderRadius: 8 }}>
+            <div style={{ padding: '16px 18px', background: 'var(--bg-surface)', border: '1px solid rgba(129,140,248,.25)', borderLeft: '3px solid rgba(129,140,248,.6)', borderRadius: 8 }}>
               <div style={{ fontSize: 11, color: 'rgba(129,140,248,.8)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Supplement × Biomarker Correlation</div>
-              <p style={{ fontSize: 16, color: 'rgba(220,255,235,.95)', lineHeight: 1.8, margin: 0, fontWeight: 300 }}>{correlation}</p>
+              <p style={{ fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.8, margin: 0, fontWeight: 300 }}>{correlation}</p>
             </div>
           )}
         </div>

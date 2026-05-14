@@ -94,22 +94,22 @@ export default function CorrelationChart({ allMarkers, userId, plan, profile }: 
     const ptsB = timeline.map((r, i) => parseFloat(r.b) ? `${px(i)},${pyB(parseFloat(r.b))}` : null).filter(Boolean).join(' ');
 
     return (
-      <div style={{ background: 'rgba(0,6,14,.5)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8, padding: '12px 8px 6px', marginBottom: 14 }}>
+      <div style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '12px 8px 6px', marginBottom: 14 }}>
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', overflow: 'visible' }}>
-          {ptsA && <polyline points={ptsA} fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
-          {ptsB && <polyline points={ptsB} fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4,3" />}
+          {ptsA && <polyline points={ptsA} fill="none" stroke="var(--accent-optimal)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
+          {ptsB && <polyline points={ptsB} fill="none" stroke="var(--accent-elevated)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4,3" />}
           {timeline.map((r, i) => (
             <g key={i}>
-              {parseFloat(r.a) && <circle cx={px(i)} cy={pyA(parseFloat(r.a))} r="3" fill="#34d399" />}
-              {parseFloat(r.b) && <circle cx={px(i)} cy={pyB(parseFloat(r.b))} r="3" fill="#f87171" />}
-              <text x={px(i)} y={H - 2} textAnchor="middle" fontSize="8" fill="rgba(0,210,165,.4)" fontFamily="inherit">{r.month}</text>
+              {parseFloat(r.a) && <circle cx={px(i)} cy={pyA(parseFloat(r.a))} r="3" fill="var(--accent-optimal)" />}
+              {parseFloat(r.b) && <circle cx={px(i)} cy={pyB(parseFloat(r.b))} r="3" fill="var(--accent-elevated)" />}
+              <text x={px(i)} y={H - 2} textAnchor="middle" fontSize="8" fill="var(--text-tertiary)" fontFamily="inherit">{r.month}</text>
             </g>
           ))}
         </svg>
         <div style={{ display: 'flex', gap: 20, padding: '6px 12px 0', fontSize: 12 }}>
-          <span style={{ color: '#34d399' }}>— {markerA || 'Marker A'}</span>
-          <span style={{ color: '#f87171' }}>- - {markerB || 'Marker B'}</span>
-          <span style={{ marginLeft: 'auto', color: 'rgba(0,210,165,.4)' }}>Dual-axis normalized</span>
+          <span style={{ color: 'var(--accent-optimal)' }}>— {markerA || 'Marker A'}</span>
+          <span style={{ color: 'var(--accent-elevated)' }}>- - {markerB || 'Marker B'}</span>
+          <span style={{ marginLeft: 'auto', color: 'var(--text-tertiary)' }}>Dual-axis normalized</span>
         </div>
       </div>
     );
@@ -117,21 +117,21 @@ export default function CorrelationChart({ allMarkers, userId, plan, profile }: 
 
   return (
     <div style={{ padding: '20px 0' }}>
-      <div style={{ fontSize: 11, color: 'rgba(0,210,165,.65)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 12 }}>
+      <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 12 }}>
         Multi-Marker Correlation
       </div>
-      <p style={{ fontSize: 14, color: 'rgba(0,210,165,.65)', marginBottom: 20, lineHeight: 1.6 }}>
+      <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
         Select two markers to overlay their timelines and see how they interact biologically.
       </p>
 
       {/* Suggested pairs */}
       {suggestedPairs.length > 0 && (
         <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 11, color: 'rgba(0,210,165,.45)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Suggested pairs</div>
+          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Suggested pairs</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {suggestedPairs.map(([a, b]) => (
               <button key={`${a}-${b}`} onClick={() => { setMarkerA(a); setMarkerB(b); analyze(a, b); }}
-                style={{ fontSize: 13, padding: '6px 12px', background: 'rgba(0,210,165,.06)', border: '1px solid rgba(0,210,165,.2)', borderRadius: 5, color: 'rgba(0,225,180,.85)', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
+                style={{ fontSize: 13, padding: '6px 12px', background: 'var(--brand-ghost)', border: '1px solid var(--border-subtle)', borderRadius: 5, color: 'var(--brand)', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
                 {a} × {b}
               </button>
             ))}
@@ -142,17 +142,17 @@ export default function CorrelationChart({ allMarkers, userId, plan, profile }: 
       {/* Manual selector */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, marginBottom: 18 }}>
         <select value={markerA} onChange={e => setMarkerA(e.target.value)}
-          style={{ fontSize: 14, padding: '10px 12px', background: 'rgba(0,8,18,.8)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 6, color: 'rgba(220,255,235,.9)', fontFamily: 'inherit' }}>
+          style={{ fontSize: 14, padding: '10px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 6, color: 'var(--text-primary)', fontFamily: 'inherit' }}>
           <option value="">Select marker A</option>
           {markersWithHistory.map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
         </select>
         <select value={markerB} onChange={e => setMarkerB(e.target.value)}
-          style={{ fontSize: 14, padding: '10px 12px', background: 'rgba(0,8,18,.8)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 6, color: 'rgba(220,255,235,.9)', fontFamily: 'inherit' }}>
+          style={{ fontSize: 14, padding: '10px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 6, color: 'var(--text-primary)', fontFamily: 'inherit' }}>
           <option value="">Select marker B</option>
           {markersWithHistory.filter(m => m.name !== markerA).map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
         </select>
         <button onClick={() => analyze()} disabled={!markerA || !markerB || loading}
-          style={{ fontSize: 14, padding: '10px 18px', background: 'rgba(0,225,180,.12)', border: '1px solid rgba(0,225,180,.4)', borderRadius: 6, color: 'rgba(0,240,190,1)', cursor: 'pointer', fontFamily: 'inherit', opacity: (!markerA || !markerB) ? 0.4 : 1 }}>
+          style={{ fontSize: 14, padding: '10px 18px', background: 'rgba(0,225,180,.12)', border: '1px solid rgba(0,225,180,.4)', borderRadius: 6, color: 'var(--brand)', cursor: 'pointer', fontFamily: 'inherit', opacity: (!markerA || !markerB) ? 0.4 : 1 }}>
           {loading ? '…' : 'Analyze'}
         </button>
       </div>
@@ -160,17 +160,17 @@ export default function CorrelationChart({ allMarkers, userId, plan, profile }: 
       {renderChart()}
 
       {loading && (
-        <div style={{ padding: '16px', fontSize: 14, color: 'rgba(0,210,165,.65)', fontStyle: 'italic' }}>
+        <div style={{ padding: '16px', fontSize: 14, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
           Aellux is reading the relationship between {markerA} and {markerB}…
         </div>
       )}
       {error && <div style={{ padding: '12px', color: 'rgba(255,150,100,.9)', fontSize: 14 }}>{error}</div>}
       {analysis && (
-        <div style={{ padding: '16px 18px', background: 'rgba(0,8,18,.6)', border: '1px solid rgba(0,210,165,.2)', borderLeft: '3px solid rgba(0,225,180,.6)', borderRadius: 8 }}>
-          <div style={{ fontSize: 11, color: 'rgba(0,210,165,.6)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
+        <div style={{ padding: '16px 18px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderLeft: '3px solid rgba(0,225,180,.6)', borderRadius: 8 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
             {markerA} × {markerB} — Biological Relationship
           </div>
-          <p style={{ fontSize: 16, color: 'rgba(220,255,235,.95)', lineHeight: 1.8, margin: 0, fontWeight: 300 }}>{analysis}</p>
+          <p style={{ fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.8, margin: 0, fontWeight: 300 }}>{analysis}</p>
         </div>
       )}
     </div>

@@ -63,7 +63,7 @@ const STEPS = [
 function ProgressBar({ step, total }: { step: number; total: number }) {
   const pct = Math.round((step / (total - 1)) * 100);
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(0,210,165,.12)' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'var(--border-subtle)' }}>
       <div style={{ height: '100%', width: `${pct}%`, background: 'rgba(0,225,180,.7)', transition: 'width .4s ease', borderRadius: '0 2px 2px 0' }} />
     </div>
   );
@@ -71,14 +71,14 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
 
 function Orb() {
   return (
-    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%)', boxShadow: '0 0 30px rgba(0,210,165,.4)', flexShrink: 0 }} />
+    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'radial-gradient(ellipse at 35% 30%, #4dc98a 0%, #1a5c3a 50%, #0a1a0a 100%)', boxShadow: '0 0 30px var(--text-tertiary)', flexShrink: 0 }} />
   );
 }
 
 function NextBtn({ onClick, disabled, label = 'Continue →' }: { onClick: () => void; disabled?: boolean; label?: string }) {
   return (
     <button onClick={onClick} disabled={disabled}
-      style={{ width: '100%', fontSize: 17, color: disabled ? 'rgba(0,50,40,.5)' : 'rgba(0,20,14,1)', background: disabled ? 'rgba(0,225,180,.25)' : 'rgba(0,225,180,.92)', border: 'none', borderRadius: 10, padding: '16px 0', cursor: disabled ? 'default' : 'pointer', fontFamily: 'inherit', fontWeight: 600, transition: 'all .2s', marginTop: 8 }}>
+      style={{ width: '100%', fontSize: 17, color: disabled ? 'rgba(0,50,40,.5)' : 'rgba(0,20,14,1)', background: disabled ? 'var(--brand-ghost)' : 'var(--brand)', border: 'none', borderRadius: 10, padding: '16px 0', cursor: disabled ? 'default' : 'pointer', fontFamily: 'inherit', fontWeight: 600, transition: 'all .2s', marginTop: 8 }}>
       {label}
     </button>
   );
@@ -86,7 +86,7 @@ function NextBtn({ onClick, disabled, label = 'Continue →' }: { onClick: () =>
 
 function SkipBtn({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ width: '100%', fontSize: 14, color: 'rgba(0,210,165,.4)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '12px 0', marginTop: 2 }}>
+    <button onClick={onClick} style={{ width: '100%', fontSize: 14, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '12px 0', marginTop: 2 }}>
       Skip for now
     </button>
   );
@@ -98,12 +98,12 @@ function OptionList({ options, selected, onSelect, multi = false }: { options: a
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {options.map(opt => (
         <button key={opt.id} onClick={() => onSelect(opt.id)}
-          style={{ padding: '16px 18px', background: isSelected(opt.id) ? 'rgba(0,225,180,.08)' : 'rgba(0,4,10,.5)', border: `1.5px solid ${isSelected(opt.id) ? 'rgba(0,225,180,.6)' : 'rgba(0,210,165,.14)'}`, borderRadius: 10, color: isSelected(opt.id) ? 'rgba(220,255,235,1)' : 'rgba(220,255,235,.65)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'all .15s', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          style={{ padding: '16px 18px', background: isSelected(opt.id) ? 'var(--brand-ghost)' : 'var(--bg-sunken)', border: `1.5px solid ${isSelected(opt.id) ? 'var(--brand-border)' : 'var(--border-subtle)'}`, borderRadius: 10, color: isSelected(opt.id) ? 'var(--text-primary)' : 'rgba(220,255,235,.65)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'all .15s', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
             <div style={{ lineHeight: 1.4 }}>{opt.label}</div>
-            {opt.sub && <div style={{ fontSize: 12, color: 'rgba(0,210,165,.45)', marginTop: 3 }}>{opt.sub}</div>}
+            {opt.sub && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 3 }}>{opt.sub}</div>}
           </div>
-          {isSelected(opt.id) && <span style={{ color: 'rgba(0,225,180,.9)', fontSize: 16, flexShrink: 0, marginTop: 1 }}>✓</span>}
+          {isSelected(opt.id) && <span style={{ color: 'var(--brand)', fontSize: 16, flexShrink: 0, marginTop: 1 }}>✓</span>}
         </button>
       ))}
     </div>
@@ -170,12 +170,12 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
   };
 
   const S = {
-    wrap: { position: 'fixed' as const, inset: 0, zIndex: 4000, background: '#020810', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' },
+    wrap: { position: 'fixed' as const, inset: 0, zIndex: 4000, background: 'var(--bg-page)', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' },
     inner: { flex: 1, overflowY: 'auto' as const, padding: '52px 24px 24px', maxWidth: 480, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column' as const },
-    heading: { fontFamily: 'EB Garamond, Georgia, serif', fontSize: 30, color: 'rgba(220,255,235,.97)', fontWeight: 400, lineHeight: 1.2, margin: '0 0 10px' } as any,
-    sub: { fontSize: 15, color: 'rgba(0,210,165,.65)', lineHeight: 1.7, margin: '0 0 28px' } as any,
-    input: { width: '100%', fontSize: 17, padding: '14px 16px', background: 'rgba(0,8,18,.8)', border: '1.5px solid rgba(0,210,165,.25)', borderRadius: 10, color: 'rgba(220,255,235,.95)', fontFamily: 'inherit', outline: 'none', WebkitAppearance: 'none' as const } as any,
-    label: { fontSize: 12, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase' as const, display: 'block', marginBottom: 8 },
+    heading: { fontFamily: 'EB Garamond, Georgia, serif', fontSize: 30, color: 'var(--text-primary)', fontWeight: 400, lineHeight: 1.2, margin: '0 0 10px' } as any,
+    sub: { fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: '0 0 28px' } as any,
+    input: { width: '100%', fontSize: 17, padding: '14px 16px', background: 'var(--bg-surface)', border: '1.5px solid var(--border-medium)', borderRadius: 10, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', WebkitAppearance: 'none' as const } as any,
+    label: { fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase' as const, display: 'block', marginBottom: 8 },
   };
 
   return (
@@ -189,7 +189,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32 }}>
               <Orb />
-              <div style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Ancient Intelligence. Present Clarity.</div>
+              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Ancient Intelligence. Present Clarity.</div>
             </div>
             <h1 style={{ ...S.heading, fontSize: 36, marginBottom: 16 }}>
               Your biology has a protocol.
@@ -204,8 +204,8 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
                 'Generates meals, supplements, and training specific to your biomarker pattern',
               ].map((t, i) => (
                 <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <span style={{ color: 'rgba(0,225,180,.6)', flexShrink: 0, marginTop: 2 }}>◎</span>
-                  <span style={{ fontSize: 15, color: 'rgba(0,210,165,.75)', lineHeight: 1.6 }}>{t}</span>
+                  <span style={{ color: 'var(--brand-dim)', flexShrink: 0, marginTop: 2 }}>◎</span>
+                  <span style={{ fontSize: 15, color: 'var(--brand-dim)', lineHeight: 1.6 }}>{t}</span>
                 </div>
               ))}
             </div>
@@ -217,7 +217,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
         {/* ── MOTIVATION ── */}
         {step === 'motivation' && (
           <div>
-            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Getting to know you</p>
+            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Getting to know you</p>
             <h2 style={S.heading}>What brought you to Aellux?</h2>
             <p style={S.sub}>This helps Aellux orient your first protocol around what matters most to you.</p>
             <OptionList options={MOTIVATIONS} selected={profile.motivation} onSelect={id => set('motivation', id)} />
@@ -230,15 +230,15 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
         {/* ── BIOLOGICAL SEX ── */}
         {step === 'sex' && (
           <div>
-            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your biology</p>
+            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your biology</p>
             <h2 style={S.heading}>What is your biological sex?</h2>
             <p style={S.sub}>Hormonal reference ranges, risk factors, and recommendations differ significantly between sexes. This is the most important input Aellux uses.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
               {['male', 'female'].map(s => (
                 <button key={s} onClick={() => set('biological_sex', s)}
-                  style={{ padding: '18px', background: profile.biological_sex === s ? 'rgba(0,225,180,.08)' : 'rgba(0,4,10,.5)', border: `1.5px solid ${profile.biological_sex === s ? 'rgba(0,225,180,.6)' : 'rgba(0,210,165,.14)'}`, borderRadius: 10, color: profile.biological_sex === s ? 'rgba(220,255,235,1)' : 'rgba(220,255,235,.65)', fontSize: 17, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', textTransform: 'capitalize', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  style={{ padding: '18px', background: profile.biological_sex === s ? 'var(--brand-ghost)' : 'var(--bg-sunken)', border: `1.5px solid ${profile.biological_sex === s ? 'var(--brand-border)' : 'var(--border-subtle)'}`, borderRadius: 10, color: profile.biological_sex === s ? 'var(--text-primary)' : 'rgba(220,255,235,.65)', fontSize: 17, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', textTransform: 'capitalize', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   {s}
-                  {profile.biological_sex === s && <span style={{ color: 'rgba(0,225,180,.9)' }}>✓</span>}
+                  {profile.biological_sex === s && <span style={{ color: 'var(--brand)' }}>✓</span>}
                 </button>
               ))}
             </div>
@@ -250,7 +250,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
         {/* ── BIRTH YEAR ── */}
         {step === 'birthyear' && (
           <div>
-            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your biology</p>
+            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your biology</p>
             <h2 style={S.heading}>What year were you born?</h2>
             <p style={S.sub}>Age affects what's optimal vs. what's merely normal. A testosterone level that's fine at 25 is a problem at 50.</p>
             <input
@@ -263,7 +263,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
               autoFocus
             />
             {profile.birth_year && !isNaN(parseInt(profile.birth_year)) && parseInt(profile.birth_year) > 1920 && parseInt(profile.birth_year) < 2007 && (
-              <div style={{ textAlign: 'center', fontSize: 14, color: 'rgba(0,210,165,.5)', marginBottom: 16 }}>
+              <div style={{ textAlign: 'center', fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 16 }}>
                 Age: {new Date().getFullYear() - parseInt(profile.birth_year)}
               </div>
             )}
@@ -276,7 +276,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
         {/* ── WEIGHT & HEIGHT ── */}
         {step === 'weight_height' && (
           <div>
-            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your biology</p>
+            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your biology</p>
             <h2 style={S.heading}>Height and weight</h2>
             <p style={S.sub}>Used for body composition calculations and protocol caloric targets. Optional — you can add this later.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
@@ -299,7 +299,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
         {/* ── GOAL ── */}
         {step === 'goal' && (
           <div>
-            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your focus</p>
+            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your focus</p>
             <h2 style={S.heading}>What is your primary goal?</h2>
             <p style={S.sub}>Aellux will prioritize its analysis and recommendations around this.</p>
             <OptionList options={GOALS} selected={profile.goal} onSelect={id => set('goal', id)} />
@@ -312,7 +312,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
         {/* ── ACTIVITY ── */}
         {step === 'activity' && (
           <div>
-            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your lifestyle</p>
+            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your lifestyle</p>
             <h2 style={S.heading}>How active are you currently?</h2>
             <p style={S.sub}>This affects your protocol intensity, recovery recommendations, and caloric targets.</p>
             <OptionList options={ACTIVITY} selected={profile.activity_level} onSelect={id => set('activity_level', id)} />
@@ -325,7 +325,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
         {/* ── WEARABLES ── */}
         {step === 'wearables' && (
           <div>
-            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your data sources</p>
+            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your data sources</p>
             <h2 style={S.heading}>Do you use a wearable device?</h2>
             <p style={S.sub}>Wearable data overlaid on blood markers reveals patterns no single source can show alone. Select all that apply.</p>
             <OptionList options={WEARABLES} selected={profile.wearables} onSelect={toggleWearable} multi />
@@ -343,43 +343,43 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
             </div>
             <h2 style={{ ...S.heading, fontSize: 34, marginBottom: 14 }}>
               Aellux is ready<br />
-              <em style={{ fontStyle: 'italic', color: 'rgba(0,210,165,.9)' }}>for your biology.</em>
+              <em style={{ fontStyle: 'italic', color: 'var(--brand-dim)' }}>for your biology.</em>
             </h2>
-            <p style={{ fontSize: 16, color: 'rgba(0,210,165,.65)', lineHeight: 1.75, marginBottom: 32 }}>
+            <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.75, marginBottom: 32 }}>
               Upload your first health record — a blood panel, wearable export, or even a photo of your lab results. Aellux reads any format and extracts every biomarker automatically.
             </p>
 
             {/* Wearable export instructions if they selected one */}
             {profile.wearables.length > 0 && !profile.wearables.includes('none') && (
-              <div style={{ marginBottom: 28, padding: '16px 18px', background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 10 }}>
-                <div style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>How to export from your wearable</div>
+              <div style={{ marginBottom: 28, padding: '16px 18px', background: 'var(--brand-ghost)', border: '1px solid var(--border-subtle)', borderRadius: 10 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>How to export from your wearable</div>
                 {profile.wearables.includes('apple') && (
-                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
                     <strong style={{ color: 'rgba(220,255,235,.8)' }}>Apple Health:</strong> Health app → your profile icon → Export All Health Data → share the .zip file
                   </div>
                 )}
                 {profile.wearables.includes('oura') && (
-                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
                     <strong style={{ color: 'rgba(220,255,235,.8)' }}>Oura:</strong> Oura app → Profile → Download My Data → export CSV
                   </div>
                 )}
                 {profile.wearables.includes('garmin') && (
-                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
                     <strong style={{ color: 'rgba(220,255,235,.8)' }}>Garmin:</strong> connect.garmin.com → Account → Data Export
                   </div>
                 )}
                 {profile.wearables.includes('whoop') && (
-                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
                     <strong style={{ color: 'rgba(220,255,235,.8)' }}>Whoop:</strong> app.whoop.com → More → Profile → Export Data
                   </div>
                 )}
                 {profile.wearables.includes('fitbit') && (
-                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
                     <strong style={{ color: 'rgba(220,255,235,.8)' }}>Fitbit:</strong> Account → Data Export → Export Account Archive
                   </div>
                 )}
                 {profile.wearables.includes('ultrahuman') && (
-                  <div style={{ fontSize: 14, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
                     <strong style={{ color: 'rgba(220,255,235,.8)' }}>Ultrahuman:</strong> app → Profile → Data Export
                   </div>
                 )}
@@ -393,7 +393,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
         {/* Back button — not on welcome or done */}
         {stepIdx > 0 && step !== 'done' && (
           <button onClick={back}
-            style={{ background: 'none', border: 'none', color: 'rgba(0,210,165,.35)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', padding: '10px 0', marginTop: 4, textAlign: 'center' as const }}>
+            style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', padding: '10px 0', marginTop: 4, textAlign: 'center' as const }}>
             ← Back
           </button>
         )}
