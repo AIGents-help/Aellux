@@ -37,6 +37,8 @@ export default async function handler(req) {
   // ── AI generate ────────────────────────────────────────────────────────────
   const prompt = `Generate precise, evidence-based information for the biomarker: "${name}"${category ? ` (category: ${category})` : ''}${unit ? ` (typical unit: ${unit})` : ''}.
 
+User context: sex=${sex || 'unknown'}${age ? `, age=${age}` : ''}. CRITICAL: All content must be appropriate for this user's sex. If sex is 'male', NEVER reference menstrual cycles, periods, vaginal dryness, breast tenderness, pregnancy, or any exclusively female physiology. If sex is 'female', NEVER reference prostate effects or exclusively male physiology. Tailor symptoms, mitigation strategies, and medical escalation to the user's actual biology.
+
 Your philosophy: the body has intelligence. Lead with what the person can do themselves through lifestyle, nutrition, movement, sleep, and targeted supplementation. Pharmaceutical and medical interventions belong at the END as escalation — not the opening move. Be specific and mechanistic. Never vague.
 
 Return ONLY this JSON schema (no markdown, no fences, no preamble):

@@ -2005,7 +2005,7 @@ export default function App() {
         )}
 
         {selectedMarker && (
-          <BiomarkerDetail marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
+          <BiomarkerDetail marker={selectedMarker} onClose={() => setSelectedMarker(null)} profile={profile} />
         )}
 
         </div>

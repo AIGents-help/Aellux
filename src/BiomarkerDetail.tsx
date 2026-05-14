@@ -162,12 +162,12 @@ const KNOWN: Record<string, BiomarkerInfo> = {
   'Estrogen': {
     what: 'Primary female sex hormone, essential in all sexes. Regulates bone density, cardiovascular health, mood, skin, cognitive function, and reproductive biology.',
     why: 'Estrogen imbalance has cascading effects across every organ system. It directly interacts with thyroid, testosterone, cortisol, and insulin — it is rarely an isolated problem.',
-    high: 'Weight gain especially hips and abdomen, mood swings, breast tenderness, reduced libido, bloating, heavy periods, increased blood clotting risk, suppressed thyroid function.',
-    low: 'Hot flashes, vaginal dryness, bone loss accelerating toward osteoporosis, depression, brain fog, joint pain, poor skin elasticity, cardiovascular risk elevation.',
-    mitigateHigh: 'Cruciferous vegetables (broccoli, cauliflower, Brussels sprouts) contain DIM which actively supports estrogen metabolism and clearance. Increase dietary fiber — it binds excess estrogen in the gut for excretion. Reduce alcohol meaningfully — even moderate drinking raises estrogen significantly. Eliminate BPA plastics from food storage. Prioritize liver health by reducing processed foods and seed oils, since the liver is the primary estrogen detoxifier. Regular vigorous exercise reduces circulating estrogen. Address gut dysbiosis — the estrobolome bacteria directly regulate estrogen recirculation.',
+    high: 'Weight gain especially hips and abdomen, mood swings, reduced libido, bloating, increased blood clotting risk, breast tissue changes, and suppressed thyroid function. In men: gynecomastia, fatigue, and direct suppression of free testosterone.',
+    low: 'Bone loss accelerating toward osteoporosis, depression, brain fog, joint pain, poor skin elasticity, and cardiovascular risk elevation. In women: hot flashes and vaginal dryness. In men: joint pain, mood instability, and low libido.',
+    mitigateHigh: 'Cruciferous vegetables (broccoli, cauliflower, Brussels sprouts) contain DIM which directly supports estrogen metabolism and clearance in both sexes. Increase dietary fiber — it binds excess estrogen for excretion. Reduce alcohol significantly — it raises aromatase activity and estrogen levels. Eliminate BPA plastics. Prioritize liver health by reducing processed foods and seed oils — the liver is the primary estrogen detoxifier. Reduce excess body fat, which produces estrogen via aromatase. Regular vigorous exercise reduces circulating estrogen. Address gut health — estrobolome bacteria regulate estrogen recirculation.',
     mitigateHighMedical: 'See a physician if estrogen dominance persists despite lifestyle changes, you have unexplained heavy bleeding, or breast density is significantly elevated. Always test progesterone alongside estrogen — dominance is often a ratio issue. Bioidentical progesterone or aromatase inhibitors may be appropriate under supervision.',
-    mitigateLow: 'Phytoestrogens from fermented soy, ground flaxseed, and legumes provide mild estrogenic support. Strength training naturally supports estrogen levels. Optimize body fat — adipose tissue produces estrogen, and very low body fat tanks levels. Address chronic stress and adrenal fatigue. Maca root has evidence for estrogen-related symptoms without directly raising serum levels.',
-    mitigateLowMedical: 'See a physician if symptoms significantly impair quality of life, bone density is declining, or cardiovascular risk factors are present. Bioidentical hormone replacement (estradiol plus progesterone) has strong evidence for symptom relief and bone protection when initiated within 10 years of menopause.',
+    mitigateLow: 'Phytoestrogens from fermented soy, ground flaxseed, and legumes provide mild estrogenic support for women. For men, very low estrogen is uncommon and usually indicates hypogonadism — address the underlying testosterone production. Optimize body fat. Address adrenal fatigue and chronic stress.',
+    mitigateLowMedical: 'Women: see a physician if symptoms significantly impair quality of life or bone density is declining. Bioidentical hormone replacement (estradiol plus progesterone) has strong evidence when initiated within 10 years of menopause. Men: see a physician if very low estrogen is confirmed — this requires evaluation of the hypothalamic-pituitary-gonadal axis.',
     goodFor: 'Bone mineral density, cardiovascular protection, skin collagen and elasticity, cognitive sharpness, mood stability, libido, metabolic efficiency.',
     badFor: 'Chronically elevated estrogen without progesterone balance increases breast and uterine cancer risk. Very high estrogen suppresses thyroid function and free testosterone.',
   },
@@ -266,7 +266,7 @@ interface BiomarkerInfo {
   goodFor: string; badFor: string;
 }
 interface Marker { name: string; value: any; unit?: string; status?: string; category?: string; history?: { value: any; date: string }[] }
-interface Props { marker: Marker; onClose: () => void; }
+interface Props { marker: Marker; onClose: () => void; profile?: any; }
 
 function InfoBlock({ title, text, bg, border, titleColor, textColor }: { title: string; text: string; bg: string; border: string; titleColor: string; textColor: string }) {
   return (
@@ -277,8 +277,32 @@ function InfoBlock({ title, text, bg, border, titleColor, textColor }: { title: 
   );
 }
 
-export default function BiomarkerDetail({ marker, onClose }: Props) {
-  const [info, setInfo] = useState<BiomarkerInfo | null>(KNOWN[marker.name] || null);
+export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
+  const sex = ((profile?.biological_sex) || '').toLowerCase();
+  const isMale = sex === 'male';
+  const isFemale = sex === 'female';
+
+  // Build sex-aware KNOWN entry — override female-specific copy for male users
+  function getSexAwareInfo(base: BiomarkerInfo | undefined): BiomarkerInfo | undefined {
+    if (!base) return undefined;
+    if (!isMale) return base; // female or unknown: use base as-is
+    const overrides: Partial<Record<string, Partial<BiomarkerInfo>>> = {
+      'Estrogen': {
+        high: 'Weight gain especially around the abdomen, reduced libido, low mood, fatigue, brain fog, breast tissue growth (gynecomastia), reduced muscle tone, and suppressed free testosterone. In men, elevated estrogen directly competes with and displaces testosterone at receptor sites.',
+        low: 'Bone loss, joint pain, low libido, cardiovascular risk elevation, and mood instability. Men need a small amount of estrogen for bone density and cardiovascular health — the goal is ratio balance, not elimination.',
+        mitigateHigh: 'Cruciferous vegetables (broccoli, cauliflower, Brussels sprouts) contain DIM which directly supports estrogen clearance in men. Increase dietary fiber. Eliminate alcohol — it significantly raises aromatase activity which converts testosterone to estrogen. Reduce excess body fat — adipose tissue produces estrogen via aromatase. Avoid BPA plastics and xenoestrogen exposure (pesticide-heavy foods, conventional meat). Zinc is a natural aromatase inhibitor — prioritize oysters, red meat, pumpkin seeds. Exercise reduces circulating estrogen.',
+        mitigateHighMedical: 'See a physician if estrogen is persistently elevated alongside low testosterone, or if gynecomastia is present. Aromatase inhibitors (anastrozole, exemestane) are used in men — but only after exhausting lifestyle measures. If on TRT, estrogen management is part of the protocol.',
+        mitigateLow: 'Very low estrogen in men is uncommon — usually from aromatase deficiency or hypogonadism. Ensure adequate body fat (very lean men may have low estrogen). Address any underlying hypogonadism.',
+        mitigateLowMedical: 'See a physician — very low estrogen in men requires investigation of the hypothalamic-pituitary-gonadal axis.',
+      },
+    };
+    const markerOverride = overrides[marker.name];
+    if (!markerOverride) return base;
+    return { ...base, ...markerOverride };
+  }
+
+  const [rawInfo, setRawInfo] = useState<BiomarkerInfo | null>(KNOWN[marker.name] || null);
+  const info = rawInfo ? getSexAwareInfo(rawInfo) ?? null : null;
   const [loading, setLoading] = useState<boolean>(!KNOWN[marker.name]);
   const [error, setError] = useState<string | null>(null);
 
@@ -288,11 +312,11 @@ export default function BiomarkerDetail({ marker, onClose }: Props) {
     (async () => {
       setLoading(true); setError(null);
       try {
-        const res = await fetch('/api/biomarker-info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: marker.name, category: marker.category || '', unit: marker.unit || '' }) });
+        const res = await fetch('/api/biomarker-info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: marker.name, category: marker.category || '', unit: marker.unit || '', sex: sex || 'unknown', age: profile?.birth_year ? new Date().getFullYear() - profile.birth_year : null }) });
         const data = await res.json();
         if (cancelled) return;
         if (!res.ok || data.error) setError(data.error || `Failed (${res.status})`);
-        else if (data.what && data.why) setInfo(data);
+        else if (data.what && data.why) setRawInfo(data);
         else setError('Unexpected response shape.');
       } catch (e: any) { if (!cancelled) setError(e?.message || 'Network error'); }
       finally { if (!cancelled) setLoading(false); }
