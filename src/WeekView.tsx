@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 
+
 interface MealAlt {
   swap: 'nutrient_match' | 'cheaper' | 'faster' | 'diet_pref';
   name: string;
@@ -144,7 +145,7 @@ function MealRow({ slot, meal, dayIdx, selectedSwap, onSwap }: {
           {hasAlts && (
             <>
               <div style={{ fontSize: 12, color: 'rgba(0,210,165,.55)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 }}>Swap to:</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8 }}>
                 {/* Original option */}
                 <button
                   onClick={(e) => { e.stopPropagation(); onSwap(''); setOpen(false); }}
@@ -190,7 +191,7 @@ function DayCard({ day, dayIdx, isToday, selected, onSwap }: {
     <div style={{ marginBottom: 16, border: `1px solid ${isToday ? 'rgba(0,225,180,.55)' : 'rgba(0,210,165,.18)'}`, borderRadius: 10, overflow: 'hidden', background: isToday ? 'rgba(0,32,50,.4)' : 'rgba(0,8,18,.5)' }}>
 
       {/* Day header — always visible */}
-      <div onClick={() => setExpanded(!expanded)} style={{ padding: '18px 22px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div onClick={() => setExpanded(!expanded)} style={{ padding: 'clamp(12px, 3vw, 18px) clamp(14px, 4vw, 22px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 26, color: 'rgba(220,255,235,1)', fontWeight: 500 }}>{day.day}</div>
@@ -218,7 +219,7 @@ function DayCard({ day, dayIdx, isToday, selected, onSwap }: {
 
       {/* Expanded body */}
       {expanded && (
-        <div style={{ padding: '0 22px 22px', borderTop: '1px solid rgba(0,210,165,.12)' }}>
+        <div style={{ padding: '0 clamp(12px, 4vw, 22px) clamp(14px, 3vw, 22px)', borderTop: '1px solid rgba(0,210,165,.12)' }}>
 
           {/* Morning */}
           {day.morning && (

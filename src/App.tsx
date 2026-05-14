@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
+import { useIsMobile } from './useIsMobile';
 import { saveDocument, getDocuments, deleteDocument, savePersonalised, getPersonalised } from './supabase';
 import AuthPaywall from './AuthPaywall';
 import LandingPage from './LandingPage';
@@ -13,6 +14,7 @@ import PatternInsights from './PatternInsights';
 import ProtocolOutcome from './ProtocolOutcome';
 import SupplementLog from './SupplementLog';
 import PractitionerShare from './PractitionerShare';
+import DoctorMissed from './DoctorMissed';
 import PrintableReport from './PrintableReport';
 import WeekView from './WeekView';
 import DerivedViews from './DerivedViews';
@@ -451,6 +453,7 @@ export default function App() {
   const [bpMealPrep, setBpMealPrep] = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const isMobile = useIsMobile();
   const [dashTab, setDashTab] = useState<'markers' | 'intelligence'>('markers');
   const [patterns, setPatterns] = useState<any[]>([]);
   const [patternsLoading, setPatternsLoading] = useState(false);
@@ -767,6 +770,25 @@ export default function App() {
       setPersonalised(updated);
       try { localStorage.setItem('aellux_personalised', JSON.stringify(updated)); } catch {}
       if (user?.id) savePersonalised(user.id, type, data);
+
+      // Auto-store biological age history after synthesis
+      if (type === 'synthesis' && data.biological_age_estimate && user?.id) {
+        const bioAge = parseFloat(String(data.biological_age_estimate).replace(/[^\d.]/g, ''));
+        const chronoAge = profile?.birth_year ? new Date().getFullYear() - profile.birth_year : null;
+        if (!isNaN(bioAge)) {
+          fetch('/api/bio-age-track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              biologicalAge: bioAge,
+              chronologicalAge: chronoAge,
+              gapYears: chronoAge ? bioAge - chronoAge : null,
+              keyDrivers: data.primary_systems ? Object.entries(data.primary_systems).map(([k, v]) => `${k}: ${v}`) : [],
+            }),
+          }).catch(() => {});
+        }
+      }
       setOrbState('speaking');
       setResponse(data.key_insight || data.aellux_voice || 'Your personalised protocol has been generated from your health data.');
       setTimeout(() => setOrbState('idle'), 4000);
@@ -1166,6 +1188,13 @@ export default function App() {
                                 ))}
                               </div>
                             )}
+                            <DoctorMissed
+                              document={doc}
+                              allMarkers={allMarkers}
+                              userId={user?.id}
+                              plan={isPro ? 'pro' : 'free'}
+                              profile={profile}
+                            />
                           </div>
                           <button onClick={() => saveDocuments(documents.filter(d => d.id !== doc.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,150,120,.35)', fontSize: 16, padding: 4 }}>✕</button>
                         </div>
@@ -1240,7 +1269,7 @@ export default function App() {
                         }
                       }}
                         style={{
-                          flex: 1, padding: '12px 0', background: 'none', border: 'none',
+                          flex: 1, padding: isMobile ? '14px 0' : '12px 0', background: 'none', border: 'none',
                           borderBottom: `2px solid ${dashTab === t.id ? 'rgba(0,225,180,.8)' : 'transparent'}`,
                           color: dashTab === t.id ? 'rgba(0,240,190,1)' : 'rgba(0,210,165,.5)',
                           fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
@@ -1264,7 +1293,7 @@ export default function App() {
                             <div style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(0,210,165,.55)', marginBottom: 4 }}>Aellux Synthesis</div>
                             <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'rgba(220,255,235,.95)', fontWeight: 500 }}>Your Biologic Read</div>
                           </div>
-                          <div style={{ display: 'flex', gap: 8 }}>
+                          <div style={{ display: 'flex', gap: isMobile ? 6 : 8 }}>
                             <button onClick={() => triggerPrint('synthesis')} style={{ fontSize: 12, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.1)', border: '1px solid rgba(0,195,155,.35)', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>↓ PDF</button>
                             <button onClick={() => triggerPrint('all')} style={{ fontSize: 12, color: 'rgba(0,225,180,.75)', background: 'rgba(0,195,155,.06)', border: '1px solid rgba(0,195,155,.2)', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>Full Report</button>
                           </div>
@@ -1276,7 +1305,7 @@ export default function App() {
                         </div>
 
                         {/* Bio age + focus strip */}
-                        <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 10, marginBottom: 14 }}>
                           {syn.biological_age_estimate && (
                             <div style={{ flex: 1, minWidth: 140, padding: '12px 16px', background: 'rgba(0,210,165,.06)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 7 }}>
                               <div style={{ fontSize: 11, color: 'rgba(0,210,165,.55)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Biological age</div>
@@ -1315,7 +1344,7 @@ export default function App() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                               {syn.system_dance.map((dance: any, i: number) => (
                                 <div key={i} style={{ padding: '16px 20px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8 }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                                     <div style={{ fontSize: 15, color: 'rgba(220,255,235,.95)', fontWeight: 500 }}>{dance.title}</div>
                                     {dance.markers_involved && dance.markers_involved.map((mk: string) => (
                                       <span key={mk} style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(0,210,165,.1)', border: '1px solid rgba(0,210,165,.25)', borderRadius: 10, color: 'rgba(0,225,180,.85)', letterSpacing: '0.04em' }}>{mk}</span>
@@ -1367,7 +1396,7 @@ export default function App() {
                   {flaggedMarkers.length > 0 && (
                     <div style={{ marginBottom: 22 }}>
                       <div style={{ fontSize: 13, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,175,70,.9)', marginBottom: 14, fontWeight: 500 }}>⚠ Needs Attention ({flaggedMarkers.length})</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 10 }}>
                         {flaggedMarkers.map(m => (
                           <div key={m.name} onClick={() => setSelectedMarker(m)} style={{ ...S.card, padding: '14px 16px', cursor: 'pointer', borderColor: 'rgba(255,130,60,.32)', transition: 'border-color .2s' }}>
                             <div style={{ fontSize: 18, color: 'rgba(255,215,155,1)', fontWeight: 500, marginBottom: 6, lineHeight: 1.2 }}>{m.name}</div>
@@ -1396,7 +1425,7 @@ export default function App() {
                   </div>
 
                   {/* Markers grid — unified with trend data */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: isMobile ? 10 : 14 }}>
                     {displayMarkers.map(m => {
                       const history: {value: any; date: string}[] = ((m as any).history) || [{ value: m.value, date: (m as any).date || '' }];
                       const nums = history.map((v: any) => parseFloat(v.value)).filter((n: any) => !isNaN(n));

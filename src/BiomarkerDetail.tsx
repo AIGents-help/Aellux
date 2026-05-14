@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useIsMobile } from './useIsMobile';
 
 // ── Reference ranges ─────────────────────────────────────────────────────────
 // low/high = lab reference range  |  optLow/optHigh = functional optimal
@@ -455,6 +456,7 @@ function InfoBlock({ title, text, bg, border, titleColor, textColor }: { title: 
 }
 
 export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
+  const isMobile = useIsMobile();
   const sex = ((profile?.biological_sex) || '').toLowerCase();
   const isMale = sex === 'male';
   const isFemale = sex === 'female';
@@ -525,7 +527,7 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,10,20,0.88)', backdropFilter: 'blur(8px)' }} onClick={onClose}>
-      <div style={{ background: 'rgba(2,12,22,0.99)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 14, padding: '28px 32px', maxWidth: 640, width: '93%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: 'rgba(2,12,22,0.99)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 14, padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 640, width: '95%', maxHeight: '92vh', overflowY: 'auto', position: 'relative' }} onClick={e => e.stopPropagation()}>
 
         {/* Header: value + trend side by side */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
@@ -587,7 +589,7 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <InfoBlock title="What is it?" text={info.what} bg="rgba(0,210,165,.03)" border="rgba(0,210,165,.12)" titleColor="rgba(0,225,180,.75)" textColor="rgba(220,255,235,.9)" />
               <InfoBlock title="Why it matters" text={info.why} bg="rgba(0,210,165,.03)" border="rgba(0,210,165,.1)" titleColor="rgba(0,200,160,.65)" textColor="rgba(220,255,235,.85)" />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                 <InfoBlock title="If too high" text={info.high} bg="rgba(248,113,113,.05)" border="rgba(248,113,113,.18)" titleColor="rgba(248,113,113,.9)" textColor="rgba(255,190,180,.9)" />
                 <InfoBlock title="If too low" text={info.low} bg="rgba(251,146,60,.05)" border="rgba(251,146,60,.18)" titleColor="rgba(251,146,60,.9)" textColor="rgba(255,210,165,.9)" />
                 <div style={{ background: 'rgba(52,211,153,.04)', border: '1px solid rgba(52,211,153,.18)', borderRadius: 8, padding: '14px 16px' }}>
