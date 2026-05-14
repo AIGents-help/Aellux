@@ -168,10 +168,12 @@ export async function getIntelligenceContext(userId) {
   if (!userId) return null;
 
   // Run all lookups in parallel
-  const [suppRows, bioAgeRows, docRows] = await Promise.all([
+  const [suppRows, bioAgeRows, docRows, recRows, checkinRows] = await Promise.all([
     sbSelect('supplement_log', `user_id=eq.${userId}&ended_date=is.null&order=started_date.desc&select=name,dose,frequency,started_date&limit=10`),
     sbSelect('bio_age_history', `user_id=eq.${userId}&order=created_at.desc&limit=6&select=biological_age,chronological_age,gap_years,created_at`),
     sbSelect('documents', `user_id=eq.${userId}&select=doctor_missed_flags,document_date,document_type&limit=10`),
+    sbSelect('recommendations', `user_id=eq.${userId}&order=created_at.desc&limit=20&select=recommendation,status,target_marker,target_direction,source,created_at,user_note`),
+    sbSelect('checkins', `user_id=eq.${userId}&order=week_start.desc&limit=4&select=week_start,protocol_followed,energy_level,sleep_quality,mood,blockers`),
   ]);
 
   const ctx = {};
@@ -214,6 +216,23 @@ export async function getIntelligenceContext(userId) {
   }
   if (missedFlags.length > 0) ctx.doctorMissedFlags = missedFlags;
 
+  // Recommendation compliance — what was recommended and what they did about it
+  if (recRows && recRows.length > 0) {
+    const pending = recRows.filter(r => r.status === 'pending');
+    const doing = recRows.filter(r => r.status === 'doing');
+    const notDoing = recRows.filter(r => r.status === 'not_doing');
+    const triedNotWorking = recRows.filter(r => r.status === 'tried_not_working');
+    const resolved = recRows.filter(r => r.status === 'resolved');
+    ctx.recommendations = { pending, doing, notDoing, triedNotWorking, resolved, all: recRows };
+  }
+
+  // Recent check-ins — how they're actually feeling and what's blocking them
+  if (checkinRows && checkinRows.length > 0) {
+    ctx.recentCheckins = checkinRows;
+    const latest = checkinRows[0];
+    ctx.latestCheckin = latest;
+  }
+
   return Object.keys(ctx).length > 0 ? ctx : null;
 }
 
@@ -253,6 +272,40 @@ export function formatIntelligenceForPrompt(intel) {
       .map(f => `${f.marker} (${f.value}) — labeled normal but: ${f.why_concerning}`);
     if (flags.length > 0) {
       parts.push(`AELLUX FLAGS (missed by conventional analysis):\n${flags.join('\n')}`);
+    }
+  }
+
+  if (intel.recommendations) {
+    const { pending, doing, notDoing, triedNotWorking } = intel.recommendations;
+
+    if (doing.length > 0) {
+      parts.push(`CURRENTLY DOING (user confirmed): ${doing.map(r => r.recommendation).join(' | ')}`);
+    }
+    if (triedNotWorking.length > 0) {
+      const details = triedNotWorking.map(r => `"${r.recommendation}"${r.user_note ? ' — user says: ' + r.user_note : ''}`);
+      parts.push(`TRIED BUT NOT WORKING — DO NOT RE-RECOMMEND WITHOUT ESCALATION: ${details.join(' | ')}`);
+    }
+    if (notDoing.length > 0) {
+      const details = notDoing.map(r => `"${r.recommendation}"${r.user_note ? ' — reason: ' + r.user_note : ' (no reason given)'}`);
+      parts.push(`NOT DOING (user declined) — if markers still require it, recommend again with escalated urgency and explain why skipping it is affecting their results: ${details.join(' | ')}`);
+    }
+    if (pending.length > 0) {
+      // Only include pending items targeting markers that are still out of range
+      const unresolved = pending.filter(r => r.target_marker).map(r => r.recommendation);
+      if (unresolved.length > 0) {
+        parts.push(`PREVIOUSLY RECOMMENDED (compliance unknown — markers may still need this): ${unresolved.slice(0, 5).join(' | ')}`);
+      }
+    }
+  }
+
+  if (intel.latestCheckin) {
+    const c = intel.latestCheckin;
+    const score = c.protocol_followed;
+    const compliance = score >= 4 ? 'high compliance' : score >= 2 ? 'partial compliance' : 'low compliance';
+    const blockerStr = c.blockers ? ` Blockers reported: "${c.blockers}"` : '';
+    parts.push(`LATEST PROTOCOL CHECK-IN (week of ${c.week_start}): ${compliance} (${score}/5 protocol adherence), energy ${c.energy_level}/5, sleep ${c.sleep_quality}/5, mood ${c.mood}/5.${blockerStr}`);
+    if (score && score < 3) {
+      parts.push(`LOW COMPLIANCE DETECTED: Adjust recommendations to address their reported blockers. Make the protocol more achievable. Identify the 1-2 highest-leverage changes and lead with those.`);
     }
   }
 

@@ -15,6 +15,7 @@ import ProtocolOutcome from './ProtocolOutcome';
 import SupplementLog from './SupplementLog';
 import PractitionerShare from './PractitionerShare';
 import DoctorMissed from './DoctorMissed';
+import Accountability from './Accountability';
 import PrintableReport from './PrintableReport';
 import WeekView from './WeekView';
 import DerivedViews from './DerivedViews';
@@ -770,6 +771,44 @@ export default function App() {
       setPersonalised(updated);
       try { localStorage.setItem('aellux_personalised', JSON.stringify(updated)); } catch {}
       if (user?.id) savePersonalised(user.id, type, data);
+
+      // Auto-extract and store recommendations from synthesis for accountability tracking
+      if (type === 'synthesis' && data.honest_combat?.length && user?.id) {
+        const recsToStore = data.honest_combat.slice(0, 6).map((combat: any) => ({
+          source: 'synthesis',
+          source_id: new Date().toISOString().slice(0, 10),
+          recommendation: combat.how || combat.lever,
+          marker_context: combat.why_it_works,
+          target_marker: null,
+          target_direction: null,
+        }));
+        if (recsToStore.length > 0) {
+          fetch('/api/recommendations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, recommendations: recsToStore }),
+          }).catch(() => {});
+        }
+      }
+
+      // Also extract from supplement stack if generated
+      if (type === 'supps' && Array.isArray(data.supplements) && user?.id) {
+        const suppRecs = data.supplements.slice(0, 8).map((s: any) => ({
+          source: 'supplement_stack',
+          source_id: new Date().toISOString().slice(0, 10),
+          recommendation: `${s.name}${s.dose ? ' ' + s.dose : ''}${s.timing ? ' — ' + s.timing : ''}`,
+          marker_context: s.rationale || s.why,
+          target_marker: s.targets?.[0] || null,
+          target_direction: null,
+        }));
+        if (suppRecs.length > 0) {
+          fetch('/api/recommendations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, recommendations: suppRecs }),
+          }).catch(() => {});
+        }
+      }
 
       // Auto-store biological age history after synthesis
       if (type === 'synthesis' && data.biological_age_estimate && user?.id) {
@@ -1591,6 +1630,15 @@ export default function App() {
 
                       {/* Practitioner Share — Phase 4 */}
                       <PractitionerShare userId={user?.id} isPro={isPro} />
+
+                      <div style={{ height: 1, background: 'rgba(0,210,165,.1)', margin: '24px 0' }} />
+
+                      {/* Accountability — Phase 5 */}
+                      <div>
+                        <div style={{ fontSize: 11, color: 'rgba(0,210,165,.65)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>Accountability</div>
+                        <div style={{ fontSize: 13, color: 'rgba(0,210,165,.5)', marginBottom: 16 }}>Track what you're doing, what isn't working, and check in weekly</div>
+                        <Accountability userId={user?.id} plan={isPro ? 'pro' : 'free'} />
+                      </div>
 
                       {!patternsLoaded && !patternsLoading && allMarkers.length <= 3 && (
                         <div style={{ padding: '16px 18px', background: 'rgba(0,8,18,.4)', border: '1px solid rgba(0,210,165,.12)', borderRadius: 8, fontSize: 14, color: 'rgba(0,210,165,.55)', lineHeight: 1.7, marginTop: 16 }}>
