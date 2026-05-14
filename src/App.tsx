@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useAuth } from './useAuth';
 import { saveDocument, getDocuments, deleteDocument, savePersonalised, getPersonalised } from './supabase';
 import AuthPaywall from './AuthPaywall';
+import LandingPage from './LandingPage';
 import ProtocolsSection from './ProtocolsSection';
 import ProfilePage from './ProfilePage';
 import BodyHero from './BodyHero';
@@ -444,6 +445,7 @@ export default function App() {
   const [bpCycleLengthDays, setBpCycleLengthDays] = useState<number>(30);
   const [bpMealPrep, setBpMealPrep] = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [bpGoalExpanded, setBpGoalExpanded] = useState(false);
 
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
@@ -921,7 +923,21 @@ export default function App() {
     setAsking(false);
   }, [input, asking, allMarkers, documents.length]);
 
-  if (!user) return <AuthPaywall />;
+  if (!user) {
+    return (
+      <>
+        <LandingPage onAuth={() => setShowAuthModal(true)} />
+        {showAuthModal && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,8,18,0.92)', backdropFilter: 'blur(8px)' }}
+            onClick={() => setShowAuthModal(false)}>
+            <div onClick={e => e.stopPropagation()}>
+              <AuthPaywall />
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
   if (!awakened) return (
     <div style={{ height: '100vh', background: '#020810', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 30 }}>
