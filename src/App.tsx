@@ -490,7 +490,8 @@ export default function App() {
         if (docs.length > 0) {
           const mapped = docs.map(d => ({
             id: d.id, name: d.name, date: d.date, document_type: d.document_type,
-            markers: d.markers, summary: d.summary, flags: d.flags,
+            markers: Array.isArray(d.markers) ? d.markers : [],
+            summary: d.summary, flags: d.flags,
             recommendations: d.recommendations, uploadedAt: d.uploaded_at,
           }));
           setDocuments(mapped);
@@ -561,6 +562,7 @@ export default function App() {
   const allMarkers = useMemo(() => {
     const map = new Map<string, Marker & { history: Array<{ date: string; value: number; unit: string }> }>();
     for (const doc of documents) {
+      if (!Array.isArray(doc.markers)) continue;
       for (const m of doc.markers) {
         const key = m.name.toLowerCase().trim();
         if (!map.has(key)) {
