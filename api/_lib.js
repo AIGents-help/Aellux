@@ -329,3 +329,40 @@ export function formatIntelligenceForPrompt(intel) {
     ? `\n\n=== ACCUMULATED INTELLIGENCE (factor this into every recommendation) ===\n${parts.join('\n')}`
     : '';
 }
+
+// ── Healthcheck alerting ──────────────────────────────────────────────────────
+// Fire a Slack/Discord-compatible webhook when something is broken.
+// No-op if HEALTHCHECK_WEBHOOK_URL is not set, so this never breaks anything.
+// Slack incoming webhooks and Discord (with /slack suffix) both accept this payload.
+export async function sendAlert({ service, status, error, latency_ms, context }) {
+  const url = process.env.HEALTHCHECK_WEBHOOK_URL;
+  if (!url) return; // no webhook configured — silent no-op
+
+  const emoji = status === 'down' ? '🔴' : status === 'degraded' ? '🟡' : '✅';
+  const title = `${emoji} Aellux ${service} — ${status}`;
+  const lines = [
+    error ? `*Error:* \`${String(error).slice(0, 300)}\`` : null,
+    latency_ms != null ? `*Latency:* ${latency_ms}ms` : null,
+    context ? `*Context:* ${context}` : null,
+    `*Time:* ${new Date().toISOString()}`,
+    `*Env:* ${process.env.VERCEL_ENV || 'unknown'}`,
+  ].filter(Boolean);
+
+  const payload = { text: `${title}\n${lines.join('\n')}` };
+
+  try {
+    // 3s timeout so a slow webhook never blocks the healthcheck response
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 3000);
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: ctl.signal,
+    });
+    clearTimeout(t);
+  } catch (e) {
+    // Alerting itself failing should never crash the caller
+    console.error('[sendAlert] failed:', e?.message);
+  }
+}
