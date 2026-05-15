@@ -27,6 +27,7 @@ import WeekView from './WeekView';
 import DerivedViews from './DerivedViews';
 import ProfileSetup from './ProfileSetup';
 import { track, identify, resetAnalytics } from './analytics';
+import { identifyErrorUser, resetErrorUser, captureError } from './errors';
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -420,9 +421,10 @@ function applyMealSwaps(p: any, swaps: Record<string, string>): any {
 
 export default function App() {
   const { user, isPro, signOut: rawSignOut } = useAuth();
-  // Reset analytics identity on sign out so a shared device doesn't merge two users' events.
+  // Reset analytics + error context on sign out so a shared device doesn't merge two users.
   const signOut = React.useCallback(async () => {
     resetAnalytics();
+    resetErrorUser();
     return rawSignOut();
   }, [rawSignOut]);
   const [orbState, setOrbState] = useState<OrbState>('dormant');
@@ -511,6 +513,7 @@ export default function App() {
   useEffect(() => {
     if (user?.id) {
       identify(user.id, { plan: isPro ? 'pro' : 'free' });
+      identifyErrorUser(user.id, { plan: isPro ? 'pro' : 'free' });
     }
   }, [user?.id, isPro]);
 
@@ -651,6 +654,7 @@ export default function App() {
     setActiveMarkerKeys(prev => {
       const next = new Set(prev);
       for (const doc of documents) {
+        if (!Array.isArray(doc.markers)) continue;
         for (const m of doc.markers) next.add(m.name);
       }
       return next;
