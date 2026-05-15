@@ -1509,7 +1509,7 @@ export default function App() {
 
                         {/* Opening voice */}
                         <div style={{ padding: '22px 26px', background: 'var(--bg-surface)', border: '1px solid rgba(0,210,165,.2)', borderLeft: '3px solid rgba(0,225,180,.6)', borderRadius: 8, marginBottom: 14 }}>
-                          <p style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 20, color: 'var(--text-primary)', lineHeight: 1.85, margin: 0, fontStyle: 'italic' }}>{syn.aellux_voice}</p>
+                          <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.85, margin: 0, fontWeight: 300 }}>{syn.aellux_voice}</p>
                         </div>
 
                         {/* Bio age + focus strip */}
@@ -1943,7 +1943,7 @@ export default function App() {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {[['none','No Preference'],['vegetarian','Vegetarian'],['vegan','Vegan'],['mediterranean','Mediterranean'],['paleo','Paleo'],['keto','Keto'],['indian','Indian'],['mexican','Mexican'],['japanese','Japanese'],['halal','Halal']].map(([val, label]) => (
                         <button key={val} onClick={() => setMealPreference(val)}
-                          style={{ padding: '5px 14px', borderRadius: 20, border: mealPreference === val ? '1px solid rgba(0,210,165,.7)' : '1px solid rgba(0,210,165,.2)', background: mealPreference === val ? 'var(--border-subtle)' : 'transparent', color: mealPreference === val ? 'rgba(0,210,165,.95)' : 'var(--text-tertiary)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
+                          style={{ padding: '5px 14px', borderRadius: 20, border: mealPreference === val ? '1px solid var(--brand-border)' : '1px solid var(--border-subtle)', background: mealPreference === val ? 'var(--brand-ghost)' : 'transparent', color: mealPreference === val ? 'var(--brand-dim)' : 'var(--text-secondary)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em', fontWeight: mealPreference === val ? 600 : 400 }}>
                           {label}
                         </button>
                       ))}
@@ -2285,11 +2285,11 @@ export default function App() {
                         {[30, 60, 90].map(days => (
                           <button key={days} type="button" onClick={() => setBpCycleLengthDays(days)}
                             style={{
-                              flex: 1, padding: '10px 0', fontSize: 15, fontFamily: 'EB Garamond, Georgia, serif',
-                              background: bpCycleLengthDays === days ? 'rgba(0,225,180,.14)' : 'var(--bg-surface)',
-                              border: `1px solid ${bpCycleLengthDays === days ? 'rgba(0,225,180,.6)' : 'var(--border-subtle)'}`,
-                              borderRadius: 6, color: bpCycleLengthDays === days ? 'rgba(0,255,200,1)' : 'var(--text-tertiary)',
-                              cursor: 'pointer',
+                              flex: 1, padding: '10px 0', fontSize: 15, fontFamily: 'var(--font-body)',
+                              background: bpCycleLengthDays === days ? 'var(--brand-ghost)' : 'var(--bg-surface)',
+                              border: `1px solid ${bpCycleLengthDays === days ? 'var(--brand-border)' : 'var(--border-subtle)'}`,
+                              borderRadius: 6, color: bpCycleLengthDays === days ? 'var(--brand-dim)' : 'var(--text-secondary)',
+                              cursor: 'pointer', fontWeight: bpCycleLengthDays === days ? 600 : 400,
                             }}>
                             {days} days
                           </button>
@@ -2305,7 +2305,7 @@ export default function App() {
                     <button
                       onClick={generateBiologicProtocol}
                       disabled={generatingType === 'week' || allMarkers.length === 0}
-                      style={{ fontSize: 17, color: 'rgba(0,255,200,1)', background: 'rgba(0,195,155,.16)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 5, padding: '14px 36px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
+                      style={{ fontSize: 17, color: '#ffffff', background: '#1a4731', border: 'none', borderRadius: 5, padding: '14px 36px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em', fontWeight: 600 }}
                     >
                       {generatingType === 'week'
                         ? '⟳ Designing…'
