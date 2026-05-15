@@ -337,32 +337,32 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
                 <div style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>How to export from your wearable</div>
                 {profile.wearables.includes('apple') && (
                   <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
-                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Apple Health:</strong> Health app → your profile icon → Export All Health Data → share the .zip file
+                    <strong style={{ color: 'var(--text-primary)' }}>Apple Health:</strong> Health app → your profile icon → Export All Health Data → share the .zip file
                   </div>
                 )}
                 {profile.wearables.includes('oura') && (
                   <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
-                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Oura:</strong> Oura app → Profile → Download My Data → export CSV
+                    <strong style={{ color: 'var(--text-primary)' }}>Oura:</strong> Oura app → Profile → Download My Data → export CSV
                   </div>
                 )}
                 {profile.wearables.includes('garmin') && (
                   <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
-                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Garmin:</strong> connect.garmin.com → Account → Data Export
+                    <strong style={{ color: 'var(--text-primary)' }}>Garmin:</strong> connect.garmin.com → Account → Data Export
                   </div>
                 )}
                 {profile.wearables.includes('whoop') && (
                   <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
-                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Whoop:</strong> app.whoop.com → More → Profile → Export Data
+                    <strong style={{ color: 'var(--text-primary)' }}>Whoop:</strong> app.whoop.com → More → Profile → Export Data
                   </div>
                 )}
                 {profile.wearables.includes('fitbit') && (
                   <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
-                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Fitbit:</strong> Account → Data Export → Export Account Archive
+                    <strong style={{ color: 'var(--text-primary)' }}>Fitbit:</strong> Account → Data Export → Export Account Archive
                   </div>
                 )}
                 {profile.wearables.includes('ultrahuman') && (
                   <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
-                    <strong style={{ color: 'rgba(220,255,235,.8)' }}>Ultrahuman:</strong> app → Profile → Data Export
+                    <strong style={{ color: 'var(--text-primary)' }}>Ultrahuman:</strong> app → Profile → Data Export
                   </div>
                 )}
               </div>
