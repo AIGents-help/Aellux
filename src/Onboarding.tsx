@@ -275,25 +275,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
 
         {/* ── WEIGHT & HEIGHT ── */}
         {step === 'weight_height' && (
-          <div>
-            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your biology</p>
-            <h2 style={S.heading}>Height and weight</h2>
-            <p style={S.sub}>Used for body composition calculations and protocol caloric targets. Optional — you can add this later.</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
-              <div>
-                <label style={S.label}>Height (cm)</label>
-                <input type="number" value={profile.height_cm} onChange={e => set('height_cm', e.target.value)}
-                  placeholder="e.g. 180" style={S.input} />
-              </div>
-              <div>
-                <label style={S.label}>Weight (kg)</label>
-                <input type="number" value={profile.weight_kg} onChange={e => set('weight_kg', e.target.value)}
-                  placeholder="e.g. 82" style={S.input} />
-              </div>
-            </div>
-            <NextBtn onClick={next} label="Continue →" />
-            <SkipBtn onClick={next} />
-          </div>
+          <WeightHeightStep profile={profile} set={set} next={next} />
         )}
 
         {/* ── GOAL ── */}
@@ -402,3 +384,107 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
   );
 }
 // redeploy Fri May 15 22:40:22 UTC 2026
+
+// ── WeightHeightStep ─────────────────────────────────────────────────────────
+function WeightHeightStep({ profile, set, next }: { profile: any; set: (k: string, v: any) => void; next: () => void }) {
+  const [unit, setUnit] = React.useState<'metric' | 'imperial'>('metric');
+
+  // Local display values in imperial
+  const [ftVal, setFtVal] = React.useState('');
+  const [inVal, setInVal] = React.useState('');
+  const [lbVal, setLbVal] = React.useState('');
+
+  // Convert imperial inputs → metric and store
+  const handleFtIn = (ft: string, inches: string) => {
+    setFtVal(ft); setInVal(inches);
+    const totalIn = (parseFloat(ft) || 0) * 12 + (parseFloat(inches) || 0);
+    if (totalIn > 0) set('height_cm', (totalIn * 2.54).toFixed(1));
+    else set('height_cm', '');
+  };
+
+  const handleLb = (lb: string) => {
+    setLbVal(lb);
+    const kg = (parseFloat(lb) || 0) * 0.453592;
+    if (kg > 0) set('weight_kg', kg.toFixed(1));
+    else set('weight_kg', '');
+  };
+
+  const switchToImperial = () => {
+    if (profile.height_cm) {
+      const totalIn = parseFloat(profile.height_cm) / 2.54;
+      setFtVal(Math.floor(totalIn / 12).toString());
+      setInVal(Math.round(totalIn % 12).toString());
+    }
+    if (profile.weight_kg) {
+      setLbVal((parseFloat(profile.weight_kg) * 2.20462).toFixed(1));
+    }
+    setUnit('imperial');
+  };
+
+  const pillStyle = (active: boolean) => ({
+    padding: '4px 14px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+    border: active ? '1.5px solid var(--brand-border)' : '1.5px solid var(--border-subtle)',
+    background: active ? 'var(--brand-ghost)' : 'transparent',
+    color: active ? 'var(--brand-dim)' : 'var(--text-tertiary)',
+    fontWeight: active ? 600 : 400, transition: 'all .15s',
+  } as React.CSSProperties);
+
+  return (
+    <div>
+      <p style={{ fontSize: 13, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>Your biology</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1.2, margin: 0 }}>Height and weight</h2>
+        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+          <button style={pillStyle(unit === 'metric')} onClick={() => setUnit('metric')}>Metric</button>
+          <button style={pillStyle(unit === 'imperial')} onClick={switchToImperial}>Imperial</button>
+        </div>
+      </div>
+      <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: '0 0 24px' }}>Used for body composition calculations and protocol caloric targets. Optional — you can add this later.</p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
+        {unit === 'metric' ? (
+          <>
+            <div>
+              <label style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Height (cm)</label>
+              <input type="number" value={profile.height_cm} onChange={e => set('height_cm', e.target.value)}
+                placeholder="e.g. 180" style={{ width: '100%', fontSize: 17, padding: '14px 16px', background: 'var(--bg-surface)', border: '1.5px solid var(--border-medium)', borderRadius: 10, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Weight (kg)</label>
+              <input type="number" value={profile.weight_kg} onChange={e => set('weight_kg', e.target.value)}
+                placeholder="e.g. 82" style={{ width: '100%', fontSize: 17, padding: '14px 16px', background: 'var(--bg-surface)', border: '1.5px solid var(--border-medium)', borderRadius: 10, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none' }} />
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <label style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Height</label>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <input type="number" value={ftVal} onChange={e => handleFtIn(e.target.value, inVal)}
+                    placeholder="5" style={{ width: '100%', fontSize: 17, padding: '14px 36px 14px 16px', background: 'var(--bg-surface)', border: '1.5px solid var(--border-medium)', borderRadius: 10, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none' }} />
+                  <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-tertiary)' }}>ft</span>
+                </div>
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <input type="number" value={inVal} onChange={e => handleFtIn(ftVal, e.target.value)}
+                    placeholder="10" style={{ width: '100%', fontSize: 17, padding: '14px 36px 14px 16px', background: 'var(--bg-surface)', border: '1.5px solid var(--border-medium)', borderRadius: 10, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none' }} />
+                  <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-tertiary)' }}>in</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Weight</label>
+              <div style={{ position: 'relative' }}>
+                <input type="number" value={lbVal} onChange={e => handleLb(e.target.value)}
+                  placeholder="185" style={{ width: '100%', fontSize: 17, padding: '14px 40px 14px 16px', background: 'var(--bg-surface)', border: '1.5px solid var(--border-medium)', borderRadius: 10, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none' }} />
+                <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-tertiary)' }}>lbs</span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      <NextBtn onClick={next} label="Continue →" />
+      <SkipBtn onClick={next} />
+    </div>
+  );
+}
