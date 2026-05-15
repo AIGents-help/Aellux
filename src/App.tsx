@@ -1,10 +1,6 @@
-imif (!user) {port React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
-imif (window.location.pathname === '/privacy') {
-      return <PrivacyPolicy />;
-}
-              
-                if (!user) {port { useIsMobile } from './useIsMobile';
+import { useIsMobile } from './useIsMobile';
 import { saveDocument, getDocuments, deleteDocument, savePersonalised, getPersonalised } from './supabase';
 import AuthModal from './AuthModal';
 import LandingPage from './LandingPage';
