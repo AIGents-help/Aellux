@@ -1448,6 +1448,12 @@ export default function App() {
                                   </div>
                                   <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: '0 0 6px' }}>{dance.explanation}</p>
                                   {dance.impact && <p style={{ fontSize: 14, color: 'var(--accent-watch)', lineHeight: 1.6, margin: 0, fontStyle: 'italic' }}>→ {dance.impact}</p>}
+                                  {dance.reasoning_basis && (
+                                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(0,0,0,.06)', fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.02em', lineHeight: 1.55 }}>
+                                      <span style={{ fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginRight: 6 }}>Mechanism</span>
+                                      {dance.reasoning_basis}
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -1466,6 +1472,12 @@ export default function App() {
                                     <div style={{ fontSize: 15, color: 'rgba(180,255,210,.95)', fontWeight: 500, marginBottom: 6 }}>{combat.lever}</div>
                                     <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.65, margin: '0 0 6px', fontStyle: 'italic' }}>{combat.why_it_works}</p>
                                     <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>{combat.how}</p>
+                                    {combat.reasoning_basis && (
+                                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(52,211,153,.15)', fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.02em', lineHeight: 1.55 }}>
+                                        <span style={{ fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginRight: 6 }}>Mechanism</span>
+                                        {combat.reasoning_basis}
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               ))}
@@ -1482,6 +1494,13 @@ export default function App() {
                                 <span style={{ color: 'rgba(52,211,153,.8)', flexShrink: 0 }}>✓</span> {win}
                               </div>
                             ))}
+                          </div>
+                        )}
+
+                        {/* Transparency footer — explains the "Mechanism" tags */}
+                        {(syn.system_dance?.length > 0 || syn.honest_combat?.length > 0) && (
+                          <div style={{ marginTop: 18, padding: '10px 14px', fontSize: 11, color: 'var(--text-tertiary)', lineHeight: 1.6, background: 'rgba(0,0,0,.025)', borderRadius: 6 }}>
+                            <strong style={{ color: 'var(--text-secondary)' }}>About "Mechanism" tags:</strong> Aellux names the biological pathways its reasoning is grounded in. We don't invent paper citations or DOIs — if you want primary research, search the named mechanism on PubMed or Google Scholar. This is an AI synthesis, not a clinical diagnosis.
                           </div>
                         )}
                       </div>
@@ -1888,6 +1907,12 @@ export default function App() {
                                     <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.88, margin: '16px 0 12px', fontStyle: 'italic', paddingLeft: 14, borderLeft: '2px solid var(--border-medium)' }}>{s.why}</p>
                                     {s.synergies?.length > 0 && <div style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>Synergises with: {s.synergies.join(', ')}</div>}
                                     {s.contraindications?.length > 0 && <div style={{ fontSize: 14, color: 'rgba(255,150,60,.65)', marginTop: 6 }}>⚠ {s.contraindications.join('; ')}</div>}
+                                    {s.reasoning_basis && (
+                                      <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(0,0,0,.06)', fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.02em', lineHeight: 1.55 }}>
+                                        <span style={{ fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginRight: 6 }}>Mechanism</span>
+                                        {s.reasoning_basis}
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -1974,6 +1999,12 @@ export default function App() {
                           </div>
                           <p style={{ fontSize: 15, color: 'var(--text-secondary)', margin: '0 0 4px', lineHeight: 1.7, fontStyle: 'italic' }}>{p.why}</p>
                           {p.expected_impact && <div style={{ fontSize: 14, color: 'rgba(0,200,162,.65)' }}>Expected: {p.expected_impact}</div>}
+                          {p.reasoning_basis && (
+                            <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.02em', lineHeight: 1.55 }}>
+                              <span style={{ fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginRight: 6 }}>Mechanism</span>
+                              {p.reasoning_basis}
+                            </div>
+                          )}
                         </div>
                         <div style={{ fontSize: 13, color: 'rgba(0,155,125,.48)', letterSpacing: 1, textTransform: 'uppercase', flexShrink: 0, textAlign: 'right' }}>{p.frequency}</div>
                       </div>

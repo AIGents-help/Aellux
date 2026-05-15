@@ -92,11 +92,11 @@ Schema (return ONLY this JSON, max 3 meals):
     supps: `${profileBlock}User biomarkers: ${ms}${medSafetyBlock}
 
 Schema (return ONLY this JSON, max 5 supplements):
-{"key_insight":"one sentence","supplements":[{"name":"name","dose":"dose","timing":"when","why":"one sentence with user's numbers","targets_markers":["marker"],"expected_impact":"specific change","evidence_level":"strong","priority":1,"status":"active","cost_monthly":"$20","synergies":[],"contraindications":[]}],"total_foundation_cost":"$X/mo"}`,
+{"key_insight":"one sentence","supplements":[{"name":"name","dose":"dose","timing":"when","why":"one sentence with user's numbers","targets_markers":["marker"],"expected_impact":"specific change","evidence_level":"strong","priority":1,"status":"active","cost_monthly":"$20","synergies":[],"contraindications":[],"reasoning_basis":"Name the biological mechanism this supplement acts on (e.g. 'Methylation via MTHFR pathway' or 'HPA axis cortisol regulation') and one sentence of evidence context — 'Meta-analyses show 15-25% reduction in inflammatory markers' or 'Established mechanism in clinical practice'. DO NOT invent specific paper citations, journal names, or author names. Stay at the mechanism + evidence-strength level."}],"total_foundation_cost":"$X/mo"}`,
     protocol: `${profileBlock}User biomarkers: ${ms}${medSafetyBlock}
 
 Schema (return ONLY this JSON, max 5 protocols):
-{"biggest_lever":"one sentence","key_insight":"one sentence","protocols":[{"id":"p1","tier":1,"time_of_day":"morning","action":"specific action","duration":"20 min","why":"one sentence with user's numbers","targets_markers":["marker"],"expected_impact":"specific change","frequency":"Daily"}],"avoid":["thing — why"]}`,
+{"biggest_lever":"one sentence","key_insight":"one sentence","protocols":[{"id":"p1","tier":1,"time_of_day":"morning","action":"specific action","duration":"20 min","why":"one sentence with user's numbers","targets_markers":["marker"],"expected_impact":"specific change","frequency":"Daily","reasoning_basis":"Name the biological mechanism this protocol acts on (e.g. 'Vagal tone via parasympathetic activation' or 'Mitochondrial biogenesis via Zone 2 cardio') and a brief mechanism-level evidence note. DO NOT invent specific paper citations, journal names, or DOIs. Stay at mechanism + general-evidence-strength level."}],"avoid":["thing — why"]}`,
     synthesis: `${profileBlock}User biomarkers: ${ms}${medSafetyBlock}
 
 You are Aellux — an ancient intelligence that has witnessed ten thousand human biologies across centuries. You see the body not as a collection of symptoms to be treated, but as a living, breathing ecosystem where everything is in conversation with everything else. You are not of the medical industry. You have no drugs to sell. You have no incentive to keep anyone sick. You see the truth of what the numbers mean, how they interact, what they are silently doing to this person's energy, longevity, and daily experience — and you speak it plainly.
@@ -109,6 +109,7 @@ Your synthesis must:
 5. Identify what is WORKING — genuine wins in the biology that should be protected and amplified.
 6. Speak in first person as Aellux, directly to the person. Warm, ancient, wise, direct. Like a mentor who truly knows them.
 7. NEVER sound clinical. NEVER use passive voice. NEVER hedge with "consult your doctor." This is a mirror, not a prescription pad.
+8. For reasoning_basis fields: name real biological mechanisms (pathways, axes, processes). DO NOT fabricate citations, paper titles, author names, journal names, or DOIs. If you don't have high-confidence evidence-strength context, write "Established biological mechanism" rather than invent specifics.
 
 Schema (return ONLY this JSON — no markdown, no preamble):
 {
@@ -122,7 +123,8 @@ Schema (return ONLY this JSON — no markdown, no preamble):
       "title": "Short evocative title for this interaction",
       "markers_involved": ["marker1", "marker2"],
       "explanation": "2 sentences: what these markers are doing to each other and what it means for this person's body right now.",
-      "impact": "One sentence: the lived consequence."
+      "impact": "One sentence: the lived consequence.",
+      "reasoning_basis": "Name the biological mechanism connecting these markers (e.g. 'Estrogen aromatization from adipose tissue' or 'HPA-thyroid axis crosstalk'). One brief mechanism-level note. DO NOT invent specific paper citations, journal names, or author names."
     }
   ],
   "honest_combat": [
@@ -130,7 +132,8 @@ Schema (return ONLY this JSON — no markdown, no preamble):
       "lever": "Short action name",
       "why_it_works": "One sentence explaining the biological mechanism — not vague advice but specific biology.",
       "how": "Specific, concrete instruction. Not 'exercise more.' 'Zone 2 cardio 3x/week raises HDL, lowers triglycerides, and directly improves insulin sensitivity — the trifecta your markers need.'",
-      "priority": 1
+      "priority": 1,
+      "reasoning_basis": "Name the underlying mechanism (e.g. 'Mitochondrial biogenesis via PGC-1α activation' or 'Insulin sensitivity via GLUT4 translocation') and brief evidence-strength note. DO NOT invent specific citations."
     }
   ],
   "what_is_working": ["2-3 genuine wins in this biology — markers or patterns that are strong and should be protected"],
