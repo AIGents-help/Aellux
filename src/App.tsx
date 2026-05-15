@@ -1102,7 +1102,7 @@ export default function App() {
     { id: 'upload',    label: '+ Upload Records',  count: documents.length },
     { id: 'dashboard', label: 'Health Dashboard',  count: allMarkers.length },
     { id: 'week',      label: 'Biologic Protocol'                           },
-    { id: 'tested',    label: 'Get Tested'                                  },
+    { id: 'tested',    label: 'Lab Testing'                                   },
     // Legacy — admin only
     ...(isAdmin ? [
       { id: 'protocols' as Panel, label: 'Protocols & Plans (legacy)' },
@@ -1141,7 +1141,7 @@ export default function App() {
           {panel === 'trends' && 'Health Dashboard'}
           {panel === 'protocols' && 'Protocols'}
           {panel === 'profile' && 'Profile'}
-          {panel === 'tested' && 'Get Tested'}
+          {panel === 'tested' && 'Lab Testing'}
           {panel === 'ask' && 'Ask Aellux'}
           {panel === 'meals' && 'Meal Protocol'}
           {panel === 'supps' && 'Supp Stack'}

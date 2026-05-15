@@ -492,11 +492,12 @@ export default function BiomarkerDetail({ marker, onClose, profile }: Props) {
       setLoading(true); setError(null);
       try {
         const res = await fetch('/api/biomarker-info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: marker.name, category: marker.category || '', unit: marker.unit || '', sex: sex || 'unknown', age: profile?.birth_year ? new Date().getFullYear() - profile.birth_year : null }) });
-        const data = await res.json();
+        let data: any = {};
+        try { data = await res.json(); } catch { /* non-JSON response — skip AI enrichment, use local data */ }
         if (cancelled) return;
-        if (!res.ok || data.error) setError(data.error || `Failed (${res.status})`);
+        if (data.error) setError(data.error);
         else if (data.what && data.why) setRawInfo(data);
-        else setError('Unexpected response shape.');
+        // else: silently fall through to KNOWN local data
       } catch (e: any) { if (!cancelled) setError(e?.message || 'Network error'); }
       finally { if (!cancelled) setLoading(false); }
     })();

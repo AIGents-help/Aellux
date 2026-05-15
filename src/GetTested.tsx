@@ -177,7 +177,7 @@ export default function GetTested({ userId }: Props) {
 
   return (
     <div style={S.page}>
-      <p style={S.eyebrow}>Get tested</p>
+      <p style={S.eyebrow}>Lab Testing</p>
       <h1 style={S.h1}>You need the labs first.</h1>
       <p style={S.intro}>
         Aellux is most powerful when it has the full picture of your biology — at least
@@ -214,7 +214,7 @@ export default function GetTested({ userId }: Props) {
           target="_blank"
           rel="noopener noreferrer sponsored"
           style={S.primaryBtn}
-          onClick={handleFunctionClick}
+          onClick={(e) => { window.open(FUNCTION_REFERRAL_URL, '_blank', 'noopener,noreferrer')?.scrollTo(0,0); handleFunctionClick(e); }}
           onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.opacity = '0.92'; }}
           onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.opacity = '1'; }}
         >
