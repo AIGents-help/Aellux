@@ -26,6 +26,7 @@ import PrintableReport from './PrintableReport';
 import WeekView from './WeekView';
 import DerivedViews from './DerivedViews';
 import ProfileSetup from './ProfileSetup';
+import { track, identify, resetAnalytics } from './analytics';
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -418,7 +419,12 @@ function applyMealSwaps(p: any, swaps: Record<string, string>): any {
 }
 
 export default function App() {
-  const { user, isPro, signOut } = useAuth();
+  const { user, isPro, signOut: rawSignOut } = useAuth();
+  // Reset analytics identity on sign out so a shared device doesn't merge two users' events.
+  const signOut = React.useCallback(async () => {
+    resetAnalytics();
+    return rawSignOut();
+  }, [rawSignOut]);
   const [orbState, setOrbState] = useState<OrbState>('dormant');
   const [panel, setPanel] = useState<Panel>('upload');
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -498,6 +504,15 @@ export default function App() {
       setShowAuthModal(true);
     }
   }, []);
+
+  // Tie analytics events to a real user once logged in. Anonymous events captured
+  // before login are automatically merged onto this distinct_id by PostHog.
+  // Never sends email — only opaque user id + plan flag.
+  useEffect(() => {
+    if (user?.id) {
+      identify(user.id, { plan: isPro ? 'pro' : 'free' });
+    }
+  }, [user?.id, isPro]);
 
   // Load from Supabase on mount (with localStorage fallback)
   useEffect(() => {
@@ -721,6 +736,11 @@ export default function App() {
       }
       saveDocuments(newDoc);
       saveDocumentToDb(newDoc);
+      track('document_uploaded', {
+        doc_type: newDoc.document_type || 'unknown',
+        markers_count: newDoc.markers?.length || 0,
+        is_first_doc: documents.length === 0,
+      });
       setUploadStatus(`✓ ${file.name} — extracted ${newDoc.markers.length} markers`);
       setOrbState('speaking');
       setResponse(extracted.summary || `I have extracted ${newDoc.markers.length} biomarkers from ${file.name}.`);
@@ -789,6 +809,23 @@ export default function App() {
       setPersonalised(updated);
       try { localStorage.setItem('aellux_personalised', JSON.stringify(updated)); } catch {}
       if (user?.id) savePersonalised(user.id, type, data);
+
+      // Fire generation event — separate event names per type so we can build
+      // funnels for each generation flow. The 'synthesis_generated' event is
+      // the canonical "aha moment" for funnel building.
+      const eventMap = {
+        synthesis: 'synthesis_generated',
+        protocol: 'protocol_generated',
+        supps: 'supplements_generated',
+        meals: 'meals_generated',
+      } as const;
+      const eventName = eventMap[type];
+      if (eventName) {
+        track(eventName, {
+          markers_count: allMarkers.length,
+          doc_count: documents.length,
+        });
+      }
 
       // Auto-extract and store recommendations from synthesis for accountability tracking
       if (type === 'synthesis' && data.honest_combat?.length && user?.id) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
+import { track } from './analytics';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // AuthModal — light-themed, matches LandingPage aesthetic.
@@ -78,6 +79,7 @@ export default function AuthModal({ initialView = 'signin', onClose }: Props) {
     setLoading(true); setError('');
     const result = await signIn(email.trim(), password);
     if (result?.error) setError(result.error);
+    else track('signin_completed');
     setLoading(false);
   };
 
@@ -92,6 +94,8 @@ export default function AuthModal({ initialView = 'signin', onClose }: Props) {
     if (isPro) {
       const result = await signUp(email.trim(), password);
       if (result?.error) { setError(result.error); setLoading(false); return; }
+      track('signup_completed', { plan: 'pro' });
+      track('pro_checkout_started');
       const r = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,6 +107,7 @@ export default function AuthModal({ initialView = 'signin', onClose }: Props) {
     } else {
       const result = await signUp(email.trim(), password);
       if (result?.error) setError(result.error);
+      else track('signup_completed', { plan: 'free' });
       setLoading(false);
     }
   };

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { track } from './analytics';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // GetTested.tsx — dedicated "How to get tested" panel.
@@ -25,9 +26,17 @@ interface Props {
 export default function GetTested({ userId }: Props) {
   const [clickedFunction, setClickedFunction] = useState(false);
 
+  // Fire view event once per panel visit — separate from landing_viewed
+  useEffect(() => {
+    track('get_tested_viewed');
+  }, []);
+
   // Log clicks server-side so we have an honest source of truth that doesn't
   // depend on Function/Impact's attribution dashboard.
   const trackClick = async (partner: string) => {
+    // Client-side PostHog event for funnel visibility
+    track('get_tested_partner_clicked', { partner });
+    // Server-side log into usage_log table for revenue reconciliation
     if (!userId) return;
     try {
       await fetch('/api/track-click', {
