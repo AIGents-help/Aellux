@@ -273,7 +273,7 @@ function TodayChecklist({ weekData, selectedMealKeys }: { weekData: any; selecte
 
       {day.morning && (
         <div style={{ marginBottom: 16, padding: '14px 18px', background: 'rgba(255,200,80,.04)', border: '1px solid rgba(255,200,80,.18)', borderRadius: 6 }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,210,100,.8)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>☀ Morning {day.morning.wake_time ? `· ${day.morning.wake_time}` : ''}</div>
+          <div style={{ fontSize: 12, color: 'var(--accent-watch)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>☀ Morning {day.morning.wake_time ? `· ${day.morning.wake_time}` : ''}</div>
           {day.morning.actions?.map((a: string, i: number) => <div key={i} style={{ fontSize: 16, color: 'var(--text-primary)', padding: '3px 0' }}>☐ {a}</div>)}
           {day.morning.supps_am?.map((s: string, i: number) => <div key={`s${i}`} style={{ fontSize: 16, color: 'var(--text-secondary)', padding: '3px 0' }}>☐ Take {s}</div>)}
         </div>

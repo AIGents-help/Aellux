@@ -75,12 +75,12 @@ function ChipInput({ label, values, onChange, placeholder, helpText }: { label: 
           placeholder={placeholder}
           style={{ ...fieldStyle, flex: 1 }}
         />
-        <button type="button" onClick={add} style={{ fontSize: 13, color: 'rgba(0,225,180,.95)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,225,180,.45)', borderRadius: 5, padding: '0 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Add</button>
+        <button type="button" onClick={add} style={{ fontSize: 13, color: 'var(--brand-dim)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,225,180,.45)', borderRadius: 5, padding: '0 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>Add</button>
       </div>
       {values.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {values.map((v, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, padding: '5px 10px 5px 12px', background: 'rgba(0,210,165,.08)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 14, color: 'rgba(220,255,235,.9)' }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, padding: '5px 10px 5px 12px', background: 'rgba(0,210,165,.08)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 14, color: 'var(--text-primary)' }}>
               {v}
               <button type="button" onClick={() => remove(i)} style={{ background: 'none', border: 'none', color: 'rgba(0,210,165,.5)', cursor: 'pointer', fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
             </div>
@@ -142,7 +142,7 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
 
       {/* Account */}
       <div style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 8, padding: '20px 24px', marginBottom: 18 }}>
-        <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 13, color: 'rgba(0,210,165,.8)', letterSpacing: '0.1em', marginBottom: 12, textTransform: 'uppercase' }}>Account</div>
+        <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 13, color: 'var(--text-secondary)', letterSpacing: '0.1em', marginBottom: 12, textTransform: 'uppercase' }}>Account</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%)', flexShrink: 0 }} />
           <div>
@@ -165,7 +165,7 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
         </p>
 
         {loading ? (
-          <div style={{ padding: '20px 0', color: 'rgba(0,210,165,.55)', fontSize: 13 }}>Loading profile…</div>
+          <div style={{ padding: '20px 0', color: 'var(--text-tertiary)', fontSize: 13 }}>Loading profile…</div>
         ) : (
           <>
             {/* Tier 1: essentials */}
@@ -195,14 +195,14 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
 
             {/* Body composition (optional) */}
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 13, color: 'rgba(0,225,180,.75)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10, paddingTop: 6, borderTop: '1px solid rgba(0,210,165,.1)' }}>Body Composition <span style={{ fontSize: 12, color: 'rgba(0,210,165,.45)', letterSpacing: 0, textTransform: 'none' }}>(optional — improves protocol accuracy)</span></div>
+              <div style={{ fontSize: 13, color: 'rgba(0,225,180,.75)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10, paddingTop: 6, borderTop: '1px solid rgba(0,210,165,.1)' }}>Body Composition <span style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: 0, textTransform: 'none' }}>(optional — improves protocol accuracy)</span></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={labelStyle}>Body fat % <span style={{ color: 'rgba(0,210,165,.4)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>from DEXA or calipers</span></label>
+                  <label style={labelStyle}>Body fat % <span style={{ color: 'var(--text-tertiary)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>from DEXA or calipers</span></label>
                   <input type="number" step="0.1" min="3" max="60" value={profile?.body_fat_pct || ''} onChange={e => update('body_fat_pct', e.target.value ? parseFloat(e.target.value) : null)} placeholder="e.g. 22.5" style={fieldStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Lean mass (kg) <span style={{ color: 'rgba(0,210,165,.4)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>from DEXA</span></label>
+                  <label style={labelStyle}>Lean mass (kg) <span style={{ color: 'var(--text-tertiary)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>from DEXA</span></label>
                   <input type="number" step="0.1" value={profile?.lean_mass_kg || ''} onChange={e => update('lean_mass_kg', e.target.value ? parseFloat(e.target.value) : null)} placeholder="e.g. 65.2" style={fieldStyle} />
                 </div>
                 <div>
@@ -210,15 +210,15 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
                   <input type="number" step="0.1" value={profile?.waist_cm || ''} onChange={e => update('waist_cm', e.target.value ? parseFloat(e.target.value) : null)} placeholder="e.g. 88" style={fieldStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Visceral fat rating <span style={{ color: 'rgba(0,210,165,.4)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>1–59 scale</span></label>
+                  <label style={labelStyle}>Visceral fat rating <span style={{ color: 'var(--text-tertiary)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>1–59 scale</span></label>
                   <input type="number" step="1" min="1" max="59" value={profile?.visceral_fat || ''} onChange={e => update('visceral_fat', e.target.value ? parseInt(e.target.value) : null)} placeholder="e.g. 8" style={fieldStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Bone density T-score <span style={{ color: 'rgba(0,210,165,.4)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>from DEXA</span></label>
+                  <label style={labelStyle}>Bone density T-score <span style={{ color: 'var(--text-tertiary)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>from DEXA</span></label>
                   <input type="number" step="0.1" min="-4" max="4" value={profile?.bone_density_tscore || ''} onChange={e => update('bone_density_tscore', e.target.value ? parseFloat(e.target.value) : null)} placeholder="e.g. -0.5" style={fieldStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>VO₂ max <span style={{ color: 'rgba(0,210,165,.4)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>ml/kg/min</span></label>
+                  <label style={labelStyle}>VO₂ max <span style={{ color: 'var(--text-tertiary)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>ml/kg/min</span></label>
                   <input type="number" step="0.1" value={profile?.vo2_max || ''} onChange={e => update('vo2_max', e.target.value ? parseFloat(e.target.value) : null)} placeholder="e.g. 42.5" style={fieldStyle} />
                 </div>
               </div>
@@ -308,7 +308,7 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
             )}
 
             <button onClick={handleSave} disabled={saving}
-              style={{ width: '100%', marginTop: 14, fontSize: 14, color: 'rgba(0,255,200,1)', background: 'rgba(0,195,155,.16)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 5, padding: '11px 0', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em' }}>
+              style={{ width: '100%', marginTop: 14, fontSize: 14, color: 'var(--brand)', background: 'rgba(0,195,155,.16)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 5, padding: '11px 0', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em' }}>
               {saving ? 'Saving…' : 'Save health profile'}
             </button>
           </>
@@ -317,7 +317,7 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
 
       {/* Stats */}
       <div style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 8, padding: '20px 24px', marginBottom: 18 }}>
-        <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 12, color: 'rgba(0,210,165,.55)', letterSpacing: '0.1em', marginBottom: 14, textTransform: 'uppercase' }}>Activity</div>
+        <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.1em', marginBottom: 14, textTransform: 'uppercase' }}>Activity</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
           {[
             { label: 'Documents', value: documents.length },

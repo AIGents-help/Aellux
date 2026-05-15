@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 
 interface Pattern {
-  type: 'seasonal' | 'correlated' | 'triggered' | 'supplement';
+  type: 'seasonal' | 'correlated' | 'triggered' | 'supplement' | 'elevated' | 'suppressed' | 'pattern';
   title: string;
   markers: string[];
   finding: string;
@@ -16,10 +16,13 @@ interface Props {
 }
 
 const TYPE_CONFIG = {
-  seasonal:   { color: 'var(--accent-watch)', label: 'Seasonal', icon: '◐' },
-  correlated: { color: 'var(--accent-optimal)', label: 'Correlated', icon: '⟺' },
-  triggered:  { color: 'var(--accent-elevated)', label: 'Triggered', icon: '→' },
-  supplement: { color: '#818cf8', label: 'Supplement Effect', icon: '◈' },
+  seasonal:   { color: 'var(--accent-watch)',    label: 'Seasonal Shift',      icon: '◐' },
+  correlated: { color: 'var(--accent-optimal)',  label: 'Marker Interaction',  icon: '⟺' },
+  triggered:  { color: 'var(--accent-elevated)', label: 'Triggered Change',    icon: '→' },
+  supplement: { color: '#6366f1',                label: 'Supplement Effect',   icon: '◈' },
+  elevated:   { color: 'var(--accent-elevated)', label: 'Elevated & Linked',   icon: '↑' },
+  suppressed: { color: 'var(--accent-watch)',    label: 'Suppressed & Linked', icon: '↓' },
+  pattern:    { color: 'var(--accent-optimal)',  label: 'System Pattern',      icon: '◎' },
 };
 
 export default function PatternInsights({ patterns, loading, onRefresh }: Props) {
@@ -29,7 +32,7 @@ export default function PatternInsights({ patterns, loading, onRefresh }: Props)
     return (
       <div style={{ padding: '20px 0' }}>
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 14 }}>Pattern Intelligence</div>
-        <div style={{ fontSize: 14, color: 'var(--text-tertiary)', fontStyle: 'italic' }}>Aellux is scanning your biological history for patterns…</div>
+        <div style={{ fontSize: 14, color: 'var(--text-tertiary)', fontStyle: 'italic' }}>Aellux is scanning your biology for patterns…</div>
       </div>
     );
   }
@@ -39,7 +42,7 @@ export default function PatternInsights({ patterns, loading, onRefresh }: Props)
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <div>
           <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>Pattern Intelligence</div>
-          <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>Seasonal shifts, correlated markers, supplement effects</div>
+          <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>Cross-marker interactions Aellux detected in your biology</div>
         </div>
         {onRefresh && (
           <button onClick={onRefresh} style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 4, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -49,8 +52,18 @@ export default function PatternInsights({ patterns, loading, onRefresh }: Props)
       </div>
 
       {!patterns.length ? (
-        <div style={{ padding: '16px 18px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, fontSize: 14, color: 'var(--text-tertiary)', lineHeight: 1.7 }}>
-          Patterns emerge with more data. Upload labs from multiple dates and Aellux will detect seasonal shifts, correlations between markers, and supplement effects across your biological timeline.
+        <div style={{ padding: '18px 20px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, lineHeight: 1.7 }}>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8 }}>
+            No cross-marker patterns detected yet.
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>
+            Upload additional lab panels — especially from different dates — and Aellux will automatically detect seasonal shifts, hormone cascades, and supplement effects across your biology.
+          </div>
+          {onRefresh && (
+            <button onClick={onRefresh} style={{ marginTop: 14, fontSize: 13, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 5, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
+              Run pattern scan now →
+            </button>
+          )}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

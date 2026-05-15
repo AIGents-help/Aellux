@@ -1,9 +1,9 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 
-interface Props { userId?: string; chronologicalAge?: number; currentBioAge?: string; }
+interface Props { userId?: string; chronologicalAge?: number; currentBioAge?: string; onGenerate?: () => void; }
 
-export default function BiologicalAgeChart({ userId, chronologicalAge, currentBioAge }: Props) {
+export default function BiologicalAgeChart({ userId, chronologicalAge, currentBioAge, onGenerate }: Props) {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -90,8 +90,16 @@ export default function BiologicalAgeChart({ userId, chronologicalAge, currentBi
           </div>
         </div>
       ) : (
-        <div style={{ padding: '14px 16px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 8, fontSize: 14, color: 'var(--text-secondary)' }}>
-          Generate your Biologic Synthesis again to add another data point. Once you have 2+ readings, your biological age trajectory will appear here.
+        <div style={{ padding: '14px 16px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 8, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+          To track your biological age over time, you need 2+ readings.{' '}
+          {onGenerate ? (
+            <button onClick={onGenerate} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, color: 'var(--brand-dim)', fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              Run a new Biologic Synthesis →
+            </button>
+          ) : (
+            <span style={{ color: 'var(--text-tertiary)' }}>Run a new Biologic Synthesis from the Intelligence tab.</span>
+          )}
+          {' '}Once you have 2+ readings, your biological age trajectory will appear here.
         </div>
       )}
     </div>

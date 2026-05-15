@@ -1,1 +1,28 @@
-/* Light theme active — readability overrides not required */
+/* AELLUX READABILITY v6 — light theme contrast enforcement */
+
+/* Onboarding option cards */
+button[style*="borderRadius: 10"],
+button[style*="borderRadius:10"] {
+  color: var(--text-primary) !important;
+}
+
+/* Teal body text → readable */
+p[style*="rgba(0,210,165,.78)"],
+p[style*="rgba(0,210,165,0.78)"] { color: var(--text-secondary) !important; }
+
+div[style*="rgba(0,225,180,.65)"],
+div[style*="rgba(0,225,180,0.65)"] { color: var(--text-tertiary) !important; }
+
+span[style*="rgba(52,211,153,.8)"],
+span[style*="rgba(52,211,153,0.8)"] { color: var(--accent-optimal) !important; }
+
+div[style*="rgba(52,211,153,.9)"],
+div[style*="rgba(52,211,153,0.9)"] { color: var(--accent-optimal) !important; }
+
+button[style*="rgba(0,210,165,.95)"],
+button[style*="rgba(0,210,165,0.95)"] { color: var(--brand-dim) !important; }
+
+/* Body text minimum */
+p[style*="fontSize: 15"][style*="text-tertiary"],
+p[style*="fontSize: 16"][style*="text-tertiary"],
+p[style*="fontSize: 14"][style*="text-tertiary"] { color: var(--text-secondary) !important; }

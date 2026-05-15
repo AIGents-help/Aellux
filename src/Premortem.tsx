@@ -128,7 +128,7 @@ export default function Premortem({ userId, plan, allMarkers, profile }: Props) 
                           </div>
                           <div style={{ marginBottom: 14 }}>
                             <div style={{ fontSize: 11, color: 'var(--accent-watch)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>You may already be feeling</div>
-                            <p style={{ fontSize: 15, color: 'rgba(255,220,140,.88)', lineHeight: 1.7, margin: 0, fontWeight: 300 }}>{s.warning_signs}</p>
+                            <p style={{ fontSize: 15, color: 'var(--accent-watch)', lineHeight: 1.7, margin: 0, fontWeight: 300 }}>{s.warning_signs}</p>
                           </div>
                           <div style={{ padding: '14px 16px', background: 'rgba(52,211,153,.06)', border: '1px solid rgba(52,211,153,.2)', borderRadius: 7, marginBottom: 12 }}>
                             <div style={{ fontSize: 11, color: 'rgba(52,211,153,.8)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>The intervention that changes this</div>

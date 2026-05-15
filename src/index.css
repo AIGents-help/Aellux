@@ -17,8 +17,8 @@
 
   /* Text */
   --text-primary:   #0f1a0f;
-  --text-secondary: #1e321e;
-  --text-tertiary:  #3d5a3d;
+  --text-secondary: #1a2e1a;
+  --text-tertiary:  #3a4a3a;
   --text-inverse:   #ffffff;
 
   /* Brand — deep forest green */
@@ -28,9 +28,9 @@
   --brand-border:   rgba(3,26,13,.22);
 
   /* Accent — for data, alerts, highlights */
-  --accent-elevated: #7f1d1d;
-  --accent-optimal:  #14532d;
-  --accent-watch:    #78350f;
+  --accent-elevated: #991b1b;
+  --accent-optimal:  #166534;
+  --accent-watch:    #92400e;
   --accent-info:     #1e3a5f;
 
   /* Shadows */

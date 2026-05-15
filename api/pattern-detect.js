@@ -35,18 +35,23 @@ export default async function handler(req) {
         .join(' → '),
     }));
 
-  if (!markersWithHistory.length) return json({ patterns: [] });
+  const hasTimeline = markersWithHistory.length > 0;
 
-  const markerStr = markersWithHistory
-    .slice(0, 15)
-    .map(m => `${m.name} (${m.unit}): ${m.readings}`)
-    .join('\n');
+  const markerStr = hasTimeline
+    ? markersWithHistory.slice(0, 15).map(m => `${m.name} (${m.unit}): ${m.readings}`).join('\n')
+    : allMarkers.slice(0, 25).map(m => {
+        const status = m.status ? ` [${m.status}]` : '';
+        const ref = m.reference_range_low && m.reference_range_high
+          ? ` ref:${m.reference_range_low}-${m.reference_range_high}` : '';
+        return `${m.name}: ${m.value}${m.unit ? ' ' + m.unit : ''}${ref}${status}`;
+      }).join('\n');
 
   const supplementStr = supplements?.length
     ? `\nSUPPLEMENTS/MEDICATIONS LOGGED:\n${supplements.map(s => `${s.name} ${s.dose || ''} started ${s.started_date || 'unknown'}`).join(', ')}`
     : '';
 
-  const prompt = `You are Aellux — an ancient intelligence that reads biological patterns across time. Analyze this person's complete marker history and identify meaningful patterns.
+  const prompt = hasTimeline
+    ? `You are Aellux — an ancient intelligence that reads biological patterns across time. Analyze this person's complete marker history and identify meaningful patterns.
 
 USER PROFILE: ${profileCtx || 'Not provided'}
 
@@ -68,6 +73,31 @@ Return ONLY valid JSON, no markdown, no commentary:
       "markers": ["marker1", "marker2"],
       "finding": "2-3 sentences: what you found, the mechanism, and what it means for this person. Plain prose, no markdown.",
       "action": "One specific thing they can do about this pattern."
+    }
+  ]
+}`
+    : `You are Aellux — an ancient intelligence that reads biological systems. Analyze this person's current biomarker snapshot and identify the most important cross-marker interactions and cascades.
+
+USER PROFILE: ${profileCtx || 'Not provided'}
+
+CURRENT BIOMARKERS (value, reference range, status):
+${markerStr}${supplementStr}
+
+Identify up to 4 of the most clinically significant cross-marker patterns. Do NOT describe single markers in isolation — find the interactions and cascades between markers. Look for:
+- CORRELATED: two markers whose values interact biologically — one driving the other
+- ELEVATED: a marker above range and which other markers explain the upstream cause
+- SUPPRESSED: a marker below range and which other markers reveal the driver
+- PATTERN: a cluster of related markers all pointing in the same biological direction
+
+Return ONLY valid JSON, no markdown, no commentary:
+{
+  "patterns": [
+    {
+      "type": "correlated|elevated|suppressed|pattern",
+      "title": "Short title naming the interaction (e.g. 'Elevated Estrogen Suppressing Free Testosterone')",
+      "markers": ["marker1", "marker2"],
+      "finding": "2-3 sentences: the interaction, the biological mechanism, and what it means for this person specifically. Plain prose, no markdown.",
+      "action": "One specific actionable step to address this pattern."
     }
   ]
 }`;
