@@ -1168,7 +1168,8 @@ export default function App() {
     { id: 'upload',    label: '+ Upload Records',  count: documents.length },
     { id: 'dashboard', label: 'Health Dashboard',  count: allMarkers.length },
     { id: 'week',      label: 'Biologic Protocol'                           },
-    { id: 'tested',    label: 'Lab Testing'                                   },
+    { id: 'intelligence', label: 'Intelligent Consult'                      },
+    { id: 'tested',    label: 'Lab Testing'                                 },
     // Legacy — admin only
     ...(isAdmin ? [
       { id: 'protocols' as Panel, label: 'Protocols & Plans (legacy)' },
@@ -1204,6 +1205,7 @@ export default function App() {
           {panel === 'upload' && 'Upload'}
           {panel === 'dashboard' && 'Dashboard'}
           {panel === 'week' && 'Biologic Protocol'}
+          {panel === 'intelligence' && 'Intelligent Consult'}
           {panel === 'trends' && 'Health Dashboard'}
           {panel === 'protocols' && 'Protocols'}
           {panel === 'profile' && 'Profile'}
@@ -1226,7 +1228,15 @@ export default function App() {
 
         <div style={{ width: '100%', padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 18 }}>
           {NAV.map(({ id, label, count }) => (
-            <button key={id} className={`aellux-nav-item ${panel === id ? 'active' : ''}`} onClick={() => { setPanel(id); setDrawerOpen(false); }}>
+            <button key={id} className={`aellux-nav-item ${panel === id ? 'active' : ''}`} onClick={() => {
+              setPanel(id); setDrawerOpen(false);
+              if (id === 'intelligence' && !patternsLoaded && allMarkers.length > 0) {
+                setPatternsLoading(true);
+                const profileCtx = profile ? [profile.biological_sex && `sex: ${profile.biological_sex}`, profile.birth_year && `age: ${new Date().getFullYear() - profile.birth_year}`, profile.goal && `goal: ${profile.goal}`].filter(Boolean).join(', ') : '';
+                fetch('/api/pattern-detect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user?.id, plan: isPro ? 'pro' : 'free', allMarkers, profileCtx }) })
+                  .then(r => r.json()).then(d => { setPatterns(d.patterns || []); setPatternsLoaded(true); setPatternsLoading(false); }).catch(() => setPatternsLoading(false));
+              }
+            }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: panel === id ? 'var(--brand-dim)' : 'rgba(0,130,105,.3)', flexShrink: 0, display: 'inline-block' }} />
               <span style={{ flex: 1 }}>{label}</span>
               {count !== undefined && count > 0 && (
@@ -2145,6 +2155,67 @@ export default function App() {
           {panel === 'protocols' && (
             <div>
               <ProtocolsSection markers={allMarkers} />
+            </div>
+          )}
+
+          {/* ── INTELLIGENT CONSULT ── */}
+          {panel === 'intelligence' && (
+            <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 0' }}>
+              <BodyHero personalised={personalised} />
+              <div style={{ marginTop: 24 }}>
+                {/* Synthesis card */}
+                {personalised.synthesis && (() => {
+                  const syn = personalised.synthesis;
+                  return (
+                    <div style={{ padding: '22px 26px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderLeft: '3px solid var(--brand-dim)', borderRadius: 8, marginBottom: 14 }}>
+                      <div style={{ fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 8 }}>Aellux Synthesis</div>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.85, margin: 0, fontWeight: 300 }}>{syn.aellux_voice}</p>
+                      {syn.focus_priority && (
+                        <div style={{ marginTop: 14, padding: '10px 14px', background: 'var(--bg-sunken)', borderRadius: 6 }}>
+                          <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 4 }}>Your focus this week</div>
+                          <div style={{ fontSize: 15, color: 'var(--accent-watch)', lineHeight: 1.5, fontWeight: 500 }}>{syn.focus_priority}</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+                {!personalised.synthesis && allMarkers.length > 0 && (
+                  <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                    <button onClick={() => generatePersonalised('synthesis')} disabled={generatingType === 'synthesis'}
+                      style={{ fontSize: 15, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                      {generatingType === 'synthesis' ? 'Synthesising...' : 'Generate Intelligent Consult →'}
+                    </button>
+                  </div>
+                )}
+                <BiologicalAgeChart
+                  userId={user?.id}
+                  chronologicalAge={profile?.birth_year ? new Date().getFullYear() - profile.birth_year : undefined}
+                  currentBioAge={personalised.synthesis?.biological_age_estimate?.replace(/[^\d.]/g, '')}
+                  onGenerate={() => generatePersonalised('synthesis')}
+                />
+                <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
+                <Premortem userId={user?.id} plan={isPro ? 'pro' : 'free'} allMarkers={allMarkers} profile={profile} />
+                <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
+                <PatternInsights
+                  patterns={patterns}
+                  loading={patternsLoading}
+                  onRefresh={() => {
+                    setPatternsLoaded(false); setPatternsLoading(true);
+                    const profileCtx = profile ? [profile.biological_sex && `sex: ${profile.biological_sex}`, profile.birth_year && `age: ${new Date().getFullYear() - profile.birth_year}`, profile.goal && `goal: ${profile.goal}`].filter(Boolean).join(', ') : '';
+                    fetch('/api/pattern-detect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user?.id, plan: isPro ? 'pro' : 'free', allMarkers, profileCtx }) })
+                      .then(r => r.json()).then(d => { setPatterns(d.patterns || []); setPatternsLoaded(true); setPatternsLoading(false); }).catch(() => setPatternsLoading(false));
+                  }}
+                />
+                <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
+                <SupplementLog userId={user?.id} allMarkers={allMarkers} />
+                <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
+                <PractitionerShare userId={user?.id} isPro={isPro} />
+                <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
+                <div>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>Accountability</div>
+                  <Accountability userId={user?.id} plan={isPro ? 'pro' : 'free'} />
+                </div>
+              </div>
             </div>
           )}
 
