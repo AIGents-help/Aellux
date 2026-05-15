@@ -11,7 +11,7 @@ interface Props {
 
 const MOTIVATIONS = [
   { id: 'prevent',      label: 'I want to stay on top of my health and prevent problems before they start' },
-  { id: 'understand',   label: "I want to understand what's causing health issues I'm already experiencing" },
+  { id: 'understand',   label: "I want to understand what's causing heahhflth issues I'm already experiencing" },
   { id: 'optimize',     label: 'I want to optimize my performance and longevity beyond what feels normal' },
   { id: 'missed',       label: "I'm looking for reassurance that nothing serious is being missed" },
   { id: 'protocol',     label: 'I want a specific, personalized protocol — not generic advice' },
@@ -98,7 +98,7 @@ function OptionList({ options, selected, onSelect, multi = false }: { options: a
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {options.map(opt => (
         <button key={opt.id} onClick={() => onSelect(opt.id)}
-          style={{ padding: '16px 18px', background: isSelected(opt.id) ? 'var(--brand-ghost)' : 'var(--bg-sunken)', border: `1.5px solid ${isSelected(opt.id) ? 'var(--brand-border)' : 'var(--border-subtle)'}`, borderRadius: 10, color: isSelected(opt.id) ? 'var(--text-primary)' : 'rgba(220,255,235,.65)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'all .15s', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          style={{ padding: '16px 18px', background: isSelected(opt.id) ? 'var(--brand-ghost)' : 'var(--bg-sunken)', border: `1.5px solid ${isSelected(opt.id) ? 'var(--brand-border)' : 'var(--border-subtle)'}`, borderRadius: 10, color: 'var(--text-primary)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'all .15s', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
             <div style={{ lineHeight: 1.4 }}>{opt.label}</div>
             {opt.sub && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 3 }}>{opt.sub}</div>}
@@ -236,7 +236,7 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
               {['male', 'female'].map(s => (
                 <button key={s} onClick={() => set('biological_sex', s)}
-                  style={{ padding: '18px', background: profile.biological_sex === s ? 'var(--brand-ghost)' : 'var(--bg-sunken)', border: `1.5px solid ${profile.biological_sex === s ? 'var(--brand-border)' : 'var(--border-subtle)'}`, borderRadius: 10, color: profile.biological_sex === s ? 'var(--text-primary)' : 'rgba(220,255,235,.65)', fontSize: 17, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', textTransform: 'capitalize', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  style={{ padding: '18px', background: profile.biological_sex === s ? 'var(--brand-ghost)' : 'var(--bg-sunken)', border: `1.5px solid ${profile.biological_sex === s ? 'var(--brand-border)' : 'var(--border-subtle)'}`, borderRadius: 10, color: 'var(--text-primary)', fontSize: 17, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', textTransform: 'capitalize', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   {s}
                   {profile.biological_sex === s && <span style={{ color: 'var(--brand)' }}>✓</span>}
                 </button>
