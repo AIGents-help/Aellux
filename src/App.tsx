@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useAuth } from './useAuth';
 import { useIsMobile } from './useIsMobile';
 import { saveDocument, getDocuments, deleteDocument, savePersonalised, getPersonalised } from './supabase';
-import AuthPaywall from './AuthPaywall';
+import AuthModal from './AuthModal';
 import LandingPage from './LandingPage';
 import ProtocolsSection from './ProtocolsSection';
 import ProfilePage from './ProfilePage';
@@ -486,6 +486,17 @@ export default function App() {
   const [dragOver, setDragOver] = useState(false);
   const [activeMarkerKeys, setActiveMarkerKeys] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-open the auth modal in reset-password mode if the URL has a reset_token.
+  // The token itself is consumed by AuthModal's own useEffect — we just need to
+  // make sure the modal is open so its useEffect runs.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('reset_token') && params.get('email')) {
+      setAuthModalView('signin'); // AuthModal will override to 'reset' on its mount
+      setShowAuthModal(true);
+    }
+  }, []);
 
   // Load from Supabase on mount (with localStorage fallback)
   useEffect(() => {
@@ -1009,11 +1020,23 @@ export default function App() {
       <>
         <LandingPage onAuth={(variant) => { setAuthModalView(variant || 'signin'); setShowAuthModal(true); }} />
         {showAuthModal && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,8,18,0.92)', backdropFilter: 'blur(8px)', overflowY: 'auto', padding: '40px 20px' }}
-            onClick={() => setShowAuthModal(false)}>
-            <div onClick={e => e.stopPropagation()} style={{ maxWidth: 480, width: '100%' }}>
-              <AuthPaywall initialView={authModalView} />
+          <div
+            style={{
+              position: 'fixed', inset: 0, zIndex: 9999,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(15,26,15,0.55)', backdropFilter: 'blur(6px)',
+              overflowY: 'auto', padding: '40px 20px',
+              animation: 'fadeIn .2s ease',
+            }}
+            onClick={() => setShowAuthModal(false)}
+          >
+            <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 420, animation: 'slideUp .3s cubic-bezier(.16,1,.3,1)' }}>
+              <AuthModal initialView={authModalView} onClose={() => setShowAuthModal(false)} />
             </div>
+            <style>{`
+              @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+              @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            `}</style>
           </div>
         )}
       </>
