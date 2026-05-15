@@ -1,6 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+imif (!user) {port React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
-import { useIsMobile } from './useIsMobile';
+imif (window.location.pathname === '/privacy') {
+      return <PrivacyPolicy />;
+}
+              
+                if (!user) {port { useIsMobile } from './useIsMobile';
 import { saveDocument, getDocuments, deleteDocument, savePersonalised, getPersonalised } from './supabase';
 import AuthModal from './AuthModal';
 import LandingPage from './LandingPage';
@@ -19,6 +23,7 @@ import Accountability from './Accountability';
 import Premortem from './Premortem';
 import RecordsGuide from './RecordsGuide';
 import Onboarding from './Onboarding';
+import PrivacyPolicy from './PrivacyPolicy';
 import EmptyDashboard from './EmptyDashboard';
 import GetTested from './GetTested';
 import AdminDashboard from './AdminDashboard';
@@ -1057,7 +1062,7 @@ export default function App() {
     setAsking(false);
   }, [input, asking, allMarkers, documents.length]);
 
-  if (!user) {
+  if (window.location.pathname === '/privacy') {    return <PrivacyPolicy />;
     return (
       <>
         <LandingPage onAuth={(variant) => { setAuthModalView(variant || 'signin'); setShowAuthModal(true); }} />
