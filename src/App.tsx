@@ -310,6 +310,10 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = React.useState(false);
   const { user } = useAuth();
 
+  const [billingPlan, setBillingPlan] = React.useState<'monthly' | 'annual'>('annual');
+  const [giftMode, setGiftMode] = React.useState(false);
+  const [giftEmail, setGiftEmail] = React.useState('');
+
   const handleUpgrade = async () => {
     const e = user?.email || email;
     if (!e) return;
@@ -317,7 +321,7 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: e }),
+        body: JSON.stringify({ email: e, plan: billingPlan, gift: giftMode, giftEmail: giftMode ? giftEmail : undefined }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -325,28 +329,90 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
     setLoading(false);
   };
 
+  const monthlyPrice = 29;
+  const annualPrice = 249;
+  const annualSaving = Math.round((monthlyPrice * 12 - annualPrice));
+
+  const pillStyle = (active: boolean) => ({
+    flex: 1, padding: '8px 0', fontSize: 14, fontFamily: 'inherit', cursor: 'pointer', border: 'none',
+    borderRadius: 6, fontWeight: active ? 600 : 400, transition: 'all .15s',
+    background: active ? 'var(--brand-dim)' : 'transparent',
+    color: active ? '#fff' : 'var(--text-secondary)',
+  } as React.CSSProperties);
+
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,8,16,.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 10, padding: '40px 36px', maxWidth: 440, width: '90%', textAlign: 'center' }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>✦</div>
-        <h2 style={{ fontSize: 26, color: 'rgba(0,215,172,.95)', fontWeight: 400, margin: '0 0 12px' }}>Aellux Pro</h2>
-        <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.75, marginBottom: 28 }}>
-          Unlock AI-generated meal protocols, supplement stacks, daily protocols, and unlimited Aellux conversations — all personalised to your actual biomarkers.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
-          {['Personalised meal protocol from your markers', 'Supplement stack with full dosing rationale', 'Daily protocol ranked by biomarker impact', 'Unlimited AI conversations with your data'].map(f => (
-            <div key={f} style={{ fontSize: 15, color: 'rgba(0,205,165,.82)', textAlign: 'left', display: 'flex', gap: 10 }}>
-              <span style={{ color: 'var(--text-secondary)' }}>✦</span>{f}
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,26,15,.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 12, padding: '36px 32px', maxWidth: 460, width: '100%' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+          <div>
+            <h2 style={{ fontSize: 24, color: 'var(--text-primary)', fontWeight: 600, margin: '0 0 4px', fontFamily: 'var(--font-display)' }}>Aellux Pro</h2>
+            <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: 0 }}>Personalised to your exact biology</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--text-tertiary)', padding: 0, lineHeight: 1 }}>×</button>
+        </div>
+
+        {/* Gift / Self toggle */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          <button onClick={() => setGiftMode(false)} style={{ ...pillStyle(!giftMode), flex: 1, border: `1px solid ${!giftMode ? 'var(--brand-dim)' : 'var(--border-subtle)'}` }}>
+            For myself
+          </button>
+          <button onClick={() => setGiftMode(true)} style={{ ...pillStyle(giftMode), flex: 1, border: `1px solid ${giftMode ? 'var(--brand-dim)' : 'var(--border-subtle)'}` }}>
+            🎁 Gift to someone
+          </button>
+        </div>
+
+        {giftMode && (
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Recipient's email</label>
+            <input value={giftEmail} onChange={e => setGiftEmail(e.target.value)} placeholder="their@email.com"
+              style={{ width: '100%', fontSize: 15, padding: '10px 14px', border: '1px solid var(--border-medium)', borderRadius: 8, fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--bg-sunken)', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+        )}
+
+        {/* Billing toggle */}
+        <div style={{ background: 'var(--bg-sunken)', borderRadius: 8, padding: 4, display: 'flex', gap: 4, marginBottom: 20 }}>
+          <button onClick={() => setBillingPlan('monthly')} style={pillStyle(billingPlan === 'monthly')}>Monthly</button>
+          <button onClick={() => setBillingPlan('annual')} style={{ ...pillStyle(billingPlan === 'annual'), position: 'relative' as const }}>
+            Annual
+            <span style={{ marginLeft: 6, fontSize: 11, background: '#d1fae5', color: '#065f46', padding: '2px 6px', borderRadius: 10, fontWeight: 700 }}>
+              Save ${annualSaving}
+            </span>
+          </button>
+        </div>
+
+        {/* Price display */}
+        <div style={{ textAlign: 'center', marginBottom: 20, padding: '16px', background: 'var(--bg-sunken)', borderRadius: 8 }}>
+          {billingPlan === 'monthly' ? (
+            <>
+              <span style={{ fontSize: 40, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>$29</span>
+              <span style={{ fontSize: 16, color: 'var(--text-tertiary)' }}>/month</span>
+              <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4 }}>Billed monthly · Cancel anytime</div>
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: 40, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>$249</span>
+              <span style={{ fontSize: 16, color: 'var(--text-tertiary)' }}>/year</span>
+              <div style={{ fontSize: 13, color: '#166534', marginTop: 4, fontWeight: 500 }}>= $20.75/mo · You save ${annualSaving} vs monthly</div>
+            </>
+          )}
+        </div>
+
+        {/* Features */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+          {['Personalised meal protocol from your markers', 'Supplement stack with full dosing rationale', 'Daily protocol ranked by biomarker impact', 'Unlimited AI conversations with your data', 'PDF exports for all protocols'].map(f => (
+            <div key={f} style={{ fontSize: 14, color: 'var(--text-secondary)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ color: '#166534', flexShrink: 0, marginTop: 1 }}>✓</span>{f}
             </div>
           ))}
         </div>
-        <div style={{ fontSize: 32, color: 'var(--brand)', marginBottom: 6, fontWeight: 400 }}>$29<span style={{ fontSize: 16, color: 'var(--text-tertiary)', fontWeight: 400 }}>/month</span></div>
-        <div style={{ fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 24 }}>Cancel anytime · Powered by Stripe</div>
-        <button onClick={handleUpgrade} disabled={loading}
-          style={{ width: '100%', fontSize: 17, color: '#020810', background: 'rgba(0,200,160,.88)', border: 'none', borderRadius: 5, padding: '14px 0', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500, marginBottom: 12 }}>
-          {loading ? 'Opening Stripe...' : 'Upgrade to Pro →'}
+
+        <button onClick={handleUpgrade} disabled={loading || (giftMode && !giftEmail)}
+          style={{ width: '100%', fontSize: 16, color: '#fff', background: (loading || (giftMode && !giftEmail)) ? 'var(--text-tertiary)' : '#1a4731', border: 'none', borderRadius: 8, padding: '14px 0', cursor: (loading || (giftMode && !giftEmail)) ? 'default' : 'pointer', fontFamily: 'inherit', fontWeight: 600, marginBottom: 10 }}>
+          {loading ? 'Opening Stripe...' : giftMode ? `Gift Aellux Pro (${billingPlan}) →` : `Upgrade to Pro →`}
         </button>
-        <button onClick={onClose} style={{ fontSize: 14, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Maybe later</button>
+        <div style={{ fontSize: 12, color: 'var(--text-tertiary)', textAlign: 'center' }}>Powered by Stripe · Secure checkout</div>
       </div>
     </div>
   );

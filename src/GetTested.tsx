@@ -233,6 +233,32 @@ export default function GetTested({ userId }: Props) {
         </div>
       </div>
 
+      {/* ─── GIFT FUNCTION HEALTH ──────────────────────────────────────── */}
+      <div style={{ ...S.secondaryCard, marginTop: 16, border: '1px solid var(--border-medium)', borderRadius: 10, padding: '24px 28px', background: 'var(--bg-surface)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+          <span style={{ fontSize: 28 }}>🎁</span>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Gift a Function Health membership</div>
+            <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 2 }}>Give someone the full picture of their biology</div>
+          </div>
+        </div>
+        <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 18 }}>
+          Function Health memberships make exceptional gifts — 160+ lab tests, twice yearly, with physician-reviewed results. Available as a one-year digital gift. No shipping needed, delivered instantly by email.
+        </p>
+        <a
+          href="https://my.functionhealth.com/gift"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => trackClick('function-gift')}
+          style={{ display: 'inline-block', fontSize: 15, fontWeight: 600, color: '#fff', background: '#1a4731', borderRadius: 8, padding: '12px 24px', textDecoration: 'none', transition: 'opacity .15s' }}
+          onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
+          onMouseOut={e => (e.currentTarget.style.opacity = '1')}
+        >
+          Gift Function Health →
+        </a>
+        <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 10 }}>$365/year · Recipient redeems via email · Aellux discount applies at checkout with code AKATES11</div>
+      </div>
+
       {/* ─── ALTERNATIVES ──────────────────────────────────────────────── */}
       <div style={S.sectionDivider}>
         <p style={S.sectionEyebrow}>Other ways to get tested</p>
