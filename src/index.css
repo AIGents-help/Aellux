@@ -115,22 +115,22 @@
   transition: background .15s, border-color .15s, color .15s;
   font-size: 13px;
   font-family: var(--font-body);
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: 0.01em;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   width: 100%;
   background: none;
   text-align: left;
 }
 .aellux-nav-item:hover {
-  background: rgba(0,0,0,.03);
-  color: var(--text-secondary);
+  background: rgba(0,0,0,.05);
+  color: var(--text-primary);
 }
 .aellux-nav-item.active {
-  border-left-color: var(--brand);
-  background: var(--brand-ghost);
-  color: var(--brand);
-  font-weight: 500;
+  border-left-color: var(--brand-dim);
+  background: rgba(3,26,13,.1);
+  color: var(--brand-dim);
+  font-weight: 600;
 }
 
 /* ── TOPBAR ────────────────────────────────────────────────────────────────── */

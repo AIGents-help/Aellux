@@ -1258,9 +1258,9 @@ export default function App() {
                 onDrop={e => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
                 onClick={() => fileInputRef.current?.click()}
                 style={{
-                  border: `2px dashed ${dragOver ? 'var(--text-secondary)' : 'rgba(0,175,138,.2)'}`,
+                  border: `2px dashed ${dragOver ? 'var(--brand-dim)' : 'var(--border-medium)'}`,
                   borderRadius: 8, padding: '48px 32px', textAlign: 'center', cursor: 'pointer',
-                  background: dragOver ? 'rgba(0,40,32,.3)' : 'rgba(0,6,14,.6)',
+                  background: dragOver ? 'var(--brand-ghost)' : 'var(--bg-sunken)',
                   transition: 'all .2s', marginBottom: 28,
                 }}
               >
