@@ -78,7 +78,7 @@ function Orb() {
 function NextBtn({ onClick, disabled, label = 'Continue →' }: { onClick: () => void; disabled?: boolean; label?: string }) {
   return (
     <button onClick={onClick} disabled={disabled}
-      style={{ width: '100%', fontSize: 17, color: disabled ? 'rgba(0,50,40,.5)' : 'rgba(0,20,14,1)', background: disabled ? 'var(--brand-ghost)' : 'var(--brand)', border: 'none', borderRadius: 10, padding: '16px 0', cursor: disabled ? 'default' : 'pointer', fontFamily: 'inherit', fontWeight: 600, transition: 'all .2s', marginTop: 8 }}>
+      style={{ width: '100%', fontSize: 17, color: disabled ? 'rgba(0,50,40,.5)' : '#ffffff', background: disabled ? 'var(--brand-ghost)' : '#1a4731', border: 'none', borderRadius: 10, padding: '16px 0', cursor: disabled ? 'default' : 'pointer', fontFamily: 'inherit', fontWeight: 600, transition: 'all .2s', marginTop: 8 }}>
       {label}
     </button>
   );
