@@ -20,6 +20,7 @@ import Premortem from './Premortem';
 import RecordsGuide from './RecordsGuide';
 import Onboarding from './Onboarding';
 import EmptyDashboard from './EmptyDashboard';
+import GetTested from './GetTested';
 import AdminDashboard from './AdminDashboard';
 import PrintableReport from './PrintableReport';
 import WeekView from './WeekView';
@@ -29,7 +30,7 @@ import ProfileSetup from './ProfileSetup';
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
 type OrbState = 'dormant' | 'idle' | 'listening' | 'thinking' | 'speaking';
-type Panel = 'upload' | 'dashboard' | 'trends' | 'meals' | 'supps' | 'protocol' | 'protocols' | 'week' | 'ask' | 'profile' | 'admin';
+type Panel = 'upload' | 'dashboard' | 'trends' | 'meals' | 'supps' | 'protocol' | 'protocols' | 'week' | 'ask' | 'profile' | 'admin' | 'tested';
 
 interface Marker {
   name: string;
@@ -1055,6 +1056,7 @@ export default function App() {
     { id: 'upload',    label: '+ Upload Records',  count: documents.length },
     { id: 'dashboard', label: 'Health Dashboard',  count: allMarkers.length },
     { id: 'week',      label: 'Biologic Protocol'                           },
+    { id: 'tested',    label: 'Get Tested'                                  },
     // Legacy — admin only
     ...(isAdmin ? [
       { id: 'protocols' as Panel, label: 'Protocols & Plans (legacy)' },
@@ -1093,6 +1095,7 @@ export default function App() {
           {panel === 'trends' && 'Health Dashboard'}
           {panel === 'protocols' && 'Protocols'}
           {panel === 'profile' && 'Profile'}
+          {panel === 'tested' && 'Get Tested'}
           {panel === 'ask' && 'Ask Aellux'}
           {panel === 'meals' && 'Meal Protocol'}
           {panel === 'supps' && 'Supp Stack'}
@@ -1319,6 +1322,7 @@ export default function App() {
                   goal={profile?.goal}
                   onUpload={() => setPanel('upload')}
                   onGuide={() => { setPanel('upload'); }}
+                  onGetTested={() => setPanel('tested')}
                 />
               ) : (
                 <>
@@ -2277,6 +2281,10 @@ export default function App() {
             personalised={personalised}
             setPanel={setPanel}
           />
+        )}
+
+        {panel === 'tested' && (
+          <GetTested userId={user?.id} isPro={isPro} />
         )}
 
         {panel === 'admin' && isAdmin && (

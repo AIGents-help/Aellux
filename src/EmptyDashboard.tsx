@@ -6,6 +6,7 @@ interface Props {
   goal?: string;
   onUpload: () => void;
   onGuide: () => void;
+  onGetTested?: () => void;
 }
 
 const GOAL_LABELS: Record<string, string> = {
@@ -49,7 +50,7 @@ const QUICK_SOURCES = [
   { icon: '🧬', label: 'Genetic report', desc: '23andMe, AncestryDNA, Nebula' },
 ];
 
-export default function EmptyDashboard({ userName, goal, onUpload, onGuide }: Props) {
+export default function EmptyDashboard({ userName, goal, onUpload, onGuide, onGetTested }: Props) {
   const [hoveredStep, setHoveredStep] = useState<number | null>(null);
   const goalLabel = goal ? GOAL_LABELS[goal] : null;
 
@@ -123,12 +124,12 @@ export default function EmptyDashboard({ userName, goal, onUpload, onGuide }: Pr
       {/* Don't have records? */}
       <div style={{ padding: '16px 20px', background: 'rgba(0,210,165,.03)', border: '1px solid var(--border-subtle)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 14, color: 'rgba(220,255,235,.8)', marginBottom: 3 }}>Don't have your health records yet?</div>
-          <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>See every way to get them — including free options and affiliate-partner lab services.</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 3 }}>Don't have your labs yet?</div>
+          <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>See every option — from free physician requests to comprehensive 160-marker panels.</div>
         </div>
-        <button onClick={onGuide}
+        <button onClick={onGetTested || onGuide}
           style={{ flexShrink: 0, fontSize: 13, color: 'var(--brand)', background: 'var(--brand-ghost)', border: '1px solid var(--border-subtle)', borderRadius: 6, padding: '9px 16px', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' }}>
-          How to get my records →
+          How to get tested →
         </button>
       </div>
 
