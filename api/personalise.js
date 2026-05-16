@@ -45,8 +45,47 @@ export default async function handler(req) {
   try { body = await req.json(); }
   catch { return json({ error: 'Invalid JSON body' }, { status: 400 }); }
 
-  const { markers, type, preference = null, userId = null, plan = 'free', dayOnly = false } = body || {};
+  const { markers, type, preference = null, userId = null, plan = 'free', dayOnly = false, bioAge, chronoAge, markerCtx, profile: bodyProfile } = body || {};
   if (!Array.isArray(markers) || markers.length === 0) return json({ error: 'No markers provided' }, { status: 400 });
+
+  // Handle bio_age_insight separately — lightweight, no cache needed
+  if (type === 'bio_age_insight') {
+    const flagged = markers.filter(m => m.status === 'elevated' || m.status === 'low');
+    const mCtx = markers.slice(0, 20).map(m => `${m.name}: ${m.value}${m.unit || ''} [${m.status || 'normal'}]`).join(', ');
+    const prompt = `You are Aellux. This person's biological age is ${bioAge || '?'} vs calendar age ${chronoAge || '?'}. Their flagged markers: ${flagged.map(m => `${m.name} [${m.status}]`).join(', ') || 'none'}.
+
+All markers: ${mCtx}
+
+Answer these questions about THEIR biological age specifically, grounded in their actual marker data.
+
+Return ONLY valid JSON:
+{
+  "where_it_comes_from": "2-3 sentences: which specific markers are driving this number and the biological mechanism. Reference their actual values.",
+  "difficulty_rating": "one of: Highly Changeable / Moderately Changeable / Difficult to Change",
+  "difficulty_color": "one of: #166534 / #92400e / #991b1b",
+  "difficulty_explanation": "1-2 sentences explaining why at this difficulty level for THIS person.",
+  "realistic_floor": "e.g. '44-47 years' — the realistic minimum biological age achievable with full commitment, given their specific marker profile and age.",
+  "floor_explanation": "1 sentence explaining what would need to change to reach that floor.",
+  "genetic_pct": 30,
+  "genetic_note": "1-2 sentences on what in their markers appears genetic vs lifestyle-driven.",
+  "biggest_levers": [
+    { "action": "specific action tied to a flagged marker", "expected_impact": "e.g. 'Could reduce bio age by 1-2 years in 90 days'" },
+    { "action": "...", "expected_impact": "..." },
+    { "action": "...", "expected_impact": "..." }
+  ],
+  "timeline": "Honest timeline: with full commitment to the protocol, what biological age could they realistically achieve in 6 months, 12 months, 2 years?"
+}`;
+
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 700, system: SYSTEM, messages: [{ role: 'user', content: prompt }] }),
+    });
+    const d = await r.json();
+    try { return json(parseJSON(d.content?.[0]?.text || '{}')); }
+    catch { return json({ error: 'Parse error' }, { status: 500 }); }
+  }
+
   if (!['meals', 'supps', 'protocol', 'synthesis'].includes(type)) return json({ error: 'Invalid type — week generation is handled by /api/week-stream' }, { status: 400 });
 
   // ── Rate limit ─────────────────────────────────────────────────────────────

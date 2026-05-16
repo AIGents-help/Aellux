@@ -319,6 +319,145 @@ function SectionCard({ title, subtitle, photo, children }: { title: string; subt
   );
 }
 
+// ── BIO AGE INSIGHT MODAL ────────────────────────────────────────────────────
+function BioAgeInsightModal({ synthesis, allMarkers, profile, userId, onClose }: any) {
+  const [insight, setInsight] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const bioAge = synthesis?.biological_age_estimate?.replace(/[^\d.]/g, '');
+    const chronoAge = profile?.birth_year ? new Date().getFullYear() - profile.birth_year : null;
+    const flagged = allMarkers.filter((m: any) => m.status === 'elevated' || m.status === 'low');
+    const markerCtx = allMarkers.slice(0, 20).map((m: any) => `${m.name}: ${m.value}${m.unit || ''} [${m.status || 'normal'}]`).join(', ');
+
+    fetch('/api/personalise', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'bio_age_insight',
+        userId,
+        plan: 'pro',
+        markers: allMarkers,
+        bioAge,
+        chronoAge,
+        flaggedCount: flagged.length,
+        markerCtx,
+        profile,
+      }),
+    }).then(r => r.json()).then(d => { setInsight(d); setLoading(false); }).catch(() => setLoading(false));
+  }, []);
+
+  const bioAge = parseFloat(synthesis?.biological_age_estimate?.replace(/[^\d.]/g, '') || '0');
+  const chronoAge = profile?.birth_year ? new Date().getFullYear() - profile.birth_year : null;
+  const gap = chronoAge ? (bioAge - chronoAge).toFixed(1) : null;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,26,15,.8)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: 20 }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: 'var(--bg-surface)', borderRadius: 16, maxWidth: 560, width: '100%', maxHeight: '88vh', overflowY: 'auto', boxShadow: '0 12px 48px rgba(0,0,0,.18)' }}>
+
+        {/* Header image */}
+        <div style={{ position: 'relative', height: 140, backgroundImage: 'url(https://images.unsplash.com/photo-1559757175-5700dde675bc?w=800&q=80)', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '16px 16px 0 0', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(3,26,13,.5), rgba(3,26,13,.85))' }} />
+          <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 16, background: 'rgba(255,255,255,.15)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: '#fff', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          <div style={{ position: 'absolute', bottom: 20, left: 24 }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,.6)', marginBottom: 4 }}>Biological Age</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 48, color: '#fff', fontWeight: 400, lineHeight: 1 }}>{bioAge}</span>
+              {chronoAge && <span style={{ fontSize: 16, color: 'rgba(255,255,255,.7)' }}>vs {chronoAge} calendar age · {parseFloat(gap!) > 0 ? `+${gap}` : gap} years</span>}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: '28px 28px 32px' }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-tertiary)', fontSize: 14 }}>
+              Aellux is analysing your biological age across your markers…
+            </div>
+          ) : insight?.error ? (
+            <p style={{ color: 'var(--accent-elevated)', fontSize: 14 }}>Could not load insight. Try again.</p>
+          ) : insight ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+              {/* Where this number comes from */}
+              {insight.where_it_comes_from && (
+                <div>
+                  <div style={{ fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 8 }}>Where this number comes from</div>
+                  <p style={{ fontSize: 15, color: 'var(--text-primary)', lineHeight: 1.75, margin: 0 }}>{insight.where_it_comes_from}</p>
+                </div>
+              )}
+
+              {/* Difficulty + potential */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {insight.difficulty_rating && (
+                  <div style={{ padding: '14px 16px', background: 'var(--bg-sunken)', borderRadius: 8, borderTop: `3px solid ${insight.difficulty_color || 'var(--accent-watch)'}` }}>
+                    <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 6 }}>Changeability</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{insight.difficulty_rating}</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{insight.difficulty_explanation}</div>
+                  </div>
+                )}
+                {insight.realistic_floor && (
+                  <div style={{ padding: '14px 16px', background: 'var(--bg-sunken)', borderRadius: 8, borderTop: '3px solid var(--accent-optimal)' }}>
+                    <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 6 }}>Realistic floor</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--accent-optimal)', marginBottom: 4 }}>{insight.realistic_floor}</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{insight.floor_explanation}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Genetic vs lifestyle split */}
+              {insight.genetic_pct !== undefined && (
+                <div style={{ padding: '16px 18px', background: 'var(--bg-sunken)', borderRadius: 8 }}>
+                  <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 12 }}>What drives this number</div>
+                  <div style={{ display: 'flex', height: 10, borderRadius: 20, overflow: 'hidden', marginBottom: 10 }}>
+                    <div style={{ width: `${insight.genetic_pct}%`, background: '#6366f1' }} />
+                    <div style={{ flex: 1, background: '#166534' }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                    <span style={{ color: '#6366f1', fontWeight: 600 }}>🧬 Genetic ~{insight.genetic_pct}%</span>
+                    <span style={{ color: '#166534', fontWeight: 600 }}>💪 Lifestyle ~{100 - insight.genetic_pct}%</span>
+                  </div>
+                  {insight.genetic_note && <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: '10px 0 0' }}>{insight.genetic_note}</p>}
+                </div>
+              )}
+
+              {/* Biggest levers */}
+              {insight.biggest_levers?.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 10 }}>Biggest levers for YOUR biology</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {insight.biggest_levers.map((lever: any, i: number) => (
+                      <div key={i} style={{ padding: '12px 14px', background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 8, display: 'flex', gap: 12 }}>
+                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#1a4731', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{lever.action}</div>
+                          <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.55 }}>{lever.expected_impact}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Timeline */}
+              {insight.timeline && (
+                <div style={{ padding: '14px 16px', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 8 }}>
+                  <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--brand-dim)', marginBottom: 6 }}>Realistic timeline with full commitment</div>
+                  <p style={{ fontSize: 15, color: 'var(--text-primary)', lineHeight: 1.7, margin: 0, fontWeight: 500 }}>{insight.timeline}</p>
+                </div>
+              )}
+
+              <p style={{ fontSize: 11, color: 'var(--text-tertiary)', lineHeight: 1.6, margin: 0, borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
+                Biological age estimates are derived from biomarker patterns and are educational, not clinical. Consult your physician for medical decisions.
+              </p>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UpgradeModal({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -559,6 +698,7 @@ export default function App() {
   const isMobile = useIsMobile();
   const [dashTab, setDashTab] = useState<'markers' | 'intelligence'>('markers');
   const [patterns, setPatterns] = useState<any[]>([]);
+  const [showBioAgeInsight, setShowBioAgeInsight] = useState(false);
   const [patternsLoading, setPatternsLoading] = useState(false);
   const [patternsLoaded, setPatternsLoaded] = useState(false);
   const [markerSnapshot, setMarkerSnapshot] = useState<any[]>([]);
@@ -1536,11 +1676,14 @@ export default function App() {
                         {/* Bio age + focus strip */}
                         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 10, marginBottom: 14 }}>
                           {syn.biological_age_estimate && (
-                            <div style={{ flex: 1, minWidth: 140, padding: '12px 16px', background: 'var(--brand-ghost)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 7 }}>
-                              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Biological age</div>
-                              <div style={{ fontSize: 24, color: 'var(--brand)', fontFamily: 'EB Garamond, Georgia, serif', fontWeight: 500 }}>{syn.biological_age_estimate}</div>
+                            <button onClick={() => setShowBioAgeInsight(true)}
+                              style={{ flex: 1, minWidth: 140, padding: '12px 16px', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 7, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', transition: 'box-shadow .2s' }}
+                              onMouseEnter={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(3,26,13,.12)'}
+                              onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
+                              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Biological age <span style={{ fontSize: 10, color: 'var(--brand-dim)', fontWeight: 600 }}>· tap for insight</span></div>
+                              <div style={{ fontSize: 24, color: 'var(--brand-dim)', fontFamily: 'var(--font-display)', fontWeight: 500 }}>{syn.biological_age_estimate}</div>
                               {syn.bio_age_gap && <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>{syn.bio_age_gap}</div>}
-                            </div>
+                            </button>
                           )}
                           {syn.focus_priority && (
                             <div style={{ flex: 3, minWidth: 200, padding: '12px 16px', background: 'rgba(255,190,60,.05)', border: '1px solid rgba(255,190,60,.25)', borderRadius: 7 }}>
@@ -2092,20 +2235,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* ── BIOLOGICAL AGE ── */}
-              <SectionCard
-                title="Biological Age Trajectory"
-                subtitle="How your cellular age is moving over time"
-                photo="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80"
-              >
-                <BiologicalAgeChart
-                  userId={user?.id}
-                  chronologicalAge={profile?.birth_year ? new Date().getFullYear() - profile.birth_year : undefined}
-                  currentBioAge={personalised.synthesis?.biological_age_estimate?.replace(/[^\d.]/g, '')}
-                  onGenerate={() => generatePersonalised('synthesis')}
-                />
-              </SectionCard>
-
               {/* ── TRAJECTORY ANALYSIS ── */}
               <SectionCard
                 title="Trajectory Analysis"
@@ -2606,6 +2735,15 @@ export default function App() {
       )}
 
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+      {showBioAgeInsight && (
+        <BioAgeInsightModal
+          synthesis={personalised.synthesis}
+          allMarkers={allMarkers}
+          profile={profile}
+          userId={user?.id}
+          onClose={() => setShowBioAgeInsight(false)}
+        />
+      )}
 
       {showProfileSetup && (
         <ProfileSetup
