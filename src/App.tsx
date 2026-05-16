@@ -301,6 +301,61 @@ function MultiTrendChart({ markers, activeKeys, allDates }: {
 
 
 // ── UPGRADE MODAL ────────────────────────────────────────────────────────────
+// ── WEARABLE UPLOAD GUIDE (Upload page) ──────────────────────────────────────
+const WEARABLE_DEVICES = [
+  { id: 'apple',    name: 'Apple Health',    icon: '🍎', file: '.zip',  steps: ['Open Health app → tap your profile photo','Scroll down → "Export All Health Data"','Tap Export → save the .zip file','Upload the .zip here'] },
+  { id: 'oura',     name: 'Oura Ring',       icon: '💍', file: '.csv',  steps: ['Open Oura app → profile → Account','Tap "Data Export" → "Request Data Export"','Oura emails you a download link','Download CSV → upload here'], link: 'https://cloud.ouraring.com/user/settings/data-export' },
+  { id: 'hume',     name: 'Hume Band',       icon: '📿', file: '.csv',  steps: ['Open Hume app → Settings','Tap "Export My Data" → select date range','Save the CSV → upload here'] },
+  { id: 'withings', name: 'Withings Scale',  icon: '⚖️', file: '.csv',  steps: ['Open Health Mate app (or healthmate.withings.com)','Profile → "Download my data"','Select Weight & Body Composition → download CSV','Upload the CSV here'], link: 'https://healthmate.withings.com/settings/data' },
+  { id: 'garmin',   name: 'Garmin',          icon: '🏃', file: '.zip',  steps: ['Go to connect.garmin.com','Name → Account Settings → Data Management','Click "Export Your Data" → Garmin emails a link','Upload the ZIP here'], link: 'https://www.garmin.com/en-US/account/datamanagement/exportdata/' },
+  { id: 'whoop',    name: 'WHOOP',           icon: '💪', file: '.csv',  steps: ['Open WHOOP app → menu → My Account','Tap "Export Data" → select date range','WHOOP emails a CSV download link','Upload the CSV here'] },
+  { id: 'fitbit',   name: 'Fitbit',          icon: '📊', file: '.zip',  steps: ['Go to takeout.google.com','Deselect all → select "Fitbit" only','Next step → Export once → Create export','Download ZIP (may take minutes) → upload here'], link: 'https://takeout.google.com' },
+];
+
+function WearableUploadGuide({ onUpload }: { onUpload: () => void }) {
+  const [open, setOpen] = React.useState<string | null>(null);
+  const device = WEARABLE_DEVICES.find(d => d.id === open);
+  return (
+    <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: open ? 14 : 0 }}>
+        {WEARABLE_DEVICES.map(d => (
+          <button key={d.id} onClick={() => setOpen(open === d.id ? null : d.id)}
+            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 20, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: open === d.id ? 600 : 400, background: open === d.id ? 'var(--brand-ghost)' : '#fff', border: `1.5px solid ${open === d.id ? 'var(--brand-border)' : 'var(--border-subtle)'}`, color: open === d.id ? 'var(--brand-dim)' : 'var(--text-secondary)', transition: 'all .15s' }}>
+            <span>{d.icon}</span> {d.name}
+          </button>
+        ))}
+      </div>
+      {device && (
+        <div style={{ background: '#fff', border: '1.5px solid var(--brand-border)', borderRadius: 10, padding: '16px 18px' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>
+            {device.icon} {device.name} — export file type: <span style={{ color: 'var(--brand-dim)' }}>{device.file}</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+            {device.steps.map((s, i) => (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#1a4731', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                <div style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.5, paddingTop: 2 }}>{s}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {device.link && (
+              <button onClick={() => { const w = window.open('', '_blank', 'noopener'); if (w) w.location.href = device.link!; }}
+                style={{ fontSize: 13, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                Open {device.name} export →
+              </button>
+            )}
+            <button onClick={onUpload}
+              style={{ fontSize: 13, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1.5px solid var(--brand-border)', borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+              I have the file — upload now →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── SECTION CARD — used in Intelligent Consult ───────────────────────────────
 function SectionCard({ title, subtitle, photo, children }: { title: string; subtitle: string; photo: string; children: React.ReactNode }) {
   return (
@@ -1539,6 +1594,12 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+              {/* Wearable export guide */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 12 }}>Export from your device</div>
+                <WearableUploadGuide onUpload={() => fileInputRef.current?.click()} />
+              </div>
 
               {/* Uploaded documents */}
               {documents.length > 0 && (
