@@ -339,10 +339,21 @@ function WearableUploadGuide({ onUpload }: { onUpload: () => void }) {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {device.link && (
+            {device.link ? (
               <button onClick={() => { window.open(device.link!, '_blank', 'noopener,noreferrer'); }}
                 style={{ fontSize: 13, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
                 Open {device.name} export →
+              </button>
+            ) : (
+              <button id={`copy-${device.id}`} onClick={(e) => {
+                  const text = `${device.name} — how to export your data:\n${device.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
+                  navigator.clipboard.writeText(text).catch(() => {});
+                  const btn = e.currentTarget;
+                  btn.textContent = '✓ Copied!';
+                  setTimeout(() => { btn.textContent = 'Copy steps to phone'; }, 2000);
+                }}
+                style={{ fontSize: 13, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                Copy steps to phone
               </button>
             )}
             <button onClick={onUpload}
