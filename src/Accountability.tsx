@@ -268,19 +268,29 @@ export default function Accountability({ userId, plan }: Props) {
 
   return (
     <div>
+      {/* Honest framing */}
+      <div style={{ marginBottom: 20, padding: '14px 18px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '0 0 8px' }}>
+          <strong style={{ color: 'var(--text-primary)' }}>The most reliable accountability is your lab results.</strong> Upload new panels regularly and Aellux will show you exactly what changed and why. Numbers don't lie.
+        </p>
+        <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>
+          Check-ins below are self-reported. You can record whatever you want here — but Aellux can only adapt your protocol based on what you actually tell it. The real signal will always come from your next blood panel.
+        </p>
+      </div>
+
       {activeModal && (
         <ActionModal rec={activeModal} onClose={() => setActiveModal(null)} onUpdate={updateRec} />
       )}
 
       {/* Weekly check-in nudge */}
       {!hasCheckinThisWeek && recs.length > 0 && !showCheckin && (
-        <div style={{ marginBottom: 20, padding: '14px 18px', background: 'rgba(0,225,180,.05)', border: '1px solid rgba(0,225,180,.2)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+        <div style={{ marginBottom: 20, padding: '14px 18px', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>Weekly check-in due</div>
-            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>How did this week go? Aellux adapts when it knows your compliance.</div>
+            <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>Weekly check-in</div>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>Self-reported progress — Aellux uses this to surface patterns.</div>
           </div>
           <button onClick={() => setShowCheckin(true)}
-            style={{ flexShrink: 0, fontSize: 13, color: 'rgba(0,20,14,1)', background: 'var(--brand)', border: 'none', borderRadius: 5, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+            style={{ flexShrink: 0, fontSize: 13, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 5, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
             Check in →
           </button>
         </div>
@@ -289,7 +299,8 @@ export default function Accountability({ userId, plan }: Props) {
       {/* Check-in form */}
       {showCheckin && (
         <div style={{ marginBottom: 20, padding: '20px 22px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 10 }}>
-          <div style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 18 }}>Week of {currentWeek}</div>
+          <div style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 4 }}>Week of {currentWeek}</div>
+          <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 18, lineHeight: 1.6 }}>Be honest with yourself. These numbers only help if they're accurate.</p>
           {[
             { label: 'Protocol adherence', key: 'protocolFollowed', sub: '1 = skipped · 5 = followed fully' },
             { label: 'Energy level', key: 'energyLevel', sub: '1 = exhausted · 5 = excellent' },
@@ -305,17 +316,17 @@ export default function Accountability({ userId, plan }: Props) {
             </div>
           ))}
           <textarea value={checkinForm.blockers} onChange={e => setCheckinForm(p => ({ ...p, blockers: e.target.value }))}
-            placeholder="What prevented full compliance? (helps Aellux adapt)" rows={2}
-            style={{ width: '100%', fontSize: 13, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-secondary)', fontFamily: 'inherit', resize: 'vertical', marginBottom: 12 }} />
+            placeholder="What got in the way this week?" rows={2}
+            style={{ width: '100%', fontSize: 13, padding: '9px 12px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', fontFamily: 'inherit', resize: 'vertical', marginBottom: 12 }} />
           <textarea value={checkinForm.notableChanges} onChange={e => setCheckinForm(p => ({ ...p, notableChanges: e.target.value }))}
-            placeholder="What changed or felt different this week?" rows={2}
-            style={{ width: '100%', fontSize: 13, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-secondary)', fontFamily: 'inherit', resize: 'vertical', marginBottom: 14 }} />
+            placeholder="What felt different this week — energy, sleep, body composition?" rows={2}
+            style={{ width: '100%', fontSize: 13, padding: '9px 12px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', fontFamily: 'inherit', resize: 'vertical', marginBottom: 14 }} />
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={submitCheckin} disabled={!checkinForm.protocolFollowed || submitting}
-              style={{ fontSize: 14, color: 'rgba(0,20,14,1)', background: checkinForm.protocolFollowed ? 'var(--brand)' : 'rgba(0,225,180,.4)', border: 'none', borderRadius: 5, padding: '10px 22px', cursor: checkinForm.protocolFollowed ? 'pointer' : 'default', fontFamily: 'inherit', fontWeight: 600 }}>
+              style={{ fontSize: 14, color: '#fff', background: checkinForm.protocolFollowed ? '#1a4731' : 'var(--text-tertiary)', border: 'none', borderRadius: 5, padding: '10px 22px', cursor: checkinForm.protocolFollowed ? 'pointer' : 'default', fontFamily: 'inherit', fontWeight: 600 }}>
               {submitting ? 'Saving…' : 'Submit →'}
             </button>
-            <button onClick={() => setShowCheckin(false)} style={{ fontSize: 14, color: 'var(--text-tertiary)', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 5, padding: '10px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>Later</button>
+            <button onClick={() => setShowCheckin(false)} style={{ fontSize: 14, color: 'var(--text-secondary)', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 5, padding: '10px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>Later</button>
           </div>
         </div>
       )}

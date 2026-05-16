@@ -1247,11 +1247,18 @@ export default function App() {
           {NAV.map(({ id, label, count }) => (
             <button key={id} className={`aellux-nav-item ${panel === id ? 'active' : ''}`} onClick={() => {
               switchPanel(id); setDrawerOpen(false);
-              if (id === 'intelligence' && !patternsLoaded && allMarkers.length > 0) {
-                setPatternsLoading(true);
-                const profileCtx = profile ? [profile.biological_sex && `sex: ${profile.biological_sex}`, profile.birth_year && `age: ${new Date().getFullYear() - profile.birth_year}`, profile.goal && `goal: ${profile.goal}`].filter(Boolean).join(', ') : '';
-                fetch('/api/pattern-detect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user?.id, plan: isPro ? 'pro' : 'free', allMarkers, profileCtx }) })
-                  .then(r => r.json()).then(d => { setPatterns(d.patterns || []); setPatternsLoaded(true); setPatternsLoading(false); }).catch(() => setPatternsLoading(false));
+              if (id === 'intelligence' && allMarkers.length > 0) {
+                // Auto-run patterns if not loaded
+                if (!patternsLoaded) {
+                  setPatternsLoading(true);
+                  const profileCtx = profile ? [profile.biological_sex && `sex: ${profile.biological_sex}`, profile.birth_year && `age: ${new Date().getFullYear() - profile.birth_year}`, profile.goal && `goal: ${profile.goal}`].filter(Boolean).join(', ') : '';
+                  fetch('/api/pattern-detect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user?.id, plan: isPro ? 'pro' : 'free', allMarkers, profileCtx }) })
+                    .then(r => r.json()).then(d => { setPatterns(d.patterns || []); setPatternsLoaded(true); setPatternsLoading(false); }).catch(() => setPatternsLoading(false));
+                }
+                // Auto-run synthesis if not already done
+                if (!personalised.synthesis) {
+                  setTimeout(() => generatePersonalised('synthesis'), 300);
+                }
               }
             }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: panel === id ? 'var(--brand-dim)' : 'rgba(0,130,105,.3)', flexShrink: 0, display: 'inline-block' }} />

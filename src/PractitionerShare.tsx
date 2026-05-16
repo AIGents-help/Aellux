@@ -78,15 +78,15 @@ export default function PractitionerShare({ userId, isPro }: Props) {
                 Your practitioner will see your biomarker timeline, protocol structure, and supplement log. They cannot see your login credentials, payment info, or personal contact details.
               </div>
               <button onClick={create} disabled={creating}
-                style={{ fontSize: 14, color: 'rgba(0,20,14,1)', background: 'var(--brand)', border: 'none', borderRadius: 5, padding: '10px 22px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                style={{ fontSize: 14, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 5, padding: '10px 22px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
                 {creating ? 'Creating…' : 'Generate share link →'}
               </button>
             </>
           ) : (
             <div>
-              <div style={{ fontSize: 13, color: 'rgba(52,211,153,.8)', marginBottom: 10 }}>✓ Share link created — expires in {expiry} days</div>
+              <div style={{ fontSize: 13, color: 'var(--accent-optimal)', marginBottom: 10 }}>✓ Share link created — expires in {expiry} days</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ flex: 1, padding: '10px 14px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 5, fontSize: 13, color: 'rgba(0,225,180,.75)', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ flex: 1, padding: '10px 14px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 5, fontSize: 13, color: 'var(--text-primary)', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {shareUrl}
                 </div>
                 <button onClick={copy}
