@@ -187,11 +187,6 @@ function aggregateGrocery(weekData: any, selectedMealKeys: Record<string, string
   return { byCategory, total };
 }
 
-function todayIndex() {
-  const map: Record<string, number> = { Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3, Friday: 4, Saturday: 5, Sunday: 6 };
-  return map[new Date().toLocaleDateString('en-US', { weekday: 'long' })] ?? 0;
-}
-
 // ---- subcomponents ---------------------------------------------------------
 
 function SuppStack({ weekData }: { weekData: any }) {
@@ -248,15 +243,30 @@ function GroceryList({ weekData, selectedMealKeys }: { weekData: any; selectedMe
   );
 }
 
+function todayIndex() {
+  const map: Record<string, number> = { Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3, Friday: 4, Saturday: 5, Sunday: 6 };
+  return map[new Date().toLocaleDateString('en-US', { weekday: 'long' })] ?? 0;
+}
+
 function TodayChecklist({ weekData, selectedMealKeys }: { weekData: any; selectedMealKeys: Record<string, string> }) {
   const tIdx = todayIndex();
-  const day = weekData?.days?.[tIdx];
-  if (!day) return <div style={{ padding: '20px', color: 'var(--text-tertiary)' }}>No plan available for today.</div>;
+  const days = weekData?.days || [];
+
+  // Try to match by day name first, then fall back to index, then day 0
+  let day = days.find((d: any) => d.day?.toLowerCase() === new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase());
+  let resolvedIdx = days.indexOf(day);
+  if (!day) {
+    // Fall back to position index
+    day = days[tIdx] || days[0];
+    resolvedIdx = days[tIdx] ? tIdx : 0;
+  }
+
+  if (!day) return <div style={{ padding: '20px', color: 'var(--text-tertiary)' }}>Generate your protocol first to see today's plan.</div>;
 
   const resolveMeal = (slot: string) => {
     const meal = day.meals?.[slot];
     if (!meal) return null;
-    const swap = selectedMealKeys[`${tIdx}|${slot}`];
+    const swap = selectedMealKeys[`${resolvedIdx}|${slot}`];
     if (swap && meal.alternatives) {
       const alt = meal.alternatives.find((a: any) => a.swap === swap);
       if (alt) return { name: alt.name, swapped: true };
