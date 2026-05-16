@@ -514,6 +514,7 @@ export default function App() {
   }, [rawSignOut]);
   const [orbState, setOrbState] = useState<OrbState>('dormant');
   const [panel, setPanel] = useState<Panel>('upload');
+  const switchPanel = (p: Panel) => { setPanel(p); window.scrollTo({ top: 0, behavior: 'instant' }); };
   const [documents, setDocuments] = useState<Document[]>([]);
   const [personalised, setPersonalised] = useState<PersonalisedData>({});
   const [mealPreference, setMealPreference] = React.useState<string>('none');
@@ -1240,12 +1241,12 @@ export default function App() {
 
       {/* ── LEFT COLUMN / DRAWER ── */}
       <div className={`aellux-lc ${drawerOpen ? 'open' : ''}`}>
-        <div onClick={() => { setPanel('upload'); setDrawerOpen(false); }} style={{ cursor: 'pointer', marginBottom: 22 }}><Orb state={orbState} size={110} /></div>
+        <div onClick={() => { switchPanel('upload'); setDrawerOpen(false); }} style={{ cursor: 'pointer', marginBottom: 22 }}><Orb state={orbState} size={110} /></div>
 
         <div style={{ width: '100%', padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 18 }}>
           {NAV.map(({ id, label, count }) => (
             <button key={id} className={`aellux-nav-item ${panel === id ? 'active' : ''}`} onClick={() => {
-              setPanel(id); setDrawerOpen(false);
+              switchPanel(id); setDrawerOpen(false);
               if (id === 'intelligence' && !patternsLoaded && allMarkers.length > 0) {
                 setPatternsLoading(true);
                 const profileCtx = profile ? [profile.biological_sex && `sex: ${profile.biological_sex}`, profile.birth_year && `age: ${new Date().getFullYear() - profile.birth_year}`, profile.goal && `goal: ${profile.goal}`].filter(Boolean).join(', ') : '';
@@ -1310,7 +1311,7 @@ export default function App() {
               <button onClick={() => setShowUpgrade(true)} style={{ width: '100%', fontSize: 13, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 5, padding: '6px 0', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>Upgrade to Pro →</button>
             )}
             <div style={{ marginTop: 10, borderTop: '1px solid var(--border-subtle)', paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <button onClick={() => setPanel('profile')} style={{ width: '100%', fontSize: 13, color: 'var(--text-secondary)', background: 'none', border: 'none', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', padding: '7px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button onClick={() => switchPanel('profile')} style={{ width: '100%', fontSize: 13, color: 'var(--text-secondary)', background: 'none', border: 'none', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', padding: '7px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 14 }}>⚙</span> Profile &amp; Settings
               </button>
               <button onClick={signOut} style={{ width: '100%', fontSize: 13, color: '#991b1b', background: 'none', border: 'none', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', padding: '7px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1458,9 +1459,9 @@ export default function App() {
                 <EmptyDashboard
                   userName={user?.email?.split('@')[0]}
                   goal={profile?.goal}
-                  onUpload={() => setPanel('upload')}
-                  onGuide={() => { setPanel('upload'); }}
-                  onGetTested={() => setPanel('tested')}
+                  onUpload={() => switchPanel('upload')}
+                  onGuide={() => { switchPanel('upload'); }}
+                  onGetTested={() => switchPanel('tested')}
                 />
               ) : (
                 <>
@@ -2495,15 +2496,15 @@ export default function App() {
 
       {/* ── MOBILE BOTTOM TAB BAR ── */}
       <div className="aellux-mobile-tabbar">
-        <button className={`aellux-tab ${panel === 'week' ? 'active' : ''}`} onClick={() => setPanel('week')}>
+        <button className={`aellux-tab ${panel === 'week' ? 'active' : ''}`} onClick={() => switchPanel('week')}>
           <span className="aellux-tab-icon">📅</span>
           <span>Today</span>
         </button>
-        <button className={`aellux-tab ${panel === 'dashboard' ? 'active' : ''}`} onClick={() => setPanel('dashboard')}>
+        <button className={`aellux-tab ${panel === 'dashboard' ? 'active' : ''}`} onClick={() => switchPanel('dashboard')}>
           <span className="aellux-tab-icon">⊕</span>
           <span>Biology</span>
         </button>
-        <button className={`aellux-tab ${panel === 'profile' ? 'active' : ''}`} onClick={() => setPanel('profile')}>
+        <button className={`aellux-tab ${panel === 'profile' ? 'active' : ''}`} onClick={() => switchPanel('profile')}>
           <span className="aellux-tab-icon">◉</span>
           <span>Profile</span>
         </button>
