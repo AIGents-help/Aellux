@@ -214,7 +214,12 @@ export default function GetTested({ userId }: Props) {
           target="_blank"
           rel="noopener noreferrer sponsored"
           style={S.primaryBtn}
-          onClick={(e) => { window.open(FUNCTION_REFERRAL_URL, '_blank', 'noopener,noreferrer')?.scrollTo(0,0); handleFunctionClick(e); }}
+          onClick={(e) => {
+            e.preventDefault();
+            handleFunctionClick(e);
+            const w = window.open('', '_blank', 'noopener,noreferrer');
+            if (w) { w.location.href = FUNCTION_REFERRAL_URL; }
+          }}
           onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.opacity = '0.92'; }}
           onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.opacity = '1'; }}
         >
@@ -296,6 +301,29 @@ export default function GetTested({ userId }: Props) {
 
       <div style={{ ...S.disclosure, marginTop: 32 }}>
         <strong style={{ color: 'var(--text-secondary)' }}>Why we only recommend Function as a partner:</strong> We tested every major direct-to-consumer lab service. Function is the only one that combines (1) comprehensive panel breadth, (2) twice-yearly cadence for tracking change, (3) data export that integrates with Aellux. We're not affiliated with Quest, InsideTracker, or any other lab — those are listed above as honest alternatives, not paid placements.
+      </div>
+
+      {/* ─── WEARABLE PHILOSOPHY ───────────────────────────────────────── */}
+      <div style={S.sectionDivider}>
+        <p style={S.sectionEyebrow}>About wearable data</p>
+        <h2 style={S.sectionH2}>Why there's no "Connect Wearable" button</h2>
+      </div>
+
+      <div style={{ ...S.secondaryCard, lineHeight: 1.8 }}>
+        <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 16 }}>
+          Uploading wearable data is intentionally manual. Export your data from your device's app — Apple Health, Oura, Garmin, Whoop, Fitbit, Ultrahuman — and upload the file on the Upload Records page. Aellux reads every format automatically.
+        </div>
+        <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 16 }}>
+          We made this choice deliberately. Real-time continuous sync can turn health tracking into something compulsive — the same trap as checking your weight every morning. Numbers fluctuate. A cortisol reading on a bad night's sleep isn't your biology. A single HRV dip doesn't mean anything. Patterns over time do.
+        </div>
+        <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 16 }}>
+          The better model: establish a routine — quarterly labs, a monthly wearable export — run the numbers, get your synthesis, act on it, then put the data down and go live your life. Aellux is designed to surface what matters and get out of the way.
+        </div>
+        <div style={{ padding: '14px 18px', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 8, borderLeft: '3px solid var(--brand-dim)' }}>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>
+            <strong style={{ color: 'var(--text-primary)' }}>Having a healthy relationship with your health data is itself healthy.</strong> Aellux gives you clarity — not a new thing to monitor. Export, upload, synthesise, act. That cadence produces better results than daily anxiety about your numbers.
+          </p>
+        </div>
       </div>
     </div>
   );
