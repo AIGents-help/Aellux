@@ -1481,8 +1481,8 @@ export default function App() {
                           )}
                           {syn.focus_priority && (
                             <div style={{ flex: 3, minWidth: 200, padding: '12px 16px', background: 'rgba(255,190,60,.05)', border: '1px solid rgba(255,190,60,.25)', borderRadius: 7 }}>
-                              <div style={{ fontSize: 11, color: 'var(--accent-watch)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Your focus this week</div>
-                              <div style={{ fontSize: 16, color: 'rgba(255,220,120,1)', lineHeight: 1.5, fontWeight: 500 }}>{syn.focus_priority}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Your focus this week</div>
+                              <div style={{ fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.5, fontWeight: 500 }}>{syn.focus_priority}</div>
                             </div>
                           )}
                         </div>
@@ -2012,30 +2012,6 @@ export default function App() {
             <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 0' }}>
               <BodyHero personalised={personalised} />
               <div style={{ marginTop: 24 }}>
-                {/* Synthesis card */}
-                {personalised.synthesis && (() => {
-                  const syn = personalised.synthesis;
-                  return (
-                    <div style={{ padding: '22px 26px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderLeft: '3px solid var(--brand-dim)', borderRadius: 8, marginBottom: 14 }}>
-                      <div style={{ fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 8 }}>Aellux Synthesis</div>
-                      <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.85, margin: 0, fontWeight: 300 }}>{syn.aellux_voice}</p>
-                      {syn.focus_priority && (
-                        <div style={{ marginTop: 14, padding: '10px 14px', background: 'var(--bg-sunken)', borderRadius: 6 }}>
-                          <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 4 }}>Your focus this week</div>
-                          <div style={{ fontSize: 15, color: 'var(--accent-watch)', lineHeight: 1.5, fontWeight: 500 }}>{syn.focus_priority}</div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-                {!personalised.synthesis && allMarkers.length > 0 && (
-                  <div style={{ textAlign: 'center', marginBottom: 28 }}>
-                    <button onClick={() => generatePersonalised('synthesis')} disabled={generatingType === 'synthesis'}
-                      style={{ fontSize: 15, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
-                      {generatingType === 'synthesis' ? 'Synthesising...' : 'Generate Intelligent Consult →'}
-                    </button>
-                  </div>
-                )}
                 <BiologicalAgeChart
                   userId={user?.id}
                   chronologicalAge={profile?.birth_year ? new Date().getFullYear() - profile.birth_year : undefined}
