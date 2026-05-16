@@ -1708,7 +1708,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <BodyHero personalised={personalised} />
+                  <BodyHero markers={allMarkers} />
 
                   {/* ── MARKERS CONTENT ── */}
                   {(<>
