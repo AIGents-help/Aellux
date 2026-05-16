@@ -1265,25 +1265,6 @@ export default function App() {
 
         <div className="aellux-divider" style={{ margin: '0 auto 16px' }} />
 
-        {/* Stats summary */}
-        {documents.length > 0 && (
-          <div style={{ padding: '0 14px', width: '100%', marginBottom: 14 }}>
-            <div style={{ background: 'var(--bg-surface)', border: '1px solid rgba(0,165,132,.1)', borderRadius: 4, padding: '10px 12px' }}>
-              <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 6 }}>Health Profile</div>
-              <div style={{ fontSize: 14, color: 'rgba(0,200,165,.75)', marginBottom: 3 }}>{allMarkers.length} biomarkers</div>
-              <div style={{ fontSize: 14, color: 'rgba(0,185,150,.6)', marginBottom: 3 }}>{documents.length} documents</div>
-              {flaggedMarkers.length > 0 && <div style={{ fontSize: 14, color: 'rgba(255,160,60,.8)' }}>⚠ {flaggedMarkers.length} need attention</div>}
-            </div>
-            {profileLoaded && !isProfileComplete(profile) && (
-              <button onClick={() => setShowProfileSetup(true)}
-                style={{ width: '100%', marginTop: 8, fontSize: 11, letterSpacing: '0.06em', color: 'var(--accent-watch)', background: 'rgba(255,200,80,.08)', border: '1px solid rgba(255,200,80,.4)', borderRadius: 4, padding: '8px 10px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-                ⚠ Complete your profile →<br />
-                <span style={{ fontSize: 10, color: 'rgba(255,210,100,.65)', letterSpacing: 0 }}>Aellux needs sex, age, weight</span>
-              </button>
-            )}
-          </div>
-        )}
-
         <div className="aellux-speak-wrapper" style={{ padding: '0 14px', width: '100%', position: 'relative' }}>
           <input className="aellux-speak-input" placeholder="Ask Aellux..."
             value={input} onChange={e => setInput(e.target.value)}
@@ -1303,14 +1284,50 @@ export default function App() {
         <div style={{ flex: 1 }} />
         <div style={{ padding: '0 14px', width: '100%', marginBottom: 12 }}>
           <div style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+
+            {/* Username + plan badge */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>{user?.email?.split('@')[0]}</div>
               <div style={{ fontSize: 11, padding: '2px 8px', border: isPro ? '1px solid var(--brand-border)' : '1px solid var(--border-medium)', borderRadius: 10, color: isPro ? 'var(--brand-dim)' : 'var(--text-tertiary)', letterSpacing: 1, textTransform: 'uppercase' }}>{isPro ? 'Pro' : 'Free'}</div>
             </div>
-            {!isPro && (
-              <button onClick={() => setShowUpgrade(true)} style={{ width: '100%', fontSize: 13, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 5, padding: '6px 0', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>Upgrade to Pro →</button>
+
+            {/* Health stats — clickable */}
+            {documents.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                <button onClick={() => switchPanel('dashboard')}
+                  style={{ flex: 1, minWidth: 60, textAlign: 'center', padding: '6px 4px', background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--brand-dim)', lineHeight: 1 }}>{allMarkers.length}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-tertiary)', letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 2 }}>markers</div>
+                </button>
+                <button onClick={() => switchPanel('upload')}
+                  style={{ flex: 1, minWidth: 60, textAlign: 'center', padding: '6px 4px', background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--brand-dim)', lineHeight: 1 }}>{documents.length}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-tertiary)', letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 2 }}>docs</div>
+                </button>
+                {flaggedMarkers.length > 0 && (
+                  <button onClick={() => switchPanel('dashboard')}
+                    style={{ flex: 1, minWidth: 60, textAlign: 'center', padding: '6px 4px', background: 'rgba(153,27,27,.05)', border: '1px solid rgba(153,27,27,.2)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#991b1b', lineHeight: 1 }}>{flaggedMarkers.length}</div>
+                    <div style={{ fontSize: 10, color: '#991b1b', letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 2 }}>⚠ flags</div>
+                  </button>
+                )}
+              </div>
             )}
-            <div style={{ marginTop: 10, borderTop: '1px solid var(--border-subtle)', paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+            {!isPro && (
+              <button onClick={() => setShowUpgrade(true)} style={{ width: '100%', fontSize: 13, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 5, padding: '6px 0', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 8 }}>Upgrade to Pro →</button>
+            )}
+
+            {/* Profile complete prompt */}
+            {profileLoaded && !isProfileComplete(profile) && (
+              <button onClick={() => setShowProfileSetup(true)}
+                style={{ width: '100%', marginBottom: 8, fontSize: 11, letterSpacing: '0.06em', color: 'var(--accent-watch)', background: 'rgba(255,200,80,.08)', border: '1px solid rgba(255,200,80,.4)', borderRadius: 4, padding: '7px 10px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                ⚠ Complete your profile →<br />
+                <span style={{ fontSize: 10, color: 'var(--text-tertiary)', letterSpacing: 0 }}>Aellux needs sex, age, weight</span>
+              </button>
+            )}
+
+            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
               <button onClick={() => switchPanel('profile')} style={{ width: '100%', fontSize: 13, color: 'var(--text-secondary)', background: 'none', border: 'none', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', padding: '7px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 14 }}>⚙</span> Profile &amp; Settings
               </button>
