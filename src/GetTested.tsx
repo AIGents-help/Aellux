@@ -21,9 +21,10 @@ const FUNCTION_REFERRAL_URL = 'https://my.functionhealth.com/signup?code=AKATES1
 interface Props {
   userId?: string;
   isPro?: boolean;
+  onUpload?: () => void;
 }
 
-export default function GetTested({ userId }: Props) {
+export default function GetTested({ userId, onUpload }: Props) {
   const [clickedFunction, setClickedFunction] = useState(false);
 
   // Fire view event once per panel visit — separate from landing_viewed
@@ -303,28 +304,123 @@ export default function GetTested({ userId }: Props) {
         <strong style={{ color: 'var(--text-secondary)' }}>Why we only recommend Function as a partner:</strong> We tested every major direct-to-consumer lab service. Function is the only one that combines (1) comprehensive panel breadth, (2) twice-yearly cadence for tracking change, (3) data export that integrates with Aellux. We're not affiliated with Quest, InsideTracker, or any other lab — those are listed above as honest alternatives, not paid placements.
       </div>
 
-      {/* ─── WEARABLE PHILOSOPHY ───────────────────────────────────────── */}
+      {/* ─── WEARABLE EXPORT GUIDE ────────────────────────────────────── */}
       <div style={S.sectionDivider}>
-        <p style={S.sectionEyebrow}>About wearable data</p>
-        <h2 style={S.sectionH2}>Why there's no "Connect Wearable" button</h2>
+        <p style={S.sectionEyebrow}>Wearable Data</p>
+        <h2 style={S.sectionH2}>Export your data in one click</h2>
+        <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: '8px 0 0' }}>
+          Select your device below. Follow the steps. Upload the file to Aellux — it reads every format automatically.
+        </p>
       </div>
 
-      <div style={{ ...S.secondaryCard, lineHeight: 1.8 }}>
-        <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 16 }}>
-          Uploading wearable data is intentionally manual. Export your data from your device's app — Apple Health, Oura, Garmin, Whoop, Fitbit, Ultrahuman — and upload the file on the Upload Records page. Aellux reads every format automatically.
-        </div>
-        <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 16 }}>
-          We made this choice deliberately. Real-time continuous sync can turn health tracking into something compulsive — the same trap as checking your weight every morning. Numbers fluctuate. A cortisol reading on a bad night's sleep isn't your biology. A single HRV dip doesn't mean anything. Patterns over time do.
-        </div>
-        <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 16 }}>
-          The better model: establish a routine — quarterly labs, a monthly wearable export — run the numbers, get your synthesis, act on it, then put the data down and go live your life. Aellux is designed to surface what matters and get out of the way.
-        </div>
-        <div style={{ padding: '14px 18px', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 8, borderLeft: '3px solid var(--brand-dim)' }}>
-          <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>
-            <strong style={{ color: 'var(--text-primary)' }}>Having a healthy relationship with your health data is itself healthy.</strong> Aellux gives you clarity — not a new thing to monitor. Export, upload, synthesise, act. That cadence produces better results than daily anxiety about your numbers.
-          </p>
-        </div>
+      <WearableExportGuide onUpload={() => { track('wearable_export_upload_click'); }} />
+
+      <div style={{ marginTop: 16, padding: '14px 18px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, borderLeft: '3px solid var(--brand-dim)' }}>
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.75, margin: 0 }}>
+          <strong style={{ color: 'var(--text-primary)' }}>Why manual:</strong> Real-time sync turns health tracking into something compulsive. Numbers fluctuate daily — a single HRV dip doesn't represent your biology. The better model: export monthly, synthesise, act, then put it down and live. <strong style={{ color: 'var(--text-primary)' }}>A healthy relationship with your health data is itself healthy.</strong>
+        </p>
       </div>
+    </div>
+  );
+}
+
+// ── WEARABLE EXPORT GUIDE ─────────────────────────────────────────────────────
+
+const WEARABLES_DATA = [
+  {
+    id: 'apple', name: 'Apple Health', icon: '🍎', description: 'iPhone · Health app', file: 'export.zip',
+    steps: ['Open the Health app on your iPhone','Tap your profile photo (top right)','Scroll down → tap "Export All Health Data"','Tap "Export" and save the .zip file','Upload the .zip directly to Aellux'],
+    deeplink: null, note: 'Includes HRV, sleep, activity, heart rate, steps, workouts. File size 10–200MB.',
+  },
+  {
+    id: 'oura', name: 'Oura Ring', icon: '💍', description: 'Oura app', file: 'CSV',
+    steps: ['Open the Oura app','Tap your profile icon → "Account"','Tap "Data Export" → "Request Data Export"','Oura emails you a download link','Download the CSV and upload to Aellux'],
+    deeplink: 'https://cloud.ouraring.com/user/settings/data-export', note: 'Includes readiness, sleep stages, HRV, SpO2, temperature deviation.',
+  },
+  {
+    id: 'hume', name: 'Hume Band', icon: '📿', description: 'Hume app', file: 'CSV',
+    steps: ['Open the Hume app','Tap Settings → "Export My Data"','Select your date range → tap Export','Save the CSV and upload to Aellux'],
+    deeplink: null, note: 'Includes stress index, HRV, heart rate, and activity data.',
+  },
+  {
+    id: 'withings', name: 'Withings Scale', icon: '⚖️', description: 'Health Mate app', file: 'CSV',
+    steps: ['Open Health Mate app (or healthmate.withings.com)','Tap Profile → "Download my data"','Select Weight & Body Composition','Download and upload the CSV to Aellux'],
+    deeplink: 'https://healthmate.withings.com/settings/data', note: 'Includes weight, body fat %, muscle mass, bone mass, and BMI trend.',
+  },
+  {
+    id: 'garmin', name: 'Garmin', icon: '🏃', description: 'Garmin Connect', file: 'ZIP',
+    steps: ['Go to connect.garmin.com','Click your name → "Account Settings"','Scroll to "Data Management" → "Export Your Data"','Garmin emails you a download link','Upload the ZIP to Aellux'],
+    deeplink: 'https://www.garmin.com/en-US/account/datamanagement/exportdata/', note: 'Includes VO2 max, HRV, sleep, stress, activity, body battery.',
+  },
+  {
+    id: 'whoop', name: 'WHOOP', icon: '💪', description: 'WHOOP app', file: 'CSV',
+    steps: ['Open the WHOOP app','Tap the menu → "My Account"','Tap "Export Data" → select date range','WHOOP emails you a CSV link','Download and upload to Aellux'],
+    deeplink: null, note: 'Includes strain, recovery %, HRV, resting heart rate, sleep performance.',
+  },
+  {
+    id: 'fitbit', name: 'Fitbit / Google Fit', icon: '📊', description: 'Google Takeout', file: 'ZIP',
+    steps: ['Go to takeout.google.com','Click "Deselect all" then select "Fitbit" only','Click "Next step" → "Export once" → "Create export"','Google emails a download link (may take minutes)','Upload the ZIP to Aellux'],
+    deeplink: 'https://takeout.google.com', note: 'Includes sleep, heart rate, activity, and daily summaries.',
+  },
+];
+
+function WearableExportGuide({ onUpload }: { onUpload?: () => void }) {
+  const [selected, setSelected] = React.useState<string | null>(null);
+  const device = WEARABLES_DATA.find(w => w.id === selected);
+
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10, marginBottom: 16 }}>
+        {WEARABLES_DATA.map(w => (
+          <button key={w.id} onClick={() => setSelected(selected === w.id ? null : w.id)}
+            style={{ padding: '14px 10px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center', background: selected === w.id ? 'var(--brand-ghost)' : '#fff', border: `1.5px solid ${selected === w.id ? 'var(--brand-border)' : 'var(--border-subtle)'}`, boxShadow: selected === w.id ? '0 2px 8px rgba(3,26,13,.1)' : '0 1px 3px rgba(0,0,0,.04)', transition: 'all .15s' }}>
+            <div style={{ fontSize: 28, marginBottom: 6 }}>{w.icon}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.2 }}>{w.name}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 3 }}>{w.description}</div>
+          </button>
+        ))}
+      </div>
+
+      {device && (
+        <div style={{ background: '#fff', border: '1.5px solid var(--brand-border)', borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
+          <div style={{ padding: '16px 20px', background: 'var(--brand-ghost)', borderBottom: '1px solid var(--brand-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 28 }}>{device.icon}</span>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{device.name} — How to export</div>
+              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>File type: <strong>{device.file}</strong></div>
+            </div>
+          </div>
+          <div style={{ padding: '18px 20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+              {device.steps.map((s, i) => (
+                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#1a4731', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                  <div style={{ fontSize: 15, color: 'var(--text-primary)', lineHeight: 1.55, paddingTop: 3 }}>{s}</div>
+                </div>
+              ))}
+            </div>
+            {device.note && (
+              <div style={{ padding: '10px 14px', background: 'var(--bg-sunken)', borderRadius: 6, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 14 }}>
+                💡 {device.note}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {device.deeplink && (
+                <button onClick={() => { const w = window.open('', '_blank', 'noopener'); if (w) w.location.href = device.deeplink!; }}
+                  style={{ fontSize: 14, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 7, padding: '10px 18px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                  Open {device.name} export page →
+                </button>
+              )}
+              {onUpload && (
+                <button onClick={onUpload}
+                  style={{ fontSize: 14, color: 'var(--brand-dim)', background: 'var(--brand-ghost)', border: '1.5px solid var(--brand-border)', borderRadius: 7, padding: '10px 18px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                  Upload to Aellux →
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

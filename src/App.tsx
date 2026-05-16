@@ -2661,7 +2661,7 @@ export default function App() {
         )}
 
         {panel === 'tested' && (
-          <GetTested userId={user?.id} isPro={isPro} />
+          <GetTested userId={user?.id} isPro={isPro} onUpload={() => switchPanel('upload')} />
         )}
 
         {panel === 'admin' && isAdmin && (
