@@ -2450,6 +2450,9 @@ export default function App() {
                   <DerivedViews
                     weekData={personalised.week}
                     selectedMealKeys={mealSwaps}
+                    allMarkers={allMarkers}
+                    profile={profile}
+                    userId={user?.id}
                     weekView={
                       <WeekView
                         data={personalised.week}

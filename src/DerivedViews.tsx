@@ -3,8 +3,11 @@ import React, { useMemo, useState } from 'react';
 interface Props {
   weekData: any;
   selectedMealKeys: Record<string, string>;
-  weekView: React.ReactNode; // The full WeekView component, rendered by parent
+  weekView: React.ReactNode;
   onPrint?: (section: 'week' | 'stack' | 'grocery' | 'today') => void;
+  allMarkers?: any[];
+  profile?: any;
+  userId?: string;
 }
 
 // ---- helpers ---------------------------------------------------------------
@@ -189,28 +192,94 @@ function aggregateGrocery(weekData: any, selectedMealKeys: Record<string, string
 
 // ---- subcomponents ---------------------------------------------------------
 
-function SuppStack({ weekData }: { weekData: any }) {
+function SuppDetail({ supp, allMarkers, profile, userId, onClose }: { supp: any; allMarkers: any[]; profile: any; userId?: string; onClose: () => void }) {
+  const [info, setInfo] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/supplement-info', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: supp.name, dose: supp.dose, userId, allMarkers, profile }),
+    }).then(r => r.json()).then(d => { setInfo(d); setLoading(false); }).catch(() => setLoading(false));
+  }, [supp.name]);
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,26,15,.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: 20 }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: 'var(--bg-surface)', borderRadius: 14, padding: '32px 28px', maxWidth: 520, width: '100%', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 8px 40px rgba(0,0,0,.15)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 4 }}>Supplement</div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 400, color: 'var(--text-primary)', margin: 0 }}>{supp.name}</h2>
+            {supp.dose && <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginTop: 4 }}>{supp.dose} · {supp.ampm} · {supp.everyDay ? 'Daily' : `${supp.days.length}×/week`}</div>}
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: 'var(--text-tertiary)', padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
+        </div>
+
+        {loading ? (
+          <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 14 }}>
+            Aellux is cross-referencing your biomarkers…
+          </div>
+        ) : info?.error ? (
+          <div style={{ color: 'var(--accent-elevated)', fontSize: 14 }}>Could not load supplement info.</div>
+        ) : info ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <InfoBlock icon="🎯" label="Why you specifically need this" text={info.why_you} accent="var(--brand-dim)" />
+            <InfoBlock icon="⚙" label="How it works" text={info.mechanism} accent="var(--accent-info)" />
+            <InfoBlock icon="📈" label="What to expect" text={info.what_to_expect} accent="var(--accent-optimal)" />
+            <InfoBlock icon="💡" label="Best practice" text={info.best_practice} accent="var(--accent-watch)" />
+            {info.caution && info.caution !== 'null' && (
+              <InfoBlock icon="⚠" label="Note" text={info.caution} accent="var(--accent-elevated)" />
+            )}
+            <p style={{ fontSize: 11, color: 'var(--text-tertiary)', lineHeight: 1.6, margin: 0, borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
+              Educational context only — not medical advice. Consult your physician before starting any new supplement.
+            </p>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function InfoBlock({ icon, label, text, accent }: { icon: string; label: string; text: string; accent: string }) {
+  return (
+    <div style={{ padding: '14px 16px', background: 'var(--bg-sunken)', borderRadius: 8, borderLeft: `3px solid ${accent}` }}>
+      <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: accent, marginBottom: 6 }}>{icon} {label}</div>
+      <p style={{ fontSize: 15, color: 'var(--text-primary)', lineHeight: 1.7, margin: 0 }}>{text}</p>
+    </div>
+  );
+}
+
+function SuppStack({ weekData, allMarkers, profile, userId }: { weekData: any; allMarkers?: any[]; profile?: any; userId?: string }) {
   const supps = useMemo(() => aggregateSupps(weekData), [weekData]);
+  const [selected, setSelected] = React.useState<any>(null);
+
   if (supps.length === 0) return <div style={{ padding: '20px', color: 'var(--text-tertiary)' }}>No supplements listed in this week's protocol.</div>;
   return (
     <div>
-      <div style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 14 }}>
-        Every unique supplement across your 7-day Biologic Protocol, deduplicated. {supps.length} total · {supps.filter(s => s.everyDay).length} every-day staples.
+      <div style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 14 }}>
+        {supps.length} supplements · tap any to see why it was prescribed for your biology.
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
         {supps.map((s, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 6 }}>
+          <button key={i} onClick={() => setSelected(s)}
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'border-color .15s, box-shadow .15s', width: '100%' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand-border)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(3,26,13,.08)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.boxShadow = 'none'; }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 16, color: 'var(--text-primary)', fontFamily: 'EB Garamond, Georgia, serif' }}>{s.name}</div>
-              {s.dose && <div style={{ fontSize: 16, color: 'var(--text-secondary)', marginTop: 2 }}>{s.dose}</div>}
+              <div style={{ fontSize: 16, color: 'var(--text-primary)', fontWeight: 500 }}>{s.name}</div>
+              {s.dose && <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 2 }}>{s.dose}</div>}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', background: 'var(--brand-ghost)', borderRadius: 10 }}>{s.ampm}</div>
-            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              {s.everyDay ? 'Daily' : `${s.days.length}×/wk`}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', background: 'var(--brand-ghost)', borderRadius: 10, border: '1px solid var(--brand-border)' }}>{s.ampm}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{s.everyDay ? 'Daily' : `${s.days.length}×/wk`}</div>
+              <div style={{ fontSize: 14, color: 'var(--brand-dim)', opacity: 0.6 }}>→</div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
+      {selected && <SuppDetail supp={selected} allMarkers={allMarkers || []} profile={profile} userId={userId} onClose={() => setSelected(null)} />}
     </div>
   );
 }
@@ -392,40 +461,79 @@ function TodayChecklist({ weekData, selectedMealKeys }: { weekData: any; selecte
 
 // ---- main ------------------------------------------------------------------
 
-export default function DerivedViews({ weekData, selectedMealKeys, weekView, onPrint }: Props) {
+export default function DerivedViews({ weekData, selectedMealKeys, weekView, onPrint, allMarkers, profile, userId }: Props) {
   const [tab, setTab] = useState<'week' | 'today' | 'stack' | 'grocery'>('week');
+
+  const printSection = () => {
+    const sectionId = `print-section-${tab}`;
+    const el = document.getElementById(sectionId);
+    if (!el) { window.print(); return; }
+    const content = el.innerHTML;
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.write(`<!DOCTYPE html><html><head><title>Aellux · ${tab}</title>
+    <style>
+      body { font-family: 'DM Sans', system-ui, sans-serif; padding: 32px; color: #0f1a0f; max-width: 700px; margin: 0 auto; }
+      h1 { font-size: 24px; margin-bottom: 4px; }
+      .section-header { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #3a4a3a; margin-bottom: 16px; }
+      .category { background: #f5f3ef; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; }
+      .cat-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #3a4a3a; margin-bottom: 8px; }
+      .items { display: flex; flex-wrap: wrap; gap: 4px 24px; }
+      .item { font-size: 15px; min-width: 160px; line-height: 1.7; }
+      .supp-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid #e0ddd6; border-radius: 8px; margin-bottom: 8px; }
+      .supp-name { font-size: 16px; font-weight: 500; flex: 1; }
+      .supp-dose { font-size: 14px; color: #3a4a3a; }
+      .badge { font-size: 11px; padding: 3px 8px; background: #f0f7f0; border: 1px solid #c8dfc8; border-radius: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+      .check-row { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 16px; }
+      .checkbox { width: 16px; height: 16px; border: 2px solid #1a4731; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+      .section-block { border: 1px solid #e0ddd6; border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; }
+      .block-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+      footer { margin-top: 32px; padding-top: 14px; border-top: 1px solid #e0ddd6; font-size: 12px; color: #6b7b6b; }
+    </style></head><body>
+    <p class="section-header">Aellux · aellux.health</p>
+    ${content}
+    <footer>Generated by Aellux · aellux.health · ${new Date().toLocaleDateString()}</footer>
+    </body></html>`);
+    w.document.close();
+    setTimeout(() => { w.focus(); w.print(); }, 400);
+  };
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 4, marginBottom: 18, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 0, flexWrap: 'wrap' }}>
-        {[
-          { id: 'week',    label: 'Full Week' },
-          { id: 'today',   label: "Today's Plan" },
-          { id: 'stack',   label: 'Supplement Stack' },
-          { id: 'grocery', label: 'Grocery List' },
-        ].map(t => (
-          <button key={t.id} onClick={() => setTab(t.id as any)}
-            style={{
-              padding: '10px 16px',
-              background: 'none',
-              border: 'none',
-              borderBottom: `2px solid ${tab === t.id ? 'var(--brand)' : 'transparent'}`,
-              color: tab === t.id ? 'rgba(0,255,200,1)' : 'var(--text-tertiary)',
-              fontSize: 16,
-              fontFamily: 'inherit',
-              cursor: 'pointer',
-              letterSpacing: '0.04em',
-              transition: 'color .15s, border-color .15s',
-            }}>
-            {t.label}
-          </button>
-        ))}
+      {/* Tab bar + print button */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 18, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 0, flexWrap: 'wrap', gap: 4 }}>
+        <div style={{ display: 'flex', flex: 1, flexWrap: 'wrap' }}>
+          {[
+            { id: 'week',    label: 'Full Week' },
+            { id: 'today',   label: "Today's Plan" },
+            { id: 'stack',   label: 'Supplement Stack' },
+            { id: 'grocery', label: 'Grocery List' },
+          ].map(t => (
+            <button key={t.id} onClick={() => setTab(t.id as any)}
+              style={{
+                padding: '10px 16px', background: 'none', border: 'none',
+                borderBottom: `2px solid ${tab === t.id ? 'var(--brand-dim)' : 'transparent'}`,
+                color: tab === t.id ? 'var(--brand-dim)' : 'var(--text-secondary)',
+                fontSize: 15, fontFamily: 'inherit', cursor: 'pointer',
+                fontWeight: tab === t.id ? 600 : 400,
+                transition: 'color .15s, border-color .15s',
+              }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <button onClick={printSection}
+          style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexShrink: 0 }}>
+          🖨 Print {tab === 'week' ? 'Full Week' : tab === 'today' ? "Today" : tab === 'stack' ? 'Supplements' : 'Grocery List'}
+        </button>
       </div>
 
-      {tab === 'week'    && weekView}
-      {tab === 'today'   && <TodayChecklist weekData={weekData} selectedMealKeys={selectedMealKeys} />}
-      {tab === 'stack'   && <SuppStack weekData={weekData} />}
-      {tab === 'grocery' && <GroceryList weekData={weekData} selectedMealKeys={selectedMealKeys} />}
+      <div id={`print-section-${tab}`}>
+        {tab === 'week'    && weekView}
+        {tab === 'today'   && <TodayChecklist weekData={weekData} selectedMealKeys={selectedMealKeys} />}
+        {tab === 'stack'   && <SuppStack weekData={weekData} allMarkers={allMarkers} profile={profile} userId={userId} />}
+        {tab === 'grocery' && <GroceryList weekData={weekData} selectedMealKeys={selectedMealKeys} />}
+      </div>
     </div>
   );
 }
