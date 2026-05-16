@@ -209,7 +209,7 @@ function SuppStack({ weekData }: { weekData: any }) {
               <div style={{ fontSize: 16, color: 'var(--text-primary)', fontFamily: 'EB Garamond, Georgia, serif' }}>{s.name}</div>
               {s.dose && <div style={{ fontSize: 16, color: 'var(--text-secondary)', marginTop: 2 }}>{s.dose}</div>}
             </div>
-            <div style={{ fontSize: 12, color: 'rgba(0,225,180,.75)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', background: 'var(--brand-ghost)', borderRadius: 10 }}>{s.ampm}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', background: 'var(--brand-ghost)', borderRadius: 10 }}>{s.ampm}</div>
             <div style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               {s.everyDay ? 'Daily' : `${s.days.length}×/wk`}
             </div>
@@ -233,12 +233,12 @@ function GroceryList({ weekData, selectedMealKeys }: { weekData: any; selectedMe
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {categories.map(category => (
           <div key={category} style={{ padding: '16px 20px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8 }}>
-            <div style={{ fontSize: 12, color: 'rgba(0,225,180,.7)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>
               {category} · {byCategory[category].length}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 24px' }}>
               {byCategory[category].map((item: string, i: number) => (
-                <div key={i} style={{ fontSize: 15, color: 'rgba(220,255,235,.88)', lineHeight: 1.7, minWidth: 160 }}>• {item}</div>
+                <div key={i} style={{ fontSize: 15, color: 'var(--text-primary)', lineHeight: 1.7, minWidth: 160 }}>• {item}</div>
               ))}
             </div>
           </div>
