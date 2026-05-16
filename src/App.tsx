@@ -2374,11 +2374,40 @@ export default function App() {
               ) : weekStreamDays.length > 0 && !personalised.week ? (
                 /* ============ STREAMING IN PROGRESS ============ */
                 <div>
-                  <div style={{ marginBottom: 18, padding: '14px 20px', background: 'var(--brand-ghost)', border: '1px solid rgba(0,225,180,.3)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%)', flexShrink: 0, animation: 'pulse 2s ease-in-out infinite' }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, color: 'var(--brand)', letterSpacing: '0.04em', marginBottom: 2 }}>{weekStreamStatus || 'Aellux is designing your protocol…'}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{weekStreamDays.length} of {isPro ? 7 : 1} day{(isPro ? 7 : 1) === 1 ? '' : 's'} ready · Tap any meal once it appears for alternatives</div>
+                  <div style={{ marginBottom: 24, padding: '20px 24px', background: '#fff', border: '1px solid var(--brand-border)', borderRadius: 12, boxShadow: '0 2px 8px rgba(3,26,13,.08)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'radial-gradient(ellipse at 38% 32%, #064e23 0%, #052e16 50%, #0a1a0a 100%)', flexShrink: 0, animation: 'aellux-star-twinkle 2s ease-in-out infinite' }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 600, marginBottom: 2 }}>
+                          {weekStreamStatus || `Building Day ${weekStreamDays.length + 1} of ${isPro ? 7 : 1}…`}
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>
+                          {weekStreamDays.length} of {isPro ? 7 : 1} day{weekStreamDays.length !== 1 ? 's' : ''} complete · each day is biologically distinct
+                        </div>
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div style={{ background: 'var(--bg-sunken)', borderRadius: 20, height: 8, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%', borderRadius: 20,
+                        background: 'linear-gradient(90deg, #1a4731, #166534)',
+                        width: `${Math.max(8, (weekStreamDays.length / (isPro ? 7 : 1)) * 100)}%`,
+                        transition: 'width .5s ease',
+                      }} />
+                    </div>
+                    {/* Day pills */}
+                    <div style={{ display: 'flex', gap: 6, marginTop: 12, flexWrap: 'wrap' }}>
+                      {Array.from({ length: isPro ? 7 : 1 }, (_, i) => (
+                        <div key={i} style={{
+                          padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 500,
+                          background: i < weekStreamDays.length ? '#1a4731' : 'var(--bg-sunken)',
+                          color: i < weekStreamDays.length ? '#fff' : 'var(--text-tertiary)',
+                          border: `1px solid ${i < weekStreamDays.length ? '#1a4731' : 'var(--border-subtle)'}`,
+                          transition: 'all .3s',
+                        }}>
+                          {i < weekStreamDays.length ? `✓ Day ${i + 1}` : `Day ${i + 1}`}
+                        </div>
+                      ))}
                     </div>
                   </div>
                   <WeekView

@@ -277,28 +277,75 @@ function TodayChecklist({ weekData, selectedMealKeys }: { weekData: any; selecte
   return (
     <div>
       <div style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 14 }}>
-        Today is <strong style={{ color: 'var(--brand)' }}>{day.day} · {day.theme}</strong>
+        Today is <strong style={{ color: 'var(--text-primary)' }}>{day.day} · {day.theme}</strong>
         {day.focus_marker && <> · Focus: {day.focus_marker}</>}
       </div>
+
+      {/* Self-monitoring note */}
+      <div style={{ marginBottom: 18, padding: '12px 16px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+          <strong style={{ color: 'var(--text-primary)' }}>Print this page</strong> and check off each item as you complete it.
+          This is intentionally self-monitored — your results are only as honest as your effort.
+          In a future version, Aellux will track completion in-app and adapt your protocol accordingly.
+          For now, the most effective thing you can do is be honest with yourself.
+        </div>
+        <button onClick={() => window.print()} style={{ marginTop: 10, fontSize: 13, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 6, padding: '7px 16px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
+          🖨 Print Today's Checklist
+        </button>
+      </div>
+
+      <style>{`
+        @media print {
+          body * { visibility: hidden !important; }
+          .today-checklist, .today-checklist * { visibility: visible !important; }
+          .today-checklist { position: fixed; top: 0; left: 0; width: 100%; padding: 32px; }
+          .today-checklist .print-hide { display: none !important; }
+          .today-checklist .check-box {
+            display: inline-block !important;
+            width: 14px; height: 14px;
+            border: 2px solid #1a4731;
+            border-radius: 2px;
+            margin-right: 8px;
+            vertical-align: middle;
+          }
+        }
+      `}</style>
+
+      <div className="today-checklist">
+        <div style={{ marginBottom: 8, fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
+          {day.day} · {day.theme}
+        </div>
 
       {day.morning && (
         <div style={{ marginBottom: 16, padding: '14px 18px', background: 'rgba(255,200,80,.04)', border: '1px solid rgba(255,200,80,.18)', borderRadius: 6 }}>
           <div style={{ fontSize: 12, color: 'var(--accent-watch)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>☀ Morning {day.morning.wake_time ? `· ${day.morning.wake_time}` : ''}</div>
-          {day.morning.actions?.map((a: string, i: number) => <div key={i} style={{ fontSize: 16, color: 'var(--text-primary)', padding: '3px 0' }}>☐ {a}</div>)}
-          {day.morning.supps_am?.map((s: string, i: number) => <div key={`s${i}`} style={{ fontSize: 16, color: 'var(--text-secondary)', padding: '3px 0' }}>☐ Take {s}</div>)}
+          {day.morning.actions?.map((a: string, i: number) => (
+            <div key={i} style={{ fontSize: 16, color: 'var(--text-primary)', padding: '5px 0', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <span className="check-box" style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid #1a4731', borderRadius: 2, flexShrink: 0, marginTop: 3 }} />
+              {a}
+            </div>
+          ))}
+          {day.morning.supps_am?.map((s: string, i: number) => (
+            <div key={`s${i}`} style={{ fontSize: 16, color: 'var(--text-secondary)', padding: '5px 0', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <span className="check-box" style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid #1a4731', borderRadius: 2, flexShrink: 0, marginTop: 3 }} />
+              Take {s}
+            </div>
+          ))}
         </div>
       )}
 
       {day.meals && (
-        <div style={{ marginBottom: 16, padding: '14px 18px', background: 'var(--brand-ghost)', border: '1px solid rgba(0,225,180,.2)', borderRadius: 6 }}>
-          <div style={{ fontSize: 12, color: 'var(--brand)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>🍽 Meals</div>
+        <div style={{ marginBottom: 16, padding: '14px 18px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 6 }}>
+          <div style={{ fontSize: 12, color: 'var(--brand-dim)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>🍽 Meals</div>
           {['breakfast', 'lunch', 'dinner'].map(slot => {
             const m = resolveMeal(slot);
             if (!m) return null;
             return (
-              <div key={slot} style={{ fontSize: 16, color: 'var(--text-primary)', padding: '4px 0' }}>
-                ☐ <strong style={{ textTransform: 'capitalize', color: 'var(--brand)' }}>{slot}:</strong> {m.name}
-                {m.swapped && <span style={{ marginLeft: 6, fontSize: 11, padding: '1px 6px', background: 'var(--border-subtle)', borderRadius: 3, color: 'var(--brand)', letterSpacing: '0.06em' }}>SWAPPED</span>}
+              <div key={slot} style={{ fontSize: 16, color: 'var(--text-primary)', padding: '5px 0', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <span className="check-box" style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid #1a4731', borderRadius: 2, flexShrink: 0, marginTop: 3 }} />
+                <span><strong style={{ textTransform: 'capitalize', color: 'var(--brand-dim)' }}>{slot}:</strong> {m.name}
+                {m.swapped && <span style={{ marginLeft: 6, fontSize: 11, padding: '1px 6px', background: 'var(--border-subtle)', borderRadius: 3, color: 'var(--brand-dim)', letterSpacing: '0.06em' }}>SWAPPED</span>}
+                </span>
               </div>
             );
           })}
@@ -306,19 +353,39 @@ function TodayChecklist({ weekData, selectedMealKeys }: { weekData: any; selecte
       )}
 
       {day.movement && (
-        <div style={{ marginBottom: 16, padding: '14px 18px', background: 'rgba(100,210,255,.04)', border: '1px solid rgba(100,210,255,.2)', borderRadius: 6 }}>
-          <div style={{ fontSize: 12, color: 'rgba(100,210,255,.85)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>⚡ Movement</div>
-          <div style={{ fontSize: 16, color: 'var(--text-primary)' }}>☐ {day.movement.type}{day.movement.duration ? ` · ${day.movement.duration}` : ''}{day.movement.when ? ` · ${day.movement.when}` : ''}</div>
+        <div style={{ marginBottom: 16, padding: '14px 18px', background: 'rgba(30,58,95,.04)', border: '1px solid rgba(30,58,95,.12)', borderRadius: 6 }}>
+          <div style={{ fontSize: 12, color: 'var(--accent-info)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>⚡ Movement</div>
+          <div style={{ fontSize: 16, color: 'var(--text-primary)', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <span className="check-box" style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid #1a4731', borderRadius: 2, flexShrink: 0, marginTop: 3 }} />
+            {day.movement.type}{day.movement.duration ? ` · ${day.movement.duration}` : ''}{day.movement.when ? ` · ${day.movement.when}` : ''}
+          </div>
         </div>
       )}
 
       {day.evening && (
-        <div style={{ padding: '14px 18px', background: 'rgba(200,160,255,.04)', border: '1px solid rgba(200,160,255,.2)', borderRadius: 6 }}>
-          <div style={{ fontSize: 12, color: 'rgba(200,160,255,.85)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>🌙 Evening {day.evening.sleep_target ? `· sleep ${day.evening.sleep_target}` : ''}</div>
-          {day.evening.supps_pm?.map((s: string, i: number) => <div key={i} style={{ fontSize: 16, color: 'var(--text-primary)', padding: '3px 0' }}>☐ Take {s}</div>)}
-          {day.evening.wind_down && <div style={{ fontSize: 16, color: 'var(--text-primary)', padding: '3px 0' }}>☐ {day.evening.wind_down}</div>}
+        <div style={{ padding: '14px 18px', background: 'rgba(88,28,135,.04)', border: '1px solid rgba(88,28,135,.12)', borderRadius: 6 }}>
+          <div style={{ fontSize: 12, color: '#6d28d9', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>🌙 Evening {day.evening.sleep_target ? `· sleep ${day.evening.sleep_target}` : ''}</div>
+          {day.evening.supps_pm?.map((s: string, i: number) => (
+            <div key={i} style={{ fontSize: 16, color: 'var(--text-primary)', padding: '5px 0', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <span className="check-box" style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid #1a4731', borderRadius: 2, flexShrink: 0, marginTop: 3 }} />
+              Take {s}
+            </div>
+          ))}
+          {day.evening.wind_down && (
+            <div style={{ fontSize: 16, color: 'var(--text-primary)', padding: '5px 0', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <span className="check-box" style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid #1a4731', borderRadius: 2, flexShrink: 0, marginTop: 3 }} />
+              {day.evening.wind_down}
+            </div>
+          )}
         </div>
       )}
+
+      {/* Print footer */}
+      <div style={{ marginTop: 20, paddingTop: 14, borderTop: '1px solid var(--border-subtle)', fontSize: 12, color: 'var(--text-tertiary)' }}>
+        Generated by Aellux · aellux.health · {day.day} protocol
+      </div>
+
+      </div>
     </div>
   );
 }
