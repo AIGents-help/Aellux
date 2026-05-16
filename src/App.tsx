@@ -2100,28 +2100,30 @@ export default function App() {
                       </div>
 
                       {/* Meal Prepper toggle */}
-                      <div style={{ marginBottom: 18, paddingTop: 18, borderTop: '1px solid rgba(0,210,165,.1)' }}>
+                      <div style={{ marginBottom: 18, paddingTop: 18, borderTop: '1px solid var(--border-subtle)' }}>
                         <button
                           type="button"
                           onClick={() => setBpMealPrep(!bpMealPrep)}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 12, width: '100%',
                             padding: '12px 16px',
-                            background: bpMealPrep ? 'rgba(0,225,180,.1)' : 'var(--bg-sunken)',
-                            border: `1px solid ${bpMealPrep ? 'rgba(0,225,180,.5)' : 'var(--border-subtle)'}`,
+                            background: bpMealPrep ? 'var(--brand-ghost)' : 'var(--bg-surface)',
+                            border: `1.5px solid ${bpMealPrep ? 'var(--brand-border)' : 'var(--border-subtle)'}`,
                             borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
                           }}
                         >
+                          {/* Checkbox */}
                           <div style={{
-                            width: 22, height: 22, borderRadius: 4, flexShrink: 0,
-                            background: bpMealPrep ? 'var(--brand)' : 'transparent',
-                            border: `2px solid ${bpMealPrep ? 'var(--brand)' : 'var(--text-tertiary)'}`,
+                            width: 20, height: 20, borderRadius: 4, flexShrink: 0,
+                            background: bpMealPrep ? '#1a4731' : '#fff',
+                            border: `2px solid ${bpMealPrep ? '#1a4731' : 'var(--border-medium)'}`,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all .15s',
                           }}>
-                            {bpMealPrep && <span style={{ color: '#000', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>✓</span>}
+                            {bpMealPrep && <span style={{ color: '#fff', fontSize: 12, fontWeight: 700, lineHeight: 1 }}>✓</span>}
                           </div>
                           <div>
-                            <div style={{ fontSize: 15, color: bpMealPrep ? 'rgba(0,255,200,1)' : 'var(--text-secondary)', fontWeight: 500 }}>Meal Prepper mode</div>
+                            <div style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 500 }}>Meal Prepper mode</div>
                             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 3, lineHeight: 1.5 }}>
                               Cook once on Sunday, eat all week. Aellux designs your menu around 2 bulk proteins + 2 sides — portion into containers, grab and go.
                             </div>
