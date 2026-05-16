@@ -1464,6 +1464,24 @@ export default function App() {
                 />
               ) : (
                 <>
+                  {/* ── DASHBOARD HERO ── */}
+                  <div style={{
+                    position: 'relative', height: 200, marginBottom: 28, borderRadius: 16, overflow: 'hidden',
+                    backgroundImage: 'url(https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=1200&q=80)',
+                    backgroundSize: 'cover', backgroundPosition: 'center 40%',
+                  }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(3,26,13,.85) 0%, rgba(5,46,22,.55) 60%, rgba(0,0,0,.15) 100%)' }} />
+                    <div style={{ position: 'relative', padding: '32px 36px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                      <div style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,.55)', marginBottom: 6 }}>Health Dashboard</div>
+                      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, color: '#fff', margin: 0, lineHeight: 1.2 }}>
+                        {allMarkers.length} biomarkers · {documents.length} documents
+                      </h1>
+                      {flaggedMarkers.length > 0 && (
+                        <p style={{ fontSize: 13, color: 'rgba(255,200,120,.85)', margin: '6px 0 0' }}>⚠ {flaggedMarkers.length} markers need attention</p>
+                      )}
+                    </div>
+                  </div>
+
                   <BodyHero personalised={personalised} />
 
                   {/* ── MARKERS CONTENT ── */}
@@ -2125,20 +2143,29 @@ export default function App() {
             <div>
               {!personalised.week && !weekStreamDays.length ? (
                 /* ============ PRE-GENERATION STATE ============ */
-                <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 60px' }}>
-                  <div style={{ textAlign: 'center', marginBottom: 30 }}>
-                    <div style={{ fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 10 }}>The flagship Aellux output</div>
-                    <h1 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 36, color: 'var(--text-primary)', fontWeight: 500, margin: '0 0 14px', lineHeight: 1.15 }}>Your Biologic Protocol</h1>
-                    <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
-                      {allMarkers.length === 0
-                        ? 'Upload your health documents first to begin.'
-                        : `Aellux will design 7 biologically distinct days from your ${allMarkers.length} biomarkers. Meals, supplements, training and recovery — woven together as one weekly operating system.`}
-                    </p>
-                    {!isPro && allMarkers.length > 0 && (
-                      <p style={{ fontSize: 13, color: 'var(--accent-watch)', marginTop: 14, lineHeight: 1.6 }}>
-                        Free plan: Day 1 preview only. Pro ($29/mo) unlocks all 7 days + alternatives + grocery list + printable PDF.
+                <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 0 60px' }}>
+
+                  {/* Hero banner */}
+                  <div style={{
+                    position: 'relative', height: 260, marginBottom: 32, borderRadius: 16, overflow: 'hidden',
+                    backgroundImage: 'url(https://images.unsplash.com/photo-1547592180-85f173990554?w=1200&q=80)',
+                    backgroundSize: 'cover', backgroundPosition: 'center',
+                  }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(3,26,13,.88) 0%, rgba(5,46,22,.6) 55%, rgba(0,0,0,.2) 100%)' }} />
+                    <div style={{ position: 'relative', padding: '40px 40px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                      <div style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,.55)', marginBottom: 10 }}>The flagship Aellux output</div>
+                      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 400, color: '#fff', margin: '0 0 12px', lineHeight: 1.15 }}>Your Biologic Protocol</h1>
+                      <p style={{ fontSize: 15, color: 'rgba(255,255,255,.72)', margin: 0, lineHeight: 1.65, maxWidth: 500 }}>
+                        {allMarkers.length === 0
+                          ? 'Upload your health documents first to begin.'
+                          : `7 biologically distinct days designed from your ${allMarkers.length} biomarkers — meals, supplements, training and recovery woven into one weekly operating system.`}
                       </p>
-                    )}
+                      {!isPro && allMarkers.length > 0 && (
+                        <p style={{ fontSize: 12, color: 'rgba(255,200,120,.85)', marginTop: 10, lineHeight: 1.5 }}>
+                          Free plan: Day 1 preview only. Pro unlocks all 7 days + swaps + grocery list + PDF.
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   {allMarkers.length > 0 && (
@@ -2347,23 +2374,30 @@ export default function App() {
               ) : (
                 /* ============ COMPLETED — TABBED VIEW ============ */
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
-                    <div>
-                      <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 26, color: 'var(--text-primary)', fontWeight: 500, lineHeight: 1.1 }}>{isPro ? 'Your Biologic Protocol' : 'Day 1 Preview'}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, letterSpacing: '0.04em' }}>
-                        Designed from your {allMarkers.length} biomarkers
-                        {bpMealStyle !== 'none' && <> · {bpMealStyle.charAt(0).toUpperCase() + bpMealStyle.slice(1)}</>}
-                        {bpAdditionalGoal && <> · Focus: {bpAdditionalGoal}</>}
+                  {/* Protocol hero banner */}
+                  <div style={{
+                    position: 'relative', height: 180, marginBottom: 24, borderRadius: 16, overflow: 'hidden',
+                    backgroundImage: 'url(https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&q=80)',
+                    backgroundSize: 'cover', backgroundPosition: 'center 60%',
+                  }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(3,26,13,.82) 0%, rgba(5,46,22,.5) 60%, rgba(0,0,0,.1) 100%)' }} />
+                    <div style={{ position: 'relative', padding: '28px 32px', height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                      <div>
+                        <div style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,.55)', marginBottom: 6 }}>Biologic Protocol</div>
+                        <div style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: '#fff', fontWeight: 400, lineHeight: 1.2 }}>{isPro ? 'Your Biologic Protocol' : 'Day 1 Preview'}</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,.65)', marginTop: 4 }}>
+                          Designed from your {allMarkers.length} biomarkers
+                          {bpMealStyle !== 'none' && <> · {bpMealStyle.charAt(0).toUpperCase() + bpMealStyle.slice(1)}</>}
+                          {bpAdditionalGoal && <> · {bpAdditionalGoal}</>}
+                        </div>
                       </div>
+                      {isPro && (
+                        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                          <button onClick={() => triggerPrint('week')} style={{ fontSize: 13, color: '#fff', background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.3)', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit', backdropFilter: 'blur(4px)' }}>↓ Download</button>
+                          <button onClick={() => setShowRegenConfirm(true)} style={{ fontSize: 13, color: 'rgba(255,200,120,.9)', background: 'rgba(255,200,80,.1)', border: '1px solid rgba(255,200,80,.35)', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Regenerate</button>
+                        </div>
+                      )}
                     </div>
-                    {isPro && (
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => triggerPrint('week')} style={{ fontSize: 13, color: 'var(--brand)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,225,180,.55)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>↓ Download / Print</button>
-                        <button onClick={() => setShowRegenConfirm(true)}
-                          style={{ fontSize: 13, color: 'var(--accent-watch)', background: 'rgba(255,200,80,.05)', border: '1px solid rgba(255,200,80,.4)', borderRadius: 3, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}
-                        >Regenerate</button>
-                      </div>
-                    )}
                   </div>
 
                   <DerivedViews
