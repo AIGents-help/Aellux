@@ -301,6 +301,24 @@ function MultiTrendChart({ markers, activeKeys, allDates }: {
 
 
 // ── UPGRADE MODAL ────────────────────────────────────────────────────────────
+// ── SECTION CARD — used in Intelligent Consult ───────────────────────────────
+function SectionCard({ title, subtitle, photo, children }: { title: string; subtitle: string; photo: string; children: React.ReactNode }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 14, overflow: 'hidden', marginBottom: 24, boxShadow: '0 1px 4px rgba(0,0,0,.05)' }}>
+      {/* Photo header */}
+      <div style={{ position: 'relative', height: 130, backgroundImage: `url(${photo})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(3,26,13,.75) 0%, rgba(3,26,13,.3) 60%, rgba(0,0,0,.1) 100%)' }} />
+        <div style={{ position: 'relative', padding: '24px 28px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 400, color: '#fff', margin: 0, lineHeight: 1.2 }}>{title}</h2>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,.72)', margin: '5px 0 0', lineHeight: 1.5 }}>{subtitle}</p>
+        </div>
+      </div>
+      {/* Content */}
+      <div style={{ padding: '24px 28px' }}>{children}</div>
+    </div>
+  );
+}
+
 function UpgradeModal({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -2011,18 +2029,55 @@ export default function App() {
 
           {/* ── INTELLIGENT CONSULT ── */}
           {panel === 'intelligence' && (
-            <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 0' }}>
-              <BodyHero personalised={personalised} />
-              <div style={{ marginTop: 24 }}>
+            <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 0 60px' }}>
+
+              {/* ── HERO BANNER ── */}
+              <div style={{
+                position: 'relative', height: 220, marginBottom: 32, borderRadius: 16, overflow: 'hidden',
+                backgroundImage: 'url(https://images.unsplash.com/photo-1559757175-5700dde675bc?w=1200&q=80)',
+                backgroundSize: 'cover', backgroundPosition: 'center 30%',
+              }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(3,26,13,.82) 0%, rgba(5,46,22,.6) 60%, rgba(0,0,0,.2) 100%)' }} />
+                <div style={{ position: 'relative', padding: '36px 40px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                  <div style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,.6)', marginBottom: 8 }}>Intelligent Consult</div>
+                  <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 400, color: '#fff', margin: 0, lineHeight: 1.2 }}>
+                    Your Biology, Read Deeply.
+                  </h1>
+                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,.7)', margin: '8px 0 0', lineHeight: 1.6, maxWidth: 520 }}>
+                    Pattern intelligence, trajectory analysis, and biological age tracking — derived from your {allMarkers.length} biomarkers.
+                  </p>
+                </div>
+              </div>
+
+              {/* ── BIOLOGICAL AGE ── */}
+              <SectionCard
+                title="Biological Age Trajectory"
+                subtitle="How your cellular age is moving over time"
+                photo="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80"
+              >
                 <BiologicalAgeChart
                   userId={user?.id}
                   chronologicalAge={profile?.birth_year ? new Date().getFullYear() - profile.birth_year : undefined}
                   currentBioAge={personalised.synthesis?.biological_age_estimate?.replace(/[^\d.]/g, '')}
                   onGenerate={() => generatePersonalised('synthesis')}
                 />
-                <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
+              </SectionCard>
+
+              {/* ── TRAJECTORY ANALYSIS ── */}
+              <SectionCard
+                title="Trajectory Analysis"
+                subtitle="Where your biology is heading — and how to change course"
+                photo="https://images.unsplash.com/photo-1551884170-09fb70a3a2ed?w=800&q=80"
+              >
                 <Premortem userId={user?.id} plan={isPro ? 'pro' : 'free'} allMarkers={allMarkers} profile={profile} />
-                <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
+              </SectionCard>
+
+              {/* ── PATTERN INTELLIGENCE ── */}
+              <SectionCard
+                title="Pattern Intelligence"
+                subtitle="Cross-marker interactions Aellux detected in your biology"
+                photo="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&q=80"
+              >
                 <PatternInsights
                   patterns={patterns}
                   loading={patternsLoading}
@@ -2033,16 +2088,35 @@ export default function App() {
                       .then(r => r.json()).then(d => { setPatterns(d.patterns || []); setPatternsLoaded(true); setPatternsLoading(false); }).catch(() => setPatternsLoading(false));
                   }}
                 />
-                <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
+              </SectionCard>
+
+              {/* ── SUPPLEMENT LOG ── */}
+              <SectionCard
+                title="Supplement & Medication Log"
+                subtitle="Track what you take — Aellux correlates it against your biomarker changes"
+                photo="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&q=80"
+              >
                 <SupplementLog userId={user?.id} allMarkers={allMarkers} />
-                <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
+              </SectionCard>
+
+              {/* ── PRACTITIONER SHARE ── */}
+              <SectionCard
+                title="Share with Your Practitioner"
+                subtitle="Generate a secure summary your doctor can actually read"
+                photo="https://images.unsplash.com/photo-1666214280557-f1b5022eb634?w=800&q=80"
+              >
                 <PractitionerShare userId={user?.id} isPro={isPro} />
-                <div style={{ height: 1, background: 'var(--brand-ghost)', margin: '24px 0' }} />
-                <div>
-                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>Accountability</div>
-                  <Accountability userId={user?.id} plan={isPro ? 'pro' : 'free'} />
-                </div>
-              </div>
+              </SectionCard>
+
+              {/* ── ACCOUNTABILITY ── */}
+              <SectionCard
+                title="Accountability"
+                subtitle="Track compliance, check in weekly, and let Aellux adapt"
+                photo="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80"
+              >
+                <Accountability userId={user?.id} plan={isPro ? 'pro' : 'free'} />
+              </SectionCard>
+
             </div>
           )}
 
