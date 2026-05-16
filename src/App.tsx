@@ -533,6 +533,7 @@ export default function App() {
   const [bpAdditionalGoal, setBpAdditionalGoal] = useState<string>('');
   const [bpCycleLengthDays, setBpCycleLengthDays] = useState<number>(30);
   const [bpMealPrep, setBpMealPrep] = useState<boolean>(false);
+  const [bpFlavorProfile, setBpFlavorProfile] = useState<string>('none');
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authModalView, setAuthModalView] = useState<'signin' | 'signup-free' | 'signup-pro'>('signin');
@@ -996,6 +997,7 @@ export default function App() {
           userId: user?.id,
           plan: isPro ? 'pro' : 'free',
           mealStyle: bpMealStyle,
+          flavorProfile: bpFlavorProfile !== 'none' ? bpFlavorProfile : null,
           additionalGoal: bpAdditionalGoal.trim().slice(0, 240),
           dayOnly,
           isRegenerate: !!(personalised.week && Array.isArray(personalised.week.days) && personalised.week.days.length > 0),
@@ -2066,32 +2068,58 @@ export default function App() {
                   </div>
 
                   {allMarkers.length > 0 && (
-                    <div style={{ background: 'var(--bg-surface)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 8, padding: '22px 26px', marginBottom: 20 }}>
+                    <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 8, padding: '22px 26px', marginBottom: 20 }}>
                       {/* Meal style selector */}
                       <div style={{ marginBottom: 18 }}>
-                        <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 8 }}>Meal style</div>
+                        <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 8 }}>Meal Style</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                           {[
-                            { val: 'none',        label: 'No preference' },
+                            { val: 'none',          label: 'No preference' },
                             { val: 'mediterranean', label: 'Mediterranean' },
-                            { val: 'vegetarian',  label: 'Vegetarian' },
-                            { val: 'vegan',       label: 'Vegan' },
-                            { val: 'pescatarian', label: 'Pescatarian' },
-                            { val: 'carnivore',   label: 'Carnivore' },
-                            { val: 'keto',        label: 'Keto' },
-                            { val: 'paleo',       label: 'Paleo' },
+                            { val: 'vegetarian',    label: 'Vegetarian' },
+                            { val: 'vegan',         label: 'Vegan' },
+                            { val: 'pescatarian',   label: 'Pescatarian' },
+                            { val: 'carnivore',     label: 'Carnivore' },
+                            { val: 'keto',          label: 'Keto' },
+                            { val: 'paleo',         label: 'Paleo' },
                           ].map(s => (
                             <button key={s.val} type="button" onClick={() => setBpMealStyle(s.val)}
                               style={{
-                                fontSize: 12,
-                                padding: '7px 13px',
-                                background: bpMealStyle === s.val ? 'rgba(0,225,180,.14)' : 'var(--bg-surface)',
-                                border: `1px solid ${bpMealStyle === s.val ? 'rgba(0,225,180,.55)' : 'rgba(0,210,165,.22)'}`,
-                                borderRadius: 14,
-                                color: bpMealStyle === s.val ? 'rgba(0,255,200,1)' : 'var(--text-secondary)',
-                                cursor: 'pointer',
-                                fontFamily: 'inherit',
-                                letterSpacing: '0.02em',
+                                fontSize: 12, padding: '7px 13px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit',
+                                background: bpMealStyle === s.val ? 'var(--brand-ghost)' : 'transparent',
+                                border: `1px solid ${bpMealStyle === s.val ? 'var(--brand-border)' : 'var(--border-subtle)'}`,
+                                color: bpMealStyle === s.val ? 'var(--brand-dim)' : 'var(--text-secondary)',
+                                fontWeight: bpMealStyle === s.val ? 600 : 400,
+                              }}>
+                              {s.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Flavor profile selector */}
+                      <div style={{ marginBottom: 18, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 4 }}>Flavor Profile <span style={{ fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'none', letterSpacing: 0 }}>— shape your meals around a cuisine</span></div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                          {[
+                            { val: 'none',       label: 'No preference' },
+                            { val: 'mexican',    label: '🌮 Mexican' },
+                            { val: 'indian',     label: '🍛 Indian' },
+                            { val: 'italian',    label: '🍝 Italian' },
+                            { val: 'japanese',   label: '🍱 Japanese' },
+                            { val: 'thai',       label: '🌿 Thai' },
+                            { val: 'middleeastern', label: '🧆 Middle Eastern' },
+                            { val: 'korean',     label: '🥢 Korean' },
+                            { val: 'american',   label: '🍔 American' },
+                            { val: 'french',     label: '🥐 French' },
+                          ].map(s => (
+                            <button key={s.val} type="button" onClick={() => setBpFlavorProfile(s.val)}
+                              style={{
+                                fontSize: 12, padding: '7px 13px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit',
+                                background: bpFlavorProfile === s.val ? 'var(--brand-ghost)' : 'transparent',
+                                border: `1px solid ${bpFlavorProfile === s.val ? 'var(--brand-border)' : 'var(--border-subtle)'}`,
+                                color: bpFlavorProfile === s.val ? 'var(--brand-dim)' : 'var(--text-secondary)',
+                                fontWeight: bpFlavorProfile === s.val ? 600 : 400,
                               }}>
                               {s.label}
                             </button>
@@ -2152,7 +2180,7 @@ export default function App() {
                               value={bpAdditionalGoal}
                               onChange={e => setBpAdditionalGoal(e.target.value.slice(0, 240))}
                               placeholder="e.g. prepping for travel, training for a 10K, cutting sugar cravings"
-                              style={{ width: '100%', background: 'rgba(0,8,18,.7)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 5, color: 'var(--text-primary)', fontSize: 14, fontFamily: 'inherit', padding: '10px 14px', outline: 'none', marginBottom: 8 }}
+                              style={{ width: '100%', background: 'var(--bg-sunken)', border: '1.5px solid var(--border-medium)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 14, fontFamily: 'inherit', padding: '11px 14px', outline: 'none', marginBottom: 8, boxSizing: 'border-box' }}
                             />
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                               {['More energy', 'Better sleep', 'Cut sugar cravings', 'Improve focus', 'Reduce stress', 'Prep for travel'].map(chip => (
@@ -2177,25 +2205,38 @@ export default function App() {
 
                   {/* Cycle commitment selector */}
                   {isPro && allMarkers.length > 0 && (
-                    <div style={{ marginBottom: 18, padding: '14px 18px', background: 'var(--bg-surface)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 6 }}>
-                      <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>How long will you run this protocol?</div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        {[30, 60, 90].map(days => (
+                    <div style={{ marginBottom: 18, padding: '20px 22px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 8 }}>
+                      <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 6 }}>How long will you run this protocol?</div>
+                      <p style={{ fontSize: 13, color: 'var(--text-tertiary)', lineHeight: 1.6, margin: '0 0 14px' }}>
+                        Your 7-day protocol rotates daily so you never repeat a meal — built for flexibility, not boredom. But real results come from aligned effort over time. Pick a cycle and commit.
+                      </p>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                        {[
+                          { days: 30, note: 'Feel the shift' },
+                          { days: 60, note: 'See it in labs' },
+                          { days: 90, note: 'Full adaptation' },
+                        ].map(({ days, note }) => (
                           <button key={days} type="button" onClick={() => setBpCycleLengthDays(days)}
                             style={{
-                              flex: 1, padding: '10px 0', fontSize: 15, fontFamily: 'var(--font-body)',
-                              background: bpCycleLengthDays === days ? 'var(--brand-ghost)' : 'var(--bg-surface)',
-                              border: `1px solid ${bpCycleLengthDays === days ? 'var(--brand-border)' : 'var(--border-subtle)'}`,
-                              borderRadius: 6, color: bpCycleLengthDays === days ? 'var(--brand-dim)' : 'var(--text-secondary)',
-                              cursor: 'pointer', fontWeight: bpCycleLengthDays === days ? 600 : 400,
+                              flex: 1, padding: '12px 0', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                              background: bpCycleLengthDays === days ? '#1a4731' : 'var(--bg-sunken)',
+                              border: `1.5px solid ${bpCycleLengthDays === days ? '#1a4731' : 'var(--border-subtle)'}`,
+                              color: bpCycleLengthDays === days ? '#fff' : 'var(--text-secondary)',
+                              fontWeight: bpCycleLengthDays === days ? 600 : 400,
+                              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                              transition: 'all .15s',
                             }}>
-                            {days} days
+                            <span style={{ fontSize: 16, fontWeight: 700 }}>{days} days</span>
+                            <span style={{ fontSize: 10, opacity: 0.75, letterSpacing: '0.04em' }}>{note}</span>
                           </button>
                         ))}
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 8, lineHeight: 1.5 }}>
-                        Your protocol is yours to keep. Regenerate when your cycle completes or when you upload new medical records.
+                      <div style={{ padding: '10px 14px', background: 'var(--bg-sunken)', borderRadius: 6, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                        {bpCycleLengthDays === 30 && '30 days is enough to feel meaningful energy, sleep, and metabolic changes — and enough time for your body to respond to biomarker-targeted nutrition.'}
+                        {bpCycleLengthDays === 60 && '60 days is where you start to see the numbers move. Re-test labs at day 60 and upload them — Aellux will show you exactly what shifted and why.'}
+                        {bpCycleLengthDays === 90 && '90 days is full biological adaptation. The research is consistent: most hormonal, metabolic, and inflammatory markers respond measurably at the 90-day mark with sustained dietary and lifestyle change.'}
                       </div>
+                      <p style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 10, lineHeight: 1.5 }}>Your protocol is yours to keep. Regenerate when your cycle completes or when you upload new records.</p>
                     </div>
                   )}
 
