@@ -340,7 +340,7 @@ function WearableUploadGuide({ onUpload }: { onUpload: () => void }) {
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {device.link && (
-              <button onClick={() => { const w = window.open('', '_blank', 'noopener'); if (w) w.location.href = device.link!; }}
+              <button onClick={() => { window.open(device.link!, '_blank', 'noopener,noreferrer'); }}
                 style={{ fontSize: 13, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
                 Open {device.name} export →
               </button>

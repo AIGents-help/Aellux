@@ -218,8 +218,7 @@ export default function GetTested({ userId, onUpload }: Props) {
           onClick={(e) => {
             e.preventDefault();
             handleFunctionClick(e);
-            const w = window.open('', '_blank', 'noopener,noreferrer');
-            if (w) { w.location.href = FUNCTION_REFERRAL_URL; }
+            window.open(FUNCTION_REFERRAL_URL, '_blank', 'noopener,noreferrer');
           }}
           onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.opacity = '0.92'; }}
           onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.opacity = '1'; }}
@@ -406,7 +405,7 @@ function WearableExportGuide({ onUpload }: { onUpload?: () => void }) {
             )}
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {device.deeplink && (
-                <button onClick={() => { const w = window.open('', '_blank', 'noopener'); if (w) w.location.href = device.deeplink!; }}
+                <button onClick={() => { window.open(device.deeplink!, '_blank', 'noopener,noreferrer'); }}
                   style={{ fontSize: 14, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 7, padding: '10px 18px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
                   Open {device.name} export page →
                 </button>
