@@ -100,7 +100,7 @@ const cleanMarkers = (arr) => (arr || []).filter(m => m && m.name && !GPS_NOISE.
     : '';
   const styleBlock = mealStyle && mealStyle !== 'none' ? `\nMeal style preference: ${mealStyle}. ALL meals AND alternatives must respect this style.\n` : '';
   const mealPrepBlock = mealPrep ? `
-MEAL PREP MODE — ACTIVE. The user wants to cook everything on Sunday and portion into containers for the full week. Design meals around this constraint:
+MEAL PREP MODE — ACTIVE. The user wants to cook everything on prep day and portion into containers for the full week. Design meals around this constraint:
 - Choose EXACTLY 2 bulk proteins for the week (e.g. 10 lbs ground beef + 1 dozen eggs). Every meal uses one of these two proteins.
 - Choose EXACTLY 2 bulk carbs/sides (e.g. a large pot of brown rice + roasted sweet potatoes). Every meal pairs one of these two sides.
 - Choose EXACTLY 1-2 bulk vegetables (e.g. 2 lbs steamed broccoli + a bag of spinach). Used across all meals.
@@ -108,17 +108,17 @@ MEAL PREP MODE — ACTIVE. The user wants to cook everything on Sunday and porti
 - Items array lists PORTIONED amounts per container, not full batch amounts.
 - The "why" field MUST include the batch cook instruction for that protein/carb (e.g. "Cook 10 lbs ground beef with garlic and salt Sunday; portion 6oz per container").
 - flavor_boost field is the ONLY place to add variety — different sauces/seasonings each day so it doesn't get boring: Day 1 teriyaki, Day 2 hot sauce + lime, Day 3 ranch, Day 4 salsa, Day 5 garlic + parmesan, Day 6 sriracha mayo, Day 7 BBQ sauce.
-- Set key_insight to describe the batch cook strategy, including estimated total cook time (target: under 2 hours Sunday).
-- weekly_summary.training_load should include "Batch cook Sunday: [protein] + [carb] + [veg] → 21 containers"
+- Set key_insight to describe the batch cook strategy, including estimated total cook time (target: under 2 hours on prep day).
+- weekly_summary.training_load should include "Batch cook Day 1: [protein] + [carb] + [veg] → 21 containers"
 ` : '';
   const goalBlock = additionalGoal ? `\nAdditional weekly focus from user: "${additionalGoal}". Optimize the week's design toward this goal IN ADDITION to the biomarker-driven priorities. Reflect this in key_insight.\n` : '';
 
   const dayCount = dayOnly ? 1 : 7;
-  const dayList = dayOnly ? ['Monday'] : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const dayList = dayOnly ? ['Day 1'] : ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7'];
 
   return `${profileBlock}User biomarkers: ${ms}${styleBlock}${mealPrepBlock}${goalBlock}${intelligenceStr}${medSafetyBlock}
 
-Design a personalised ${dayCount}-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return EXACTLY ONE day (Monday) — this is a free-tier preview. Do not generate Tuesday through Sunday.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days. Generate ALL 7 days in order: ' + dayList.join(', ') + '.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density. Calorie/protein targets must reflect sex/age/weight/activity.
+Design a personalised ${dayCount}-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return EXACTLY ONE day (Day 1) — this is a free-tier preview. Do not generate Day 2 through Day 7.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days. Generate ALL 7 days in order: ' + dayList.join(', ') + '.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density. Calorie/protein targets must reflect sex/age/weight/activity.
 
 **MEAL DESIGN RULES — STRICT, NO EXCEPTIONS:**
 - This is a busy normal person, not a chef. Meals MUST be 5 ingredients or fewer, recognizable to the average American shopper, and buildable in 15 minutes or less.
@@ -142,7 +142,7 @@ Schema (return ONLY this JSON, no markdown, no commentary):
 "principles":["3-5 short guiding rules"],
 "days":[
 {
-"day":"Monday","theme":"Foundation","focus_marker":"marker name",
+"day":"Day 1","theme":"Foundation","focus_marker":"marker name",
 "morning":{"wake_time":"6:30am","actions":["action 1","action 2"],"supps_am":["Supp name dose"]},
 "meals":{
 "breakfast":{"name":"plain meal name (e.g. Scrambled Eggs with Toast)","items":["raw ingredient + qty","raw ingredient + qty","raw ingredient + qty"],"why":"one sentence with user's actual numbers","macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker"],"flavor_boost":"Doctor it up: add X + Y for flavor.","alternatives":[
@@ -154,7 +154,7 @@ Schema (return ONLY this JSON, no markdown, no commentary):
 },
 "movement":{"type":"Zone 2 cardio","duration":"45 min","when":"afternoon"},
 "evening":{"supps_pm":["Magnesium glycinate 300mg"],"wind_down":"screens off 9:30pm","sleep_target":"10:30pm"}
-}${dayOnly ? '' : `,\n { ...same shape for Tuesday Strength },\n { ...Wednesday Recovery },\n { ...Thursday Metabolic },\n { ...Friday Hormonal },\n { ...Saturday Long Movement },\n { ...Sunday Restoration }\n [must include all 7 days]`}
+}${dayOnly ? '' : `,\n { ...same shape for Day 2 Strength },\n { ...Day 3 Recovery },\n { ...Day 4 Metabolic },\n { ...Day 5 Hormonal },\n { ...Day 6 Long Movement },\n { ...Day 7 Restoration }\n [must include all 7 days]`}
 ],
 "weekly_summary":{"training_load":"e.g. 3 heavy + 2 zone 2 + 2 recovery","total_supp_cost":"$X/week","estimated_calorie_target":${dayCount * 2000}}
 }`;
