@@ -2502,8 +2502,21 @@ export default function App() {
                           </div>
                         </button>
                         {bpMealPrep && (
-                          <div style={{ marginTop: 10, padding: '10px 14px', background: 'var(--brand-ghost)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 6, fontSize: 13, color: 'var(--brand-dim)', lineHeight: 1.6 }}>
-                            💡 You'll get a batch cook plan: 2 proteins, 2 carbs, 1–2 vegs, 21 containers. Flavor rotates daily so it doesn't get boring.
+                          <div style={{ marginTop: 10, padding: '10px 14px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 6, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                            {'💡 ' + (bpMealStyle === 'animal-based' ? "Batch cook plan: 2 animal proteins (e.g. ground beef + eggs) + 2 fruits. No grains or seed oils. Portioned into containers for the week."
+                              : bpMealStyle === 'carnivore' ? "Batch cook plan: 2 animal proteins (e.g. ribeye + ground beef). Zero plant foods. Salt, butter, tallow only. Simple and strict."
+                              : bpMealStyle === 'keto' ? "Batch cook plan: 2 high-fat proteins (e.g. salmon + ground beef) + 2 low-carb vegetables + healthy fats. Zero grains. Under 50g carbs total daily."
+                              : bpMealStyle === 'aip' ? "Batch cook plan: 2 AIP-safe proteins (beef, chicken, or fish) + 2 AIP vegetables. No nightshades, no eggs, no grains. Coconut or olive oil only."
+                              : bpMealStyle === 'low-fodmap' ? "Batch cook plan: 2 proteins + 2 FODMAP-safe carbs (rice, potato) + low-FODMAP vegetables. Garlic-infused oil replaces garlic."
+                              : bpMealStyle === 'paleo' ? "Batch cook plan: 2 proteins + 2 starchy vegetables (sweet potato, squash) + leafy greens. No grains, no legumes, no dairy."
+                              : bpMealStyle === 'vegan' ? "Batch cook plan: 2 plant proteins (tofu, tempeh, or legumes) + 2 whole-grain carbs + 1-2 vegetables. Fully animal-free."
+                              : bpMealStyle === 'vegetarian' ? "Batch cook plan: 2 vegetarian proteins (eggs, greek yogurt, or legumes) + 2 whole-grain carbs + 1-2 vegetables."
+                              : bpMealStyle === 'diabetic' ? "Batch cook plan: 2 lean proteins + 2 low-GI carbs (lentils, sweet potato) + non-starchy vegetables. Every meal pairs carbs with protein to blunt glucose spikes."
+                              : bpMealStyle === 'high-protein' ? "Batch cook plan: 2 lean proteins targeting 55-65g protein per meal + 2 performance carbs timed around training + 1-2 vegetables."
+                              : bpMealStyle === 'whole30' ? "Batch cook plan: 2 Whole30-compliant proteins + 2 compliant carbs (sweet potato, plantain, or fruit) + 1-2 vegetables. No grains, dairy, legumes, or sugar."
+                              : bpMealStyle === 'pescatarian' ? "Batch cook plan: 2 seafood or fish proteins + 2 whole-grain carbs + 1-2 vegetables. High omega-3 profile throughout the week."
+                              : bpMealStyle === 'mediterranean' ? "Batch cook plan: 2 proteins (fish + chicken or legumes) + 2 whole-grain carbs + 1-2 vegetables. Olive oil as the primary fat."
+                              : "Batch cook plan: 2 proteins, 2 carbs, 1-2 vegs, 21 containers. Flavor rotates daily so it doesn't get boring.")}
                           </div>
                         )}
                       </div>
