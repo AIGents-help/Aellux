@@ -1,6 +1,6 @@
 import { sbSelect, sbUpsert, sbUpdate, rateLimit, logUsage, sha256, hashMarkers, getProfile, formatProfileForPrompt, hashProfile, hasMedications, getIntelligenceContext, formatIntelligenceForPrompt } from './_lib.js';
 
-export const config = { runtime: 'nodejs', maxDuration: 60 };
+export const config = { runtime: 'nodejs', maxDuration: 300 };
 
 const SYSTEM = 'You are Aellux, a precision health intelligence. Respond with ONLY a single valid JSON object matching the schema. No prose, no preamble, no markdown fences. Start with { and end with }.';
 
@@ -255,11 +255,16 @@ export default async function handler(req, res) {
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders?.();
 
+  // Keepalive ping every 20s to prevent proxy/CDN from closing idle connections mid-stream
+  const keepalive = setInterval(() => {
+    try { res.write(': keepalive\n\n'); } catch { clearInterval(keepalive); }
+  }, 20000);
+
   // FIX: pass isRegenerate so first-time generation is never blocked
   const lim = await checkLimits({ userId, plan, isRegenerate });
   if (!lim.ok) {
     sse(res, 'error', { message: lim.msg, code: lim.code || 'rate_limited' });
-    return res.end();
+    clearInterval(keepalive); return res.end();
   }
 
   const profile = await getProfile(userId);
@@ -287,11 +292,11 @@ export default async function handler(req, res) {
       }
     }
     sse(res, 'complete', { result: row.result });
-    return res.end();
+    clearInterval(keepalive); return res.end();
   }
 
   const prompt = buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly, mealPrep, intelligenceStr });
-  const maxTokens = dayOnly ? 2500 : 7000;
+  const maxTokens = dayOnly ? 2500 : 12000;
 
   sse(res, 'start', { dayOnly });
 
@@ -317,13 +322,13 @@ export default async function handler(req, res) {
     });
   } catch (e) {
     sse(res, 'error', { message: `Network error: ${e.message}` });
-    return res.end();
+    clearInterval(keepalive); return res.end();
   }
 
   if (!anthropicRes.ok) {
     const errText = await anthropicRes.text().catch(() => '');
     sse(res, 'error', { message: `Claude API ${anthropicRes.status}: ${errText.slice(0, 200)}` });
-    return res.end();
+    clearInterval(keepalive); return res.end();
   }
 
   const reader = anthropicRes.body.getReader();
@@ -360,7 +365,7 @@ export default async function handler(req, res) {
     }
   } catch (e) {
     sse(res, 'error', { message: `Stream read error: ${e.message}` });
-    return res.end();
+    clearInterval(keepalive); return res.end();
   }
 
   sse(res, 'parsing', {});
@@ -380,13 +385,13 @@ export default async function handler(req, res) {
       };
     } else {
       sse(res, 'error', { message: `Parse failed: ${e.message}`, raw: accumulated.slice(0, 400) });
-      return res.end();
+      clearInterval(keepalive); return res.end();
     }
   }
 
   if (!result.days || !Array.isArray(result.days) || result.days.length === 0) {
     sse(res, 'error', { message: 'Model returned no days', raw: accumulated.slice(0, 400) });
-    return res.end();
+    clearInterval(keepalive); return res.end();
   }
 
   // Persist to cache and to user's meal_plans for session-persistent access
@@ -401,5 +406,5 @@ export default async function handler(req, res) {
   try { await logUsage(userId, logEndpoint); } catch (e) { console.error('[week-stream] usage log failed:', e?.message); }
 
   sse(res, 'complete', { result });
-  return res.end();
+  clearInterval(keepalive); return res.end();
 }
