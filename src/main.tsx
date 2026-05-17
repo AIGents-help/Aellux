@@ -8,6 +8,8 @@ import './index.css'
 import './aellux-readability.css'
 import './mobile.css'
 
+// v1.3.0 — Build 2026-05-17
+
 // Boot error monitoring FIRST so it can catch errors in analytics init or render.
 initErrorMonitoring();
 // Boot analytics — captures landing pageview accurately.
