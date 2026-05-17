@@ -12,14 +12,14 @@ import './mobile.css'
 
 // Pre-React crash safety net — shows a visible message if the JS crashes
 // before React can mount (e.g. a broken import at module level).
-window.addEventListener('error', (e) => {
+window.addEventListener('error', function(e) {
   const root = document.getElementById('root');
   if (root && root.childElementCount === 0) {
-    root.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui;background:#f7f6f2;color:#0f1a0f;padding:24px;text-align:center;">
-      <div style="font-size:18px;font-weight:500;margin-bottom:8px;">Aellux failed to load</div>
-      <div style="font-size:13px;color:#4a5e4a;margin-bottom:16px;max-width:420px;">Error: ${e.message || 'Unknown'}</div>
-      <button onclick="location.reload()" style="padding:10px 20px;font-size:14px;background:#0f1a0f;color:#fff;border:none;border-radius:8px;cursor:pointer;">Reload</button>
-    </div>`;
+    root.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui;background:#f7f6f2;color:#0f1a0f;padding:24px;text-align:center;">'
+      + '<div style="font-size:18px;font-weight:500;margin-bottom:8px;">Aellux failed to load</div>'
+      + '<div style="font-size:13px;color:#4a5e4a;margin-bottom:16px;max-width:420px;">Error: ' + (e.message || 'Unknown') + '</div>'
+      + '<button onclick="location.reload()" style="padding:10px 20px;font-size:14px;background:#0f1a0f;color:#fff;border:none;border-radius:8px;cursor:pointer;">Reload</button>'
+      + '</div>';
   }
 });
 
@@ -59,5 +59,5 @@ try {
 } catch(e) {
   console.error('React mount failed:', e);
   const root = document.getElementById('root');
-  if (root) root.innerHTML = `<div style="padding:40px;text-align:center;font-family:system-ui;">React failed to mount: ${String(e)}</div>`;
+  if (root) root.innerHTML = '<div style="padding:40px;text-align:center;font-family:system-ui;">React failed to mount: ' + String(e) + '</div>';
 }
