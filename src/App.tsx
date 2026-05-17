@@ -1369,10 +1369,7 @@ export default function App() {
             <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 420, animation: 'slideUp .3s cubic-bezier(.16,1,.3,1)' }}>
               <AuthModal initialView={authModalView} onClose={() => setShowAuthModal(false)} />
             </div>
-            <style>{`
-              @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-              @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-            `}</style>
+            <style dangerouslySetInnerHTML={{ __html: '@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }' }} />
           </div>
         )}
       </>

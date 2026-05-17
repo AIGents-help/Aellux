@@ -133,7 +133,7 @@ export default function EmptyDashboard({ userName, goal, onUpload, onGuide, onGe
         </button>
       </div>
 
-      <style>{`@keyframes pulse { 0%,100%{box-shadow:0 0 20px var(--text-tertiary)} 50%{box-shadow:0 0 40px var(--text-secondary)} }`}</style>
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes pulse { 0%,100%{box-shadow:0 0 20px var(--text-tertiary)} 50%{box-shadow:0 0 40px var(--text-secondary)} }' }} />
     </div>
   );
 }

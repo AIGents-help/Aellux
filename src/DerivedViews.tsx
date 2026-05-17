@@ -363,22 +363,7 @@ function TodayChecklist({ weekData, selectedMealKeys }: { weekData: any; selecte
         </button>
       </div>
 
-      <style>{`
-        @media print {
-          body * { visibility: hidden !important; }
-          .today-checklist, .today-checklist * { visibility: visible !important; }
-          .today-checklist { position: fixed; top: 0; left: 0; width: 100%; padding: 32px; }
-          .today-checklist .print-hide { display: none !important; }
-          .today-checklist .check-box {
-            display: inline-block !important;
-            width: 14px; height: 14px;
-            border: 2px solid #1a4731;
-            border-radius: 2px;
-            margin-right: 8px;
-            vertical-align: middle;
-          }
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{ __html: '@media print { body * { visibility: hidden !important; } .today-checklist, .today-checklist * { visibility: visible !important; } .today-checklist { position: fixed; top: 0; left: 0; width: 100%; padding: 32px; } .today-checklist .print-hide { display: none !important; } .today-checklist .check-box { display: inline-block !important; width: 14px; height: 14px; border: 2px solid #1a4731; border-radius: 2px; margin-right: 8px; vertical-align: middle; } }' }} />
 
       <div className="today-checklist">
         <div style={{ marginBottom: 8, fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
