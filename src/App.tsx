@@ -758,6 +758,9 @@ export default function App() {
   const [bpCycleLengthDays, setBpCycleLengthDays] = useState<number>(30);
   const [bpMealPrep, setBpMealPrep] = useState<boolean>(false);
   const [bpFlavorProfile, setBpFlavorProfile] = useState<string>('none');
+  const [bpRecommendedStyle, setBpRecommendedStyle] = useState<string>('');
+  const [bpRecommendedFlavor, setBpRecommendedFlavor] = useState<string>('');
+  const [bpRecommendedReason, setBpRecommendedReason] = useState<string>('');
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authModalView, setAuthModalView] = useState<'signin' | 'signup-free' | 'signup-pro'>('signin');
@@ -941,6 +944,56 @@ export default function App() {
   const DEVICE_NOISE = /horizontal.acc|vertical.acc|gps.acc|gps.signal|gps.route|elevation.gain|elevation.change|route.duration|ecg.*raw|raw.signal|lead.*raw|signal.qual|status.code|supplemental.drop|leafy.green|microgreen|protein.intake|pathogenic.*count|uncertain.signif.*count/i;
   const healthMarkers = useMemo(() => allMarkers.filter(m => !DEVICE_NOISE.test(String(m.name || ''))), [allMarkers]);
   const flaggedMarkers = useMemo(() => healthMarkers.filter(m => m.status === 'elevated' || m.status === 'low'), [healthMarkers]);
+
+  // Derive meal style + flavor recommendation from biomarkers
+  useMemo(() => {
+    if (allMarkers.length === 0) return;
+    const m = (name: string) => allMarkers.find((mk: any) => mk.name?.toLowerCase().includes(name.toLowerCase()));
+    const low = (name: string) => m(name)?.status === 'low';
+    const high = (name: string) => m(name)?.status === 'elevated';
+
+    let style = 'none';
+    let reason = '';
+
+    const hasLowT = low('testosterone') || low('free testosterone');
+    const hasHighEstrogen = high('estrogen') || high('estradiol');
+    const hasHighGlucose = high('glucose') || high('hba1c') || high('insulin');
+    const hasHighInflam = high('crp') || high('hs-crp') || high('il-6') || high('fibrinogen');
+    const hasHighLipids = high('ldl') || high('apob') || high('triglycerides') || high('lp(a)');
+    const hasLowVitD = low('vitamin d') || low('25-oh');
+    const hasHighUric = high('uric acid');
+    const hasAutoimmune = high('ana') || high('anti-tpo') || high('tpo antibodies');
+    const hasGutIssues = high('zonulin') || high('calprotectin') || low('secretory iga');
+
+    if (hasAutoimmune || hasGutIssues) {
+      style = 'aip';
+      reason = 'AIP recommended — your markers show immune activation or gut permeability that responds to elimination of inflammatory trigger foods.';
+    } else if (hasHighGlucose) {
+      style = 'diabetic';
+      reason = 'Diabetic-friendly recommended — your glucose or HbA1c markers require low-glycemic-index eating to prevent further metabolic damage.';
+    } else if (hasLowT && hasHighEstrogen) {
+      style = 'animal-based';
+      reason = 'Animal-Based recommended — your low testosterone and elevated estrogen respond strongly to high-bioavailability animal proteins, saturated fat for hormone synthesis, and elimination of phytoestrogens and antinutrients.';
+    } else if (hasHighInflam && hasHighLipids) {
+      style = 'mediterranean';
+      reason = 'Mediterranean recommended — your elevated inflammatory markers and lipid profile are the primary clinical indication for the Mediterranean diet, with the strongest evidence base of any diet for these markers.';
+    } else if (hasHighInflam) {
+      style = 'paleo';
+      reason = 'Paleo recommended — your elevated inflammatory markers respond to elimination of grains, legumes, and processed foods that drive systemic inflammation.';
+    } else if (hasHighLipids) {
+      style = 'mediterranean';
+      reason = 'Mediterranean recommended — your lipid markers (LDL, ApoB, or triglycerides) respond best to olive oil, omega-3 rich fish, and whole grains over saturated fat.';
+    } else if (hasLowT) {
+      style = 'high-protein';
+      reason = 'High-Protein recommended — your low testosterone requires sustained protein intake (175g+/day) to provide the substrate for hormonal recovery and preserve lean mass.';
+    } else if (hasHighUric) {
+      style = 'mediterranean';
+      reason = 'Mediterranean recommended — your elevated uric acid responds to reduced red meat, fructose, and alcohol, with increased hydration and plant foods.';
+    }
+
+    if (style !== 'none') setBpRecommendedStyle(style);
+    if (reason) setBpRecommendedReason(reason);
+  }, [allMarkers]);
 
   // Keep activeMarkerKeys in sync
   useEffect(() => {
@@ -2418,16 +2471,39 @@ export default function App() {
                           <div style={{ marginBottom: 18 }}>
                             <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 8 }}>Meal Style</div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: selected && selected.val !== 'none' ? 12 : 0 }}>
-                              {MEAL_STYLES.map(s => (
-                                <button key={s.val} type="button" onClick={() => setBpMealStyle(s.val)}
-                                  style={{ fontSize: 12, padding: '7px 13px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit', background: bpMealStyle === s.val ? 'var(--brand-ghost)' : 'transparent', border: '1px solid ' + (bpMealStyle === s.val ? 'var(--brand-border)' : 'var(--border-subtle)'), color: bpMealStyle === s.val ? 'var(--brand-dim)' : 'var(--text-secondary)', fontWeight: bpMealStyle === s.val ? 600 : 400 }}>
-                                  {s.label}
-                                </button>
-                              ))}
+                              {MEAL_STYLES.map(s => {
+                                const isRec = s.val === bpRecommendedStyle;
+                                const isSelected = bpMealStyle === s.val;
+                                return (
+                                  <button key={s.val} type="button" onClick={() => setBpMealStyle(s.val)}
+                                    style={{ fontSize: 12, padding: '7px 13px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit', position: 'relative', background: isSelected ? 'var(--brand-ghost)' : 'transparent', border: '1px solid ' + (isSelected ? 'var(--brand-border)' : isRec ? 'var(--brand-dim)' : 'var(--border-subtle)'), color: isSelected ? 'var(--brand-dim)' : 'var(--text-secondary)', fontWeight: isSelected ? 600 : 400 }}>
+                                    {s.label}
+                                    {isRec && (
+                                      <span style={{ position: 'absolute', top: -8, right: -4, fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', background: '#1a4731', color: '#fff', padding: '1px 5px', borderRadius: 6, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                                        ✦ Recommended
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
                             </div>
+                            {bpRecommendedStyle && bpMealStyle === 'none' && (
+                              <div style={{ marginBottom: 12, padding: '10px 14px', background: '#1a4731', borderRadius: 8, fontSize: 13, color: '#fff', lineHeight: 1.6, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                <span style={{ flexShrink: 0, fontSize: 16 }}>✦</span>
+                                <div>
+                                  <strong>Aellux recommends {MEAL_STYLES.find(s => s.val === bpRecommendedStyle)?.label}</strong> based on your biomarkers.
+                                  <button onClick={() => setBpMealStyle(bpRecommendedStyle)} style={{ marginLeft: 10, fontSize: 12, color: '#fff', background: 'rgba(255,255,255,.2)', border: '1px solid rgba(255,255,255,.3)', borderRadius: 5, padding: '2px 8px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>Apply →</button>
+                                </div>
+                              </div>
+                            )}
                             {selected && selected.val !== 'none' && (
                               <div style={{ padding: '10px 14px', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 8, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
                                 <strong style={{ color: 'var(--brand-dim)' }}>{selected.label}:</strong> {selected.desc}
+                                {bpMealStyle === bpRecommendedStyle && bpRecommendedReason && (
+                                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--brand-border)', color: 'var(--brand-dim)', fontStyle: 'italic' }}>
+                                    {bpRecommendedReason}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
