@@ -8,15 +8,24 @@ import './index.css'
 import './aellux-readability.css'
 import './mobile.css'
 
-// v1.3.0 — Build 2026-05-17
+// v1.3.1 — Build 2026-05-17
 
-// Boot error monitoring FIRST so it can catch errors in analytics init or render.
-initErrorMonitoring();
-// Boot analytics — captures landing pageview accurately.
-initAnalytics();
+// Pre-React crash safety net — shows a visible message if the JS crashes
+// before React can mount (e.g. a broken import at module level).
+window.addEventListener('error', (e) => {
+  const root = document.getElementById('root');
+  if (root && root.childElementCount === 0) {
+    root.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui;background:#f7f6f2;color:#0f1a0f;padding:24px;text-align:center;">
+      <div style="font-size:18px;font-weight:500;margin-bottom:8px;">Aellux failed to load</div>
+      <div style="font-size:13px;color:#4a5e4a;margin-bottom:16px;max-width:420px;">Error: ${e.message || 'Unknown'}</div>
+      <button onclick="location.reload()" style="padding:10px 20px;font-size:14px;background:#0f1a0f;color:#fff;border:none;border-radius:8px;cursor:pointer;">Reload</button>
+    </div>`;
+  }
+});
 
-// Last-resort fallback when the whole app crashes. Stays minimalist on purpose
-// so a broken brand stylesheet can't take it down too.
+try { initErrorMonitoring(); } catch(e) { console.error('Sentry init failed:', e); }
+try { initAnalytics(); } catch(e) { console.error('Analytics init failed:', e); }
+
 const CrashFallback = () => (
   <div style={{
     minHeight: '100vh', display: 'flex', flexDirection: 'column',
@@ -30,22 +39,25 @@ const CrashFallback = () => (
     </div>
     <button
       onClick={() => window.location.reload()}
-      style={{
-        padding: '10px 20px', fontSize: 14, background: '#0f1a0f', color: '#fff',
-        border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
-      }}
+      style={{ padding: '10px 20px', fontSize: 14, background: '#0f1a0f', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit' }}
     >
       Reload Aellux
     </button>
   </div>
 );
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ErrorBoundary fallback={<CrashFallback />}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </ErrorBoundary>
-  </React.StrictMode>,
-)
+try {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <ErrorBoundary fallback={<CrashFallback />}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </ErrorBoundary>
+    </React.StrictMode>,
+  );
+} catch(e) {
+  console.error('React mount failed:', e);
+  const root = document.getElementById('root');
+  if (root) root.innerHTML = `<div style="padding:40px;text-align:center;font-family:system-ui;">React failed to mount: ${String(e)}</div>`;
+}
