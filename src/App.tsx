@@ -1351,7 +1351,9 @@ export default function App() {
     setAsking(false);
   }, [input, asking, allMarkers, documents.length]);
 
-  if (window.location.pathname === '/privacy') {    return <PrivacyPolicy />;
+  if (window.location.pathname === '/privacy') { return <PrivacyPolicy />; }
+
+  if (!user) {
     return (
       <>
         <LandingPage onAuth={(variant) => { setAuthModalView(variant || 'signin'); setShowAuthModal(true); }} />
