@@ -118,7 +118,18 @@ MEAL PREP MODE — ACTIVE. The user wants to cook everything on prep day and por
 
   return `${profileBlock}User biomarkers: ${ms}${styleBlock}${mealPrepBlock}${goalBlock}${intelligenceStr}${medSafetyBlock}
 
-Design a personalised ${dayCount}-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return EXACTLY ONE day (Day 1) — this is a free-tier preview. Do not generate Day 2 through Day 7.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days. Generate ALL 7 days in order: ' + dayList.join(', ') + '.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density. Calorie/protein targets must reflect sex/age/weight/activity.
+Design a personalised ${dayCount}-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return EXACTLY ONE day (Day 1) — this is a free-tier preview. Do not generate Day 2 through Day 7.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days. Generate ALL 7 days in order: ' + dayList.join(', ') + '.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density.
+
+**PROTEIN TARGETS — CRITICAL, DO NOT UNDERESTIMATE:**
+- Minimum protein: 1g per pound of target bodyweight (not current weight if overweight). For a 175lb male target = 175g protein/day minimum.
+- For males with low testosterone, elevated estrogen, or body recomposition goals: 1.0–1.2g per pound of target bodyweight. Protein IS the testosterone substrate — underfeeding it directly worsens hormonal recovery.
+- Distribute evenly: ~55–65g protein per meal across 3 meals. Breakfast must NOT be low-protein. 30–35g per meal is insufficient for a male trying to build or preserve lean mass.
+- The example macros below (p:30) are PLACEHOLDERS ONLY — always override with the user's actual calculated targets.
+- Calorie targets: multiply target bodyweight in lbs × 14–16 (fat loss) or × 16–18 (recomp/maintenance). Always state the daily calorie and protein target in key_insight.
+
+**IDEAL BODY WEIGHT — always include guidance:**
+- In key_insight, briefly note the user's estimated ideal body weight range based on height, frame size, and goals. Reference it as the protein calculation basis.
+- For males: ~106 lbs for first 5 feet of height + 6 lbs per inch above 5 feet (medium frame). Adjust ±10% for frame.
 
 **MEAL DESIGN RULES — STRICT, NO EXCEPTIONS:**
 - This is a busy normal person, not a chef. Meals MUST be 5 ingredients or fewer, recognizable to the average American shopper, and buildable in 15 minutes or less.
@@ -145,7 +156,7 @@ Schema (return ONLY this JSON, no markdown, no commentary):
 "day":"Day 1","theme":"Foundation","focus_marker":"marker name",
 "morning":{"wake_time":"6:30am","actions":["action 1","action 2"],"supps_am":["Supp name dose"]},
 "meals":{
-"breakfast":{"name":"plain meal name (e.g. Scrambled Eggs with Toast)","items":["raw ingredient + qty","raw ingredient + qty","raw ingredient + qty"],"why":"one sentence with user's actual numbers","macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker"],"flavor_boost":"Doctor it up: add X + Y for flavor.","alternatives":[
+"breakfast":{"name":"plain meal name (e.g. Scrambled Eggs with Toast)","items":["raw ingredient + qty","raw ingredient + qty","raw ingredient + qty"],"why":"one sentence with user's actual numbers","macros":{"p":55,"c":45,"f":15,"cal":530},"targets":["marker"],"flavor_boost":"Doctor it up: add X + Y for flavor.","alternatives":[
 {"swap":"nutrient_match","name":"alt plain name","why":"same nutrients"},
 {"swap":"diet_pref","name":"alt plain name","why":"honors restriction/style or cheaper"}
 ]},
