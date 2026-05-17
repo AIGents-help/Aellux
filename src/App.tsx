@@ -2396,62 +2396,80 @@ export default function App() {
                   {allMarkers.length > 0 && (
                     <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 8, padding: '22px 26px', marginBottom: 20 }}>
                       {/* Meal style selector */}
-                      <div style={{ marginBottom: 18 }}>
-                        <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 8 }}>Meal Style</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                          {[
-                            { val: 'none',          label: 'No preference' },
-                            { val: 'mediterranean', label: 'Mediterranean' },
-                            { val: 'vegetarian',    label: 'Vegetarian' },
-                            { val: 'vegan',         label: 'Vegan' },
-                            { val: 'pescatarian',   label: 'Pescatarian' },
-                            { val: 'carnivore',     label: 'Carnivore' },
-                            { val: 'keto',          label: 'Keto' },
-                            { val: 'paleo',         label: 'Paleo' },
-                          ].map(s => (
-                            <button key={s.val} type="button" onClick={() => setBpMealStyle(s.val)}
-                              style={{
-                                fontSize: 12, padding: '7px 13px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit',
-                                background: bpMealStyle === s.val ? 'var(--brand-ghost)' : 'transparent',
-                                border: `1px solid ${bpMealStyle === s.val ? 'var(--brand-border)' : 'var(--border-subtle)'}`,
-                                color: bpMealStyle === s.val ? 'var(--brand-dim)' : 'var(--text-secondary)',
-                                fontWeight: bpMealStyle === s.val ? 600 : 400,
-                              }}>
-                              {s.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                      {(() => {
+                        const MEAL_STYLES = [
+                          { val: 'none',           label: 'No preference',       desc: 'Aellux chooses the optimal foods based purely on your biomarkers with no dietary restrictions.' },
+                          { val: 'mediterranean',  label: 'Mediterranean',       desc: 'Olive oil, fish, whole grains, legumes, vegetables, moderate red wine. Consistently ranked #1 for longevity and cardiovascular health.' },
+                          { val: 'animal-based',   label: 'Animal-Based',        desc: 'Meat, organs, eggs, raw dairy as the foundation — plus fruit and honey as carb sources. Eliminates seed oils, grains, and high-oxalate plants. Maximizes nutrient bioavailability.' },
+                          { val: 'carnivore',      label: 'Carnivore',           desc: 'Meat, fish, eggs, and animal fats only. Zero plant foods. Used for elimination, autoimmune conditions, and gut reset protocols.' },
+                          { val: 'paleo',          label: 'Paleo',               desc: 'Meat, fish, eggs, vegetables, fruit, nuts and seeds. No grains, legumes, dairy, or processed foods. Mimics ancestral eating patterns.' },
+                          { val: 'keto',           label: 'Keto',                desc: 'Very low carb (under 50g/day), high fat, moderate protein. Forces ketosis — metabolic state where body burns fat for fuel. Effective for insulin resistance and weight loss.' },
+                          { val: 'aip',            label: 'AIP',                 desc: 'Autoimmune Protocol. Eliminates grains, legumes, nightshades, eggs, dairy, nuts, seeds, and alcohol. Targets inflammatory markers and autoimmune flares.' },
+                          { val: 'low-fodmap',     label: 'Low-FODMAP',          desc: 'Eliminates fermentable carbohydrates that feed gut bacteria (onions, garlic, wheat, beans, certain fruits). Clinically validated for IBS, gut inflammation, and microbiome issues.' },
+                          { val: 'whole30',        label: 'Whole30',             desc: '30-day elimination of sugar, alcohol, grains, legumes, and dairy. Resets metabolism and identifies food sensitivities. No calorie counting.' },
+                          { val: 'high-protein',   label: 'High-Protein / Recomp', desc: 'Prioritizes 1g+ protein per pound of target bodyweight. Optimized for muscle gain, fat loss, and hormonal recovery. Carbs and fats adjusted to support training.' },
+                          { val: 'diabetic',       label: 'Diabetic-Friendly',   desc: 'Low glycemic index foods that minimize blood sugar spikes. Prioritizes fiber, lean protein, and controlled carbohydrate portions. Directly targets glucose and HbA1c markers.' },
+                          { val: 'vegetarian',     label: 'Vegetarian',          desc: 'No meat or fish — includes eggs and dairy. Plant-forward with adequate protein from eggs, dairy, legumes, and tofu.' },
+                          { val: 'vegan',          label: 'Vegan',               desc: 'No animal products of any kind. Protein from legumes, tofu, tempeh, seitan, and plant-based sources. Requires careful B12 and iron monitoring.' },
+                          { val: 'pescatarian',    label: 'Pescatarian',         desc: 'Vegetarian plus fish and seafood. Strong omega-3 profile. Good balance of plant nutrition with high-quality animal protein.' },
+                        ];
+                        const selected = MEAL_STYLES.find(s => s.val === bpMealStyle);
+                        return (
+                          <div style={{ marginBottom: 18 }}>
+                            <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 8 }}>Meal Style</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: selected && selected.val !== 'none' ? 12 : 0 }}>
+                              {MEAL_STYLES.map(s => (
+                                <button key={s.val} type="button" onClick={() => setBpMealStyle(s.val)}
+                                  style={{ fontSize: 12, padding: '7px 13px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit', background: bpMealStyle === s.val ? 'var(--brand-ghost)' : 'transparent', border: '1px solid ' + (bpMealStyle === s.val ? 'var(--brand-border)' : 'var(--border-subtle)'), color: bpMealStyle === s.val ? 'var(--brand-dim)' : 'var(--text-secondary)', fontWeight: bpMealStyle === s.val ? 600 : 400 }}>
+                                  {s.label}
+                                </button>
+                              ))}
+                            </div>
+                            {selected && selected.val !== 'none' && (
+                              <div style={{ padding: '10px 14px', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 8, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                                <strong style={{ color: 'var(--brand-dim)' }}>{selected.label}:</strong> {selected.desc}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* Flavor profile selector */}
-                      <div style={{ marginBottom: 18, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
-                        <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 4 }}>Flavor Profile <span style={{ fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'none', letterSpacing: 0 }}>— shape your meals around a cuisine</span></div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                          {[
-                            { val: 'none',       label: 'No preference' },
-                            { val: 'mexican',    label: '🌮 Mexican' },
-                            { val: 'indian',     label: '🍛 Indian' },
-                            { val: 'italian',    label: '🍝 Italian' },
-                            { val: 'japanese',   label: '🍱 Japanese' },
-                            { val: 'thai',       label: '🌿 Thai' },
-                            { val: 'middleeastern', label: '🧆 Middle Eastern' },
-                            { val: 'korean',     label: '🥢 Korean' },
-                            { val: 'american',   label: '🍔 American' },
-                            { val: 'french',     label: '🥐 French' },
-                          ].map(s => (
-                            <button key={s.val} type="button" onClick={() => setBpFlavorProfile(s.val)}
-                              style={{
-                                fontSize: 12, padding: '7px 13px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit',
-                                background: bpFlavorProfile === s.val ? 'var(--brand-ghost)' : 'transparent',
-                                border: `1px solid ${bpFlavorProfile === s.val ? 'var(--brand-border)' : 'var(--border-subtle)'}`,
-                                color: bpFlavorProfile === s.val ? 'var(--brand-dim)' : 'var(--text-secondary)',
-                                fontWeight: bpFlavorProfile === s.val ? 600 : 400,
-                              }}>
-                              {s.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                      {(() => {
+                        const FLAVOR_PROFILES = [
+                          { val: 'none',          label: 'No preference',    desc: null },
+                          { val: 'mexican',       label: '🌮 Mexican',       desc: 'Cumin, chili, lime, cilantro, salsa. Grilled proteins, rice, beans, guacamole. Bold and satisfying.' },
+                          { val: 'indian',        label: '🍛 Indian',        desc: 'Turmeric, ginger, cumin, coriander, garam masala. Curries, lentils, rice dishes. Anti-inflammatory spice profile aligns well with many biomarker goals.' },
+                          { val: 'italian',       label: '🍝 Italian',       desc: 'Olive oil, garlic, basil, oregano, parmesan. Pasta, chicken, fish, tomato-based sauces. Mediterranean foundation.' },
+                          { val: 'japanese',      label: '🍱 Japanese',      desc: 'Soy sauce, sesame, ginger, miso, rice. Clean, precise, low-fat cooking. Excellent protein-to-calorie ratio.' },
+                          { val: 'thai',          label: '🌿 Thai',          desc: 'Coconut milk, fish sauce, lime, lemongrass, chili. Bright, aromatic, balanced sweet-savory-spicy.' },
+                          { val: 'middleeastern', label: '🧆 Middle Eastern', desc: 'Za\'atar, sumac, garlic, lemon, tahini. Grilled meats, chickpeas, flatbread. High protein, rich in zinc and iron.' },
+                          { val: 'korean',        label: '🥢 Korean',        desc: 'Soy, sesame, garlic, gochugaru, ginger. Grilled meats, rice bowls, fermented sides. Fermented elements support gut health.' },
+                          { val: 'american',      label: '🍔 American',      desc: 'Simple, familiar, satisfying. Grilled proteins, potatoes, salads, simple seasonings. Maximum adherence for everyday eating.' },
+                          { val: 'french',        label: '🥐 French',        desc: 'Herbs de Provence, Dijon, tarragon, butter, lemon. Classic technique applied to simple ingredients. Elegant without complexity.' },
+                          { val: 'greek',         label: '🫒 Greek',         desc: 'Olive oil, lemon, oregano, feta, garlic. Grilled proteins, roasted vegetables, legumes. Strong Mediterranean alignment.' },
+                          { val: 'brazilian',     label: '🥩 Brazilian',     desc: 'Churrasco-style grilling, garlic, lime, farofa. Meat-forward, high protein, minimal processing. Excellent for animal-based and high-protein goals.' },
+                        ];
+                        const selected = FLAVOR_PROFILES.find(s => s.val === bpFlavorProfile);
+                        return (
+                          <div style={{ marginBottom: 18, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
+                            <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 4 }}>Flavor Profile <span style={{ fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'none', letterSpacing: 0 }}>— shape your meals around a cuisine</span></div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8, marginBottom: selected && selected.val !== 'none' ? 12 : 0 }}>
+                              {FLAVOR_PROFILES.map(s => (
+                                <button key={s.val} type="button" onClick={() => setBpFlavorProfile(s.val)}
+                                  style={{ fontSize: 12, padding: '7px 13px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit', background: bpFlavorProfile === s.val ? 'var(--brand-ghost)' : 'transparent', border: '1px solid ' + (bpFlavorProfile === s.val ? 'var(--brand-border)' : 'var(--border-subtle)'), color: bpFlavorProfile === s.val ? 'var(--brand-dim)' : 'var(--text-secondary)', fontWeight: bpFlavorProfile === s.val ? 600 : 400 }}>
+                                  {s.label}
+                                </button>
+                              ))}
+                            </div>
+                            {selected && selected.val !== 'none' && selected.desc && (
+                              <div style={{ padding: '10px 14px', background: 'var(--brand-ghost)', border: '1px solid var(--brand-border)', borderRadius: 8, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                                <strong style={{ color: 'var(--brand-dim)' }}>{selected.label}:</strong> {selected.desc}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* Meal Prepper toggle */}
                       <div style={{ marginBottom: 18, paddingTop: 18, borderTop: '1px solid var(--border-subtle)' }}>
