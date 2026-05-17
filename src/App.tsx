@@ -2956,24 +2956,25 @@ export default function App() {
       )}
 
       {showRegenConfirm && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,10,20,0.92)', backdropFilter: 'blur(8px)', padding: 16 }}>
-          <div style={{ background: 'rgba(2,12,22,0.98)', border: '1px solid rgba(0,210,165,.3)', borderRadius: 12, padding: '28px 32px', maxWidth: 480, width: '100%' }}>
-            <div style={{ fontSize: 11, color: 'rgba(0,225,180,.75)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Start a new cycle</div>
-            <h3 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 22, color: 'var(--text-primary)', margin: '0 0 12px', fontWeight: 500 }}>Regenerate your Biologic Protocol?</h3>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 12px' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,26,15,.7)', backdropFilter: 'blur(6px)', padding: 20 }}
+          onClick={() => setShowRegenConfirm(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 14, padding: '32px 32px 28px', maxWidth: 460, width: '100%', boxShadow: '0 8px 40px rgba(0,0,0,.15)' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Start a new cycle</div>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 24, color: 'var(--text-primary)', margin: '0 0 14px', fontWeight: 400, lineHeight: 1.2 }}>Regenerate your Biologic Protocol?</h3>
+            <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: '0 0 12px' }}>
               Protocols are designed to run <strong style={{ color: 'var(--text-primary)' }}>30–90 days</strong>. Deep biological adaptation takes time — the same protocol, consistently applied, produces better results than frequent changes.
             </p>
-            <p style={{ fontSize: 13, color: 'rgba(0,210,165,.62)', lineHeight: 1.6, margin: '0 0 20px' }}>
-              If you just want different meals, use the swap options inside each day — free and unlimited, no regeneration needed.
+            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', lineHeight: 1.65, margin: '0 0 24px', padding: '10px 14px', background: 'var(--bg-sunken)', borderRadius: 8 }}>
+              💡 If you just want different meals, use the swap options inside each day — free and unlimited, no regeneration needed.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => { setShowRegenConfirm(false); generateBiologicProtocol(); }}
-                style={{ flex: 1, fontSize: 14, color: 'rgba(0,255,200,1)', background: 'rgba(0,195,155,.14)', border: '1px solid rgba(0,225,180,.5)', borderRadius: 5, padding: '11px 18px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
+                style={{ flex: 1, fontSize: 15, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 8, padding: '12px 18px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
                 Yes, start a new cycle
               </button>
               <button onClick={() => setShowRegenConfirm(false)}
-                style={{ fontSize: 13, color: 'rgba(0,180,140,.7)', background: 'none', border: '1px solid rgba(0,180,140,.25)', borderRadius: 5, padding: '11px 18px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                Keep current protocol
+                style={{ fontSize: 14, color: 'var(--text-secondary)', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '12px 18px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                Keep current
               </button>
             </div>
           </div>
