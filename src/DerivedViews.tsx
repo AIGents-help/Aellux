@@ -105,42 +105,58 @@ function aggregateSupps(weekData: any) {
 }
 
 // Aggregate every grocery item across all selected meals, categorized.
-// Extract the base ingredient name by stripping quantities, prep notes, and punctuation.
-// "chicken breast 5oz grilled" → "chicken breast"
-// "frozen broccoli 1 cup" → "broccoli"
-// "olive oil 1.5 tbsp + lemon juice" → "olive oil"  (stops at + combos)
-function extractIngredientName(raw: string): string {
+// Strips cooking instructions, sums quantities of the same ingredient.
+function extractBaseIngredient(raw: string): string {
   let s = raw.toLowerCase().trim();
-  // Stop at additive combos (e.g. "olive oil + lemon juice" → just "olive oil")
+  // Remove everything in parentheses — cooking instructions live here
+  s = s.replace(/\s*\([^)]*\)/g, '');
+  // Stop at additive combos
   s = s.split(/\s*[+&]\s*/)[0].trim();
-  // Strip leading "frozen", "canned", "cooked", "fresh", "raw", "dried", "plain"
-  s = s.replace(/^(frozen|canned|cooked|fresh|raw|dried|plain|sliced|diced|minced|roasted|baked|grilled|boiled|whole|large|medium|small)\s+/g, '');
-  // Strip trailing quantity patterns: "5oz", "1 cup", "2 slices", "0.75 cup drained", etc.
-  s = s.replace(/\s+[\d./]+\s*(oz|g|lb|kg|cup|cups|tbsp|tsp|ml|l|slice|slices|piece|pieces|clove|cloves|medium|large|small|serving|scoop|handful)[\w\s]*/i, '');
-  // Strip trailing prep descriptors
-  s = s.replace(/\s+(grilled|cooked|soft-boiled|hard-boiled|lean|dry|drained|chopped|minced|roasted|baked|sliced|sautéed)$/i, '');
+  // Strip leading adjectives
+  s = s.replace(/^(frozen|canned|cooked|fresh|raw|dried|plain|sliced|diced|minced|roasted|baked|grilled|boiled|whole|large|medium|small|extra-lean|lean|grass-fed|pasture-raised|organic)\s+/gi, '');
+  // Strip trailing quantity patterns
+  s = s.replace(/\s+[\d./]+\s*(oz|g|lb|lbs|kg|cup|cups|tbsp|tsp|ml|l|slice|slices|piece|pieces|clove|cloves|serving|scoop|handful|pinch)[\w\s]*/gi, '');
+  // Strip trailing cooking descriptors
+  s = s.replace(/\s+(grilled|cooked|soft-boiled|hard-boiled|lean|dry|drained|chopped|minced|roasted|baked|sliced|sautéed|fried|warm|chilled|cold|hot|optional|double serving)[\w\s]*/gi, '');
+  // Strip trailing "for X" phrases
+  s = s.replace(/\s+for\s+.*$/gi, '');
   return s.trim();
 }
 
-// Categorize by ingredient name — check fats/oils BEFORE fruit to avoid
-// "olive oil + lemon" being classified as Fruit
+// Parse quantity from raw ingredient string — returns {amount, unit}
+function parseQty(raw: string): { amount: number; unit: string } | null {
+  const unitMap: Record<string, string> = {
+    'lb': 'lb', 'lbs': 'lb', 'pound': 'lb', 'pounds': 'lb',
+    'oz': 'oz', 'ounce': 'oz', 'ounces': 'oz',
+    'g': 'g', 'gram': 'g', 'grams': 'g',
+    'kg': 'kg',
+    'cup': 'cup', 'cups': 'cup',
+    'tbsp': 'tbsp', 'tablespoon': 'tbsp', 'tablespoons': 'tbsp',
+    'tsp': 'tsp', 'teaspoon': 'tsp', 'teaspoons': 'tsp',
+  };
+  const m = raw.match(/([\d./]+)\s*(lb|lbs|pound|pounds|oz|ounce|ounces|g|gram|grams|kg|cup|cups|tbsp|tablespoon|tablespoons|tsp|teaspoon|teaspoons)/i);
+  if (!m) return null;
+  const rawNum = m[1].includes('/') ? m[1].split('/').reduce((a: number, b: string, i: number) => i === 0 ? parseFloat(b) : a / parseFloat(b), 0) : parseFloat(m[1]);
+  return { amount: rawNum, unit: unitMap[m[2].toLowerCase()] || m[2].toLowerCase() };
+}
+
 function categorize(name: string): string {
   const lc = name.toLowerCase();
-  if (/(olive oil|avocado oil|coconut oil|ghee|nut butter|peanut butter|almond butter|tahini|nut|seed|chia|flax|almond|walnut|pumpkin seed|sunflower|avocado)/i.test(lc)) return 'Fats, nuts & seeds';
-  if (/(chicken|beef|ground beef|ground turkey|pork|turkey|salmon|tuna|cod|halibut|shrimp|tofu|tempeh|egg|cottage cheese|greek yogurt|casein|whey)/i.test(lc)) return 'Proteins';
+  if (/(olive oil|avocado oil|coconut oil|ghee|tallow|lard|nut butter|peanut butter|almond butter|tahini|nut|seed|chia|flax|almond|walnut|pumpkin seed|sunflower|avocado)/i.test(lc)) return 'Fats, nuts & seeds';
+  if (/(chicken|beef|ground beef|ground turkey|pork|turkey|salmon|tuna|cod|halibut|shrimp|tofu|tempeh|egg|cottage cheese|greek yogurt|casein|whey|liver|heart|kidney|sardine|lamb)/i.test(lc)) return 'Proteins';
   if (/(milk|butter|cheese|cream|kefir|feta|mozzarella|cheddar|parmesan)/i.test(lc)) return 'Dairy';
   if (/(bean|lentil|chickpea|black bean|kidney|pinto|navy)/i.test(lc)) return 'Legumes';
   if (/(rice|oat|oatmeal|quinoa|barley|pasta|bread|tortilla|noodle|farro|bulgur|millet|potato|sweet potato|couscous)/i.test(lc)) return 'Grains & starches';
   if (/(spinach|kale|broccoli|cauliflower|carrot|tomato|cucumber|pepper|onion|garlic|lettuce|arugula|cabbage|asparagus|zucchini|squash|beet|mushroom|salad mix)/i.test(lc)) return 'Vegetables';
-  if (/(berr|apple|banana|orange|lemon|lime|peach|pear|grape|melon|kiwi|mango|pineapple|blueberr|strawberr)/i.test(lc)) return 'Fruit';
-  if (/(salt|pepper|spice|herb|cumin|turmeric|cinnamon|ginger|paprika|oregano|basil|thyme|rosemary|soy sauce|tamari|vinegar|mustard|honey|sriracha|hot sauce)/i.test(lc)) return 'Pantry / seasoning';
+  if (/(berr|apple|banana|orange|lemon|lime|peach|pear|grape|melon|kiwi|mango|pineapple|blueberr|strawberr|honey)/i.test(lc)) return 'Fruit';
+  if (/(salt|pepper|spice|herb|cumin|turmeric|cinnamon|ginger|paprika|oregano|basil|thyme|rosemary|soy sauce|tamari|vinegar|mustard|sriracha|hot sauce)/i.test(lc)) return 'Pantry / seasoning';
   return 'Other';
 }
 
 function aggregateGrocery(weekData: any, selectedMealKeys: Record<string, string>) {
   if (!weekData?.days) return { byCategory: {}, total: 0 };
 
-  // Collect all raw item strings — respects active swap selections
+  // Collect all raw item strings
   const allItems: string[] = [];
   for (let i = 0; i < weekData.days.length; i++) {
     const day = weekData.days[i];
@@ -149,44 +165,59 @@ function aggregateGrocery(weekData: any, selectedMealKeys: Record<string, string
       const meal = day.meals[slot];
       if (!meal) continue;
       const swapKey = selectedMealKeys[`${i}|${slot}`];
-      // If user has swapped this meal and the alt has items, use those
       const swappedAlt = swapKey && meal.alternatives?.find((a: any) => a.swap === swapKey);
       const items = (swappedAlt as any)?.items || meal.items;
       if (items) allItems.push(...items);
     }
   }
 
-  // Consolidate: group by normalized ingredient name, keep the first (cleanest) label
-  const nameToLabel = new Map<string, string>();
+  // Group by base ingredient, accumulate quantities
+  const groups = new Map<string, { label: string; qty: Map<string, number>; noUnit: number }>();
   for (const raw of allItems) {
     if (!raw?.trim()) continue;
-    const normalized = extractIngredientName(raw);
-    if (normalized.length < 2) continue;
-    // Keep the shortest/cleanest label as the display name
-    if (!nameToLabel.has(normalized)) {
-      // Display label: strip qty but keep prep context if short
-      const display = raw.split(/\s*[+&]\s*/)[0].trim()
-        .replace(/\s+[\d./]+\s*(oz|g|lb|kg|cup|cups|tbsp|tsp|ml|l|slice|slices|piece|pieces|clove|cloves)[\w\s]*/i, '')
-        .replace(/\s+(grilled|cooked|lean|dry|drained|chopped|minced|roasted|baked|sliced)$/i, '')
-        .trim();
-      nameToLabel.set(normalized, display || normalized);
+    const base = extractBaseIngredient(raw);
+    if (base.length < 2) continue;
+
+    if (!groups.has(base)) {
+      // Clean display label: title case, no cooking notes
+      const label = base.replace(/\b\w/g, c => c.toUpperCase());
+      groups.set(base, { label, qty: new Map(), noUnit: 0 });
+    }
+    const g = groups.get(base)!;
+    const parsed = parseQty(raw);
+    if (parsed) {
+      g.qty.set(parsed.unit, (g.qty.get(parsed.unit) || 0) + parsed.amount);
+    } else {
+      g.noUnit++;
     }
   }
 
-  // Categorize consolidated items
+  // Build display strings with totals
   const byCategory: Record<string, string[]> = {};
-  for (const [normalized, label] of nameToLabel.entries()) {
-    const cat = categorize(normalized);
+  for (const [, g] of groups.entries()) {
+    const cat = categorize(g.label);
     if (!byCategory[cat]) byCategory[cat] = [];
-    byCategory[cat].push(label);
+
+    let qtyStr = '';
+    if (g.qty.size > 0) {
+      qtyStr = Array.from(g.qty.entries())
+        .map(([unit, amt]) => {
+          const rounded = Math.round(amt * 4) / 4; // round to nearest 0.25
+          return rounded + ' ' + unit;
+        })
+        .join(' + ');
+    } else if (g.noUnit > 0) {
+      qtyStr = g.noUnit + 'x';
+    }
+
+    byCategory[cat].push(qtyStr ? g.label + ' — ' + qtyStr : g.label);
   }
 
-  // Sort items alphabetically within each category
   for (const cat of Object.keys(byCategory)) {
     byCategory[cat].sort((a, b) => a.localeCompare(b));
   }
 
-  const total = Array.from(nameToLabel.keys()).length;
+  const total = groups.size;
   return { byCategory, total };
 }
 
