@@ -175,9 +175,9 @@ export default function Premortem({ userId, plan, allMarkers, profile }: Props) 
                             <div style={{ fontSize: 11, color: 'var(--accent-watch)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>You may already be feeling</div>
                             <p style={{ fontSize: 15, color: 'var(--accent-watch)', lineHeight: 1.7, margin: 0, fontWeight: 300 }}>{s.warning_signs}</p>
                           </div>
-                          <div style={{ padding: '14px 16px', background: 'rgba(52,211,153,.06)', border: '1px solid rgba(52,211,153,.2)', borderRadius: 7, marginBottom: 12 }}>
-                            <div style={{ fontSize: 11, color: 'rgba(52,211,153,.8)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>The intervention that changes this</div>
-                            <p style={{ fontSize: 15, color: 'rgba(180,255,220,.92)', lineHeight: 1.7, margin: 0, fontWeight: 300 }}>{s.the_intervention}</p>
+                          <div style={{ padding: '14px 16px', background: 'rgba(22,101,52,.06)', border: '1px solid rgba(22,101,52,.2)', borderRadius: 7, marginBottom: 12 }}>
+                            <div style={{ fontSize: 11, color: 'var(--accent-optimal)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 600 }}>The intervention that changes this</div>
+                            <p style={{ fontSize: 15, color: 'var(--text-primary)', lineHeight: 1.7, margin: 0, fontWeight: 400 }}>{s.the_intervention}</p>
                           </div>
                           <div style={{ fontSize: 13, color: cfg.color, fontStyle: 'italic', lineHeight: 1.6 }}>
                             ⏱ {s.window}
@@ -193,11 +193,11 @@ export default function Premortem({ userId, plan, allMarkers, profile }: Props) 
 
           {/* Bright spots */}
           {result.bright_spots?.length > 0 && (
-            <div style={{ padding: '16px 18px', background: 'rgba(52,211,153,.05)', border: '1px solid rgba(52,211,153,.18)', borderRadius: 8, marginBottom: 16 }}>
-              <div style={{ fontSize: 11, color: 'rgba(52,211,153,.75)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>What is working — protect these</div>
+            <div style={{ padding: '16px 18px', background: 'rgba(22,101,52,.05)', border: '1px solid rgba(22,101,52,.18)', borderRadius: 8, marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: 'var(--accent-optimal)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12, fontWeight: 600 }}>What is working — protect these</div>
               {result.bright_spots.map((b, i) => (
-                <div key={i} style={{ fontSize: 15, color: 'rgba(180,255,220,.9)', lineHeight: 1.65, marginBottom: 6, display: 'flex', gap: 10, fontWeight: 300 }}>
-                  <span style={{ color: 'rgba(52,211,153,.8)', flexShrink: 0 }}>✓</span>{b}
+                <div key={i} style={{ fontSize: 15, color: 'var(--text-primary)', lineHeight: 1.65, marginBottom: 6, display: 'flex', gap: 10, fontWeight: 400 }}>
+                  <span style={{ color: 'var(--accent-optimal)', flexShrink: 0, fontWeight: 700 }}>✓</span>{b}
                 </div>
               ))}
             </div>

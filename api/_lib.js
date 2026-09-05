@@ -94,6 +94,12 @@ export async function logUsage(userId, endpoint) {
 // Pass `thinkingBudget` to enable extended thinking for calls that need deeper
 // cross-marker reasoning (contraindication checks, cascade analysis) — omit it
 // for fast/cheap calls where latency matters more than depth.
+// Models that only support adaptive thinking (no budget_tokens) — using the
+// older manual "enabled" format against these returns a 400 invalid_request_error.
+// Haiku 4.5 is the one model still on manual/"Extended" thinking; everything
+// newer than that has moved to adaptive-only.
+const ADAPTIVE_THINKING_MODELS = ['claude-sonnet-5', 'claude-opus-5', 'claude-fable-5-1', 'claude-mythos-5-1'];
+
 export async function callClaude({ apiKey, model, maxTokens, system, cachedText, dynamicText, thinkingBudget }) {
   const userContent = [];
   if (cachedText) userContent.push({ type: 'text', text: cachedText, cache_control: { type: 'ephemeral' } });
@@ -105,7 +111,11 @@ export async function callClaude({ apiKey, model, maxTokens, system, cachedText,
     messages: [{ role: 'user', content: userContent.length ? userContent : (dynamicText || cachedText || '') }],
   };
   if (system) payload.system = system;
-  if (thinkingBudget) payload.thinking = { type: 'enabled', budget_tokens: thinkingBudget };
+  if (thinkingBudget) {
+    payload.thinking = ADAPTIVE_THINKING_MODELS.includes(model)
+      ? { type: 'adaptive' }
+      : { type: 'enabled', budget_tokens: thinkingBudget };
+  }
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
