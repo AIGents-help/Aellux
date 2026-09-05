@@ -761,6 +761,7 @@ export default function App() {
   const [bpMealPrep, setBpMealPrep] = useState<boolean>(false);
   const [bpCycleStartedAt, setBpCycleStartedAt] = useState<string | null>(null);
   const [protocolWatchFlags, setProtocolWatchFlags] = useState<any[]>([]);
+  const [protocolWatchError, setProtocolWatchError] = useState<string | null>(null);
   const [protocolWatchDismissed, setProtocolWatchDismissed] = useState<Set<string>>(new Set());
   const [bpFlavorProfile, setBpFlavorProfile] = useState<string>('none');
   const [bpRecommendedStyle, setBpRecommendedStyle] = useState<string>('');
@@ -941,7 +942,8 @@ export default function App() {
   // Proactive check: is any marker trending against the user since their
   // active protocol started? Runs automatically — no button, no chart click.
   useEffect(() => {
-    if (!bpCycleStartedAt || allMarkers.length === 0 || !user?.id) return;
+    if (allMarkers.length === 0 || !user?.id) return;
+    setProtocolWatchError(null);
     fetch('/api/protocol-watch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -955,8 +957,11 @@ export default function App() {
       }),
     })
       .then(r => r.json())
-      .then(d => setProtocolWatchFlags(Array.isArray(d?.flags) ? d.flags : []))
-      .catch(() => {});
+      .then(d => {
+        if (d?.error) { setProtocolWatchError(d.error); return; }
+        setProtocolWatchFlags(Array.isArray(d?.flags) ? d.flags : []);
+      })
+      .catch(e => setProtocolWatchError(e?.message || 'Trend check failed to run'));
   }, [bpCycleStartedAt, allMarkers, user?.id]);
 
   const markersByCategory = useMemo(() => {
@@ -1807,6 +1812,15 @@ export default function App() {
                 />
               ) : (
                 <>
+                  {/* If the proactive check itself failed, say so — silence here could
+                      otherwise be mistaken for "nothing's wrong" when the check never ran. */}
+                  {protocolWatchError && (
+                    <div style={{ marginBottom: 16, padding: '10px 14px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, fontSize: 13, color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>⚠</span>
+                      <span>The trend check against your active protocol couldn't run just now, so nothing flagged here is confirmed clear — it just didn't run. ({protocolWatchError})</span>
+                    </div>
+                  )}
+
                   {/* ── PROACTIVE PROTOCOL WATCH — surfaces the moment something is trending
                       wrong since the active protocol started. This is the front door: the
                       one thing that should never require the user to go looking for it. ── */}
@@ -1831,7 +1845,7 @@ export default function App() {
                                     {isPhysician ? 'Talk to a doctor this week' : 'Protocol may be working against you'}
                                   </span>
                                   <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
-                                    {f.marker} · {f.pct_change != null ? `${f.pct_change}% worse` : ''} since {f.baseline_date}
+                                    {f.marker} · {f.pct_change != null ? `${f.pct_change}% worse` : ''}{f.basis === 'chronic' ? ` over last ${f.readings_since_start} readings (no protocol tied to this)` : ` since ${f.baseline_date}`}
                                   </span>
                                 </div>
                                 <p style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6, margin: 0 }}>{f.alert}</p>
@@ -1945,6 +1959,12 @@ export default function App() {
                                     <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(0,0,0,.06)', fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.02em', lineHeight: 1.55 }}>
                                       <span style={{ fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginRight: 6 }}>Mechanism</span>
                                       {dance.reasoning_basis}
+                                      {dance.citation_pmid && (
+                                        <a href={`https://pubmed.ncbi.nlm.nih.gov/${dance.citation_pmid}/`} target="_blank" rel="noopener noreferrer"
+                                          style={{ marginLeft: 6, color: 'var(--brand)', textDecoration: 'none', fontWeight: 600 }}>
+                                          [PMID:{dance.citation_pmid}]
+                                        </a>
+                                      )}
                                     </div>
                                   )}
                                 </div>
@@ -1969,6 +1989,12 @@ export default function App() {
                                       <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(52,211,153,.15)', fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.02em', lineHeight: 1.55 }}>
                                         <span style={{ fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginRight: 6 }}>Mechanism</span>
                                         {combat.reasoning_basis}
+                                        {combat.citation_pmid && (
+                                          <a href={`https://pubmed.ncbi.nlm.nih.gov/${combat.citation_pmid}/`} target="_blank" rel="noopener noreferrer"
+                                            style={{ marginLeft: 6, color: 'var(--brand)', textDecoration: 'none', fontWeight: 600 }}>
+                                            [PMID:{combat.citation_pmid}]
+                                          </a>
+                                        )}
                                       </div>
                                     )}
                                   </div>

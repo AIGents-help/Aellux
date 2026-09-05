@@ -46,7 +46,7 @@ function isMedical(name) {
 
 const WORSENING_THRESHOLD = 0.15; // 15% move against the person, minimum to flag
 
-function detectFlags(markers, cycleStartedAt) {
+function detectProtocolFlags(markers, cycleStartedAt) {
   if (!cycleStartedAt) return [];
   const cutoff = cycleStartedAt.slice(0, 10);
   const flags = [];
@@ -82,6 +82,7 @@ function detectFlags(markers, cycleStartedAt) {
       marker: m.name,
       unit: m.unit || '',
       direction: dir,
+      basis: 'protocol',
       baseline_date: baseline.date,
       baseline_value: baseline.value,
       latest_date: latest.date,
@@ -91,8 +92,64 @@ function detectFlags(markers, cycleStartedAt) {
       severity: isMedical(m.name) ? 'physician' : 'protocol',
     });
   }
-  // Worst offenders first
-  return flags.sort((a, b) => b.pct_change - a.pct_change);
+  return flags;
+}
+
+// Catches markers with no clean protocol anchor to attribute against — a marker
+// that's simply been bad, consistently, for a long time. Without this, a
+// chronically elevated marker with no protocol start date to pin it to would
+// never surface here at all, only the ones with a tidy before/after story.
+const CHRONIC_MIN_READINGS = 3;
+
+function detectChronicFlags(markers, alreadyFlaggedNames) {
+  const flags = [];
+  for (const m of markers || []) {
+    if (alreadyFlaggedNames.has(m.name)) continue; // don't double-flag the same marker two ways
+    const dir = directionFor(m.name || '');
+    if (!dir) continue;
+    const hist = (m.history || [])
+      .filter(h => h.date && h.value !== undefined && h.value !== null && !isNaN(parseFloat(h.value)))
+      .map(h => ({ date: h.date, value: parseFloat(h.value) }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    if (hist.length < CHRONIC_MIN_READINGS) continue;
+
+    const recent = hist.slice(-CHRONIC_MIN_READINGS);
+    const earliest = recent[0];
+    const latest = recent[recent.length - 1];
+    const worstOfRecent = dir === 'lower'
+      ? Math.max(...recent.map(h => h.value))
+      : Math.min(...recent.map(h => h.value));
+    const isStillWorstOrWorsening = latest.value === worstOfRecent;
+    if (!isStillWorstOrWorsening) continue; // it's improved from its recent worst — not chronic-worsening
+
+    const pctChange = earliest.value !== 0 ? (latest.value - earliest.value) / Math.abs(earliest.value) : 0;
+    const badChange = dir === 'lower' ? pctChange : -pctChange;
+    // Chronic case doesn't need as large a swing to matter — sustained direction
+    // over this many readings with no protocol event to explain it is itself the finding.
+    if (badChange < WORSENING_THRESHOLD / 2) continue;
+
+    flags.push({
+      marker: m.name,
+      unit: m.unit || '',
+      direction: dir,
+      basis: 'chronic',
+      baseline_date: earliest.date,
+      baseline_value: earliest.value,
+      latest_date: latest.date,
+      latest_value: latest.value,
+      pct_change: Math.round(badChange * 1000) / 10,
+      readings_since_start: recent.length,
+      severity: isMedical(m.name) ? 'physician' : 'protocol',
+    });
+  }
+  return flags;
+}
+
+function detectFlags(markers, cycleStartedAt) {
+  const protocolFlags = detectProtocolFlags(markers, cycleStartedAt);
+  const flaggedNames = new Set(protocolFlags.map(f => f.marker));
+  const chronicFlags = detectChronicFlags(markers, flaggedNames);
+  return [...protocolFlags, ...chronicFlags].sort((a, b) => b.pct_change - a.pct_change);
 }
 
 export default async function handler(req) {
@@ -105,7 +162,8 @@ export default async function handler(req) {
 
   const { userId, plan, markers, cycleStartedAt, mealStyle, additionalGoal } = body || {};
   if (!Array.isArray(markers) || markers.length === 0) return json({ flags: [] });
-  if (!cycleStartedAt) return json({ flags: [] }); // no active protocol to watch against
+  // No early return on missing cycleStartedAt — chronic (protocol-independent)
+  // detection can still find something worth flagging even with no active protocol.
 
   if (userId) {
     const r = await rateLimit({ userId, endpoint: 'protocol-watch', limit: plan === 'pro' ? 100 : 10, windowHours: 24 });
@@ -118,29 +176,43 @@ export default async function handler(req) {
   // Cache the narrative — the arithmetic above is free, but the Claude call isn't,
   // and the input (marker set + protocol) doesn't change between page loads.
   const markerHash = await hashMarkers(markers);
-  const cacheKey = await sha256(`protocol-watch|${cycleStartedAt}|${mealStyle || 'none'}|${markerHash}`);
+  const cacheKey = await sha256(`protocol-watch|${cycleStartedAt || 'none'}|${mealStyle || 'none'}|${markerHash}`);
   const cached = await sbSelect('personalised_cache', `cache_key=eq.${cacheKey}&select=result,hits&limit=1`);
   if (cached && cached.length > 0) {
     sbUpdate('personalised_cache', `cache_key=eq.${cacheKey}`, { hits: (cached[0].hits || 0) + 1, last_hit_at: new Date().toISOString() }).catch(() => {});
     return json(cached[0].result, { headers: { 'x-cache': 'HIT' } });
   }
 
-  const cachedInstructions = `You write short, direct, no-hedging health alerts for Aellux. You will be given markers that have moved consistently in the WRONG direction since the person started their current protocol, with the exact dates and values already computed — do not invent, estimate, or add any numbers beyond what's given.
+  const cachedInstructions = `You write short, direct, no-hedging health alerts for Aellux. You will be given markers that have moved consistently in the WRONG direction, with the exact dates and values already computed — do not invent, estimate, or add any numbers beyond what's given.
+
+Each flagged marker has a "basis": "protocol" means it's moved this way since the person started their current protocol (a clean before/after comparison). "chronic" means there's no protocol to anchor against — it's just been consistently bad across the readings given, with no dietary or supplement change to point to.
 
 For EACH flagged marker, write ONE tight alert (2-3 sentences max):
-- State the fact plainly: marker name, baseline value/date, current value/date, the protocol name and start date.
+- If basis is "protocol": state the marker, baseline value/date, current value/date, and the protocol name/start date it's moved against.
+- If basis is "chronic": state the marker and its trend across the given readings, and say plainly there's no active protocol change driving it — this is a standing issue, not a reaction to something recent.
 - If severity is "physician": say plainly this warrants a doctor conversation this week. Do not suggest a supplement or lifestyle tweak as if it's sufficient on its own — name that a physician conversation is the primary next step, and give a specific reason (e.g. sustained magnitude, established risk threshold) if evident from the marker.
-- If severity is "protocol": name the most likely dietary/protocol lever driving it (e.g. saturated fat load if the protocol is animal-based/keto/carnivore) and suggest a specific adjustment — but if the percentage change is large, still note that a doctor conversation is reasonable too.
+- If severity is "protocol": for "protocol" basis, name the most likely dietary/protocol lever driving it (e.g. saturated fat load if the protocol is animal-based/keto/carnivore); for "chronic" basis, say this is worth raising with whoever manages this marker even without a clear trigger. If the percentage change is large, note a doctor conversation is reasonable regardless of basis.
 - Never say "consult your doctor" as a throwaway hedge — only say it when severity is "physician", and when you do, mean it as the main point, not a disclaimer.
 - No markdown, no bullet points, plain sentences.
 
 Return ONLY valid JSON:
 {"flags":[{"marker":"name","severity":"physician|protocol","alert":"the 2-3 sentence alert text"}]}`;
 
-  const dynamicData = `Protocol: ${mealStyle || 'current protocol'}${additionalGoal ? ` (goal: ${additionalGoal})` : ''}, started ${cycleStartedAt.slice(0, 10)}.
+  const protocolLine = cycleStartedAt
+    ? `Protocol: ${mealStyle || 'current protocol'}${additionalGoal ? ` (goal: ${additionalGoal})` : ''}, started ${cycleStartedAt.slice(0, 10)}.`
+    : 'No active protocol currently set.';
+
+  const dynamicData = `${protocolLine}
 
 Flagged markers (numeric analysis already done — use these exact numbers):
-${numericFlags.map(f => `- ${f.marker}: was ${f.baseline_value}${f.unit} on ${f.baseline_date} (before protocol), now ${f.latest_value}${f.unit} on ${f.latest_date} — ${f.pct_change}% worse, across ${f.readings_since_start} readings since starting, still worsening as of the latest reading. Severity: ${f.severity}.`).join('\n')}`;
+${numericFlags.map(f => f.basis === 'chronic'
+    ? `- ${f.marker} [basis: chronic, no protocol to anchor against]: was ${f.baseline_value}${f.unit} on ${f.baseline_date}, now ${f.latest_value}${f.unit} on ${f.latest_date} — ${f.pct_change}% worse across the last ${f.readings_since_start} readings, still at/near its worst point. Severity: ${f.severity}.`
+    : `- ${f.marker} [basis: protocol]: was ${f.baseline_value}${f.unit} on ${f.baseline_date} (before protocol), now ${f.latest_value}${f.unit} on ${f.latest_date} — ${f.pct_change}% worse, across ${f.readings_since_start} readings since starting, still worsening as of the latest reading. Severity: ${f.severity}.`
+  ).join('\n')}`;
+
+  const fallbackAlert = (f) => f.basis === 'chronic'
+    ? `${f.marker} has moved from ${f.baseline_value}${f.unit} (${f.baseline_date}) to ${f.latest_value}${f.unit} (${f.latest_date}) — ${f.pct_change}% worse across your last ${f.readings_since_start} readings, with no active protocol change to point to.`
+    : `${f.marker} moved from ${f.baseline_value}${f.unit} (${f.baseline_date}) to ${f.latest_value}${f.unit} (${f.latest_date}) — ${f.pct_change}% worse since starting ${mealStyle || 'your protocol'}${cycleStartedAt ? ` on ${cycleStartedAt.slice(0, 10)}` : ''}.`;
 
   try {
     const { text } = await callClaude({
@@ -154,10 +226,7 @@ ${numericFlags.map(f => `- ${f.marker}: was ${f.baseline_value}${f.unit} on ${f.
     } catch {
       // Fall back to the numeric facts alone if the model output doesn't parse —
       // better to show the honest numbers than to show nothing.
-      parsed = { flags: numericFlags.map(f => ({
-        marker: f.marker, severity: f.severity,
-        alert: `${f.marker} moved from ${f.baseline_value}${f.unit} (${f.baseline_date}) to ${f.latest_value}${f.unit} (${f.latest_date}) — ${f.pct_change}% worse since starting ${mealStyle || 'your protocol'} on ${cycleStartedAt.slice(0, 10)}.`,
-      })) };
+      parsed = { flags: numericFlags.map(f => ({ marker: f.marker, severity: f.severity, alert: fallbackAlert(f) })) };
     }
     // Merge numeric detail back in so the frontend has both the narrative and the raw numbers
     const merged = { flags: parsed.flags.map(pf => ({ ...numericFlags.find(nf => nf.marker === pf.marker), ...pf })) };
@@ -168,9 +237,6 @@ ${numericFlags.map(f => `- ${f.marker}: was ${f.baseline_value}${f.unit} on ${f.
   } catch (err) {
     // Never fail silently on something this important — fall back to the numeric
     // facts alone rather than showing nothing if the AI narrative call breaks.
-    return json({ flags: numericFlags.map(f => ({
-      marker: f.marker, severity: f.severity,
-      alert: `${f.marker} moved from ${f.baseline_value}${f.unit} (${f.baseline_date}) to ${f.latest_value}${f.unit} (${f.latest_date}) — ${f.pct_change}% worse since starting ${mealStyle || 'your protocol'} on ${cycleStartedAt.slice(0, 10)}.`,
-    })) });
+    return json({ flags: numericFlags.map(f => ({ marker: f.marker, severity: f.severity, alert: fallbackAlert(f) })) });
   }
 }

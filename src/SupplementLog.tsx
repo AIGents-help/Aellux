@@ -44,6 +44,7 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
   const [editForm, setEditForm] = useState<Supplement | null>(null);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -56,6 +57,7 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
   const runReview = async (s: Supplement) => {
     if (!s.id) return;
     setReviewingId(s.id);
+    setError(null);
     try {
       const res = await fetch('/api/supplement-review', {
         method: 'POST',
@@ -69,26 +71,36 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
       const data = await res.json();
       if (data.review) {
         setSupplements(prev => prev.map(p => p.id === s.id ? { ...p, review: data.review, reviewed_at: new Date().toISOString() } : p));
+      } else {
+        setError(`Couldn't review ${s.name}: ${data.error || 'unknown error'}. Try again — if it keeps failing, something's broken server-side, not with what you entered.`);
       }
-    } catch {}
+    } catch (e: any) {
+      setError(`Couldn't reach the review service for ${s.name}: ${e?.message || 'network error'}.`);
+    }
     setReviewingId(null);
   };
 
   const save = async () => {
     if (!form.name.trim()) return;
-    const res = await fetch('/api/supplement-log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, supplement: form }),
-    });
-    const data = await res.json();
-    if (data.supplement) {
-      const saved = data.supplement;
-      setSupplements(prev => [saved, ...prev]);
-      setForm({ name: '', dose: '', frequency: 'Daily', started_date: new Date().toISOString().slice(0, 10) });
-      setAdding(false);
-      // Review immediately — this is the whole point: don't just log it, evaluate it.
-      runReview(saved);
+    setError(null);
+    try {
+      const res = await fetch('/api/supplement-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, supplement: form }),
+      });
+      const data = await res.json();
+      if (data.supplement) {
+        const saved = data.supplement;
+        setSupplements(prev => [saved, ...prev]);
+        setForm({ name: '', dose: '', frequency: 'Daily', started_date: new Date().toISOString().slice(0, 10) });
+        setAdding(false);
+        runReview(saved);
+      } else {
+        setError(`Couldn't save ${form.name}: ${data.error || 'unknown error'}.`);
+      }
+    } catch (e: any) {
+      setError(`Couldn't save ${form.name}: ${e?.message || 'network error'}.`);
     }
   };
 
@@ -96,24 +108,31 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
     setEditingId(s.id || null);
     setEditForm({ ...s });
     setAdding(false);
+    setError(null);
   };
 
   const cancelEdit = () => { setEditingId(null); setEditForm(null); };
 
   const saveEdit = async () => {
     if (!editForm || !editForm.name.trim() || !editForm.id) return;
-    const res = await fetch('/api/supplement-log', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, id: editForm.id, supplement: editForm }),
-    });
-    const data = await res.json();
-    if (data.supplement) {
-      const updated = { ...data.supplement, review: null, reviewed_at: null };
-      setSupplements(prev => prev.map(p => p.id === updated.id ? updated : p));
-      setEditingId(null); setEditForm(null);
-      // Dose/name/frequency may have changed — the old verdict no longer applies.
-      runReview(updated);
+    setError(null);
+    try {
+      const res = await fetch('/api/supplement-log', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, id: editForm.id, supplement: editForm }),
+      });
+      const data = await res.json();
+      if (data.supplement) {
+        const updated = { ...data.supplement, review: null, reviewed_at: null };
+        setSupplements(prev => prev.map(p => p.id === updated.id ? updated : p));
+        setEditingId(null); setEditForm(null);
+        runReview(updated);
+      } else {
+        setError(`Couldn't save changes to ${editForm.name}: ${data.error || 'unknown error'}.`);
+      }
+    } catch (e: any) {
+      setError(`Couldn't save changes to ${editForm.name}: ${e?.message || 'network error'}.`);
     }
   };
 
@@ -121,10 +140,18 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
     if (!s.id) return;
     if (!window.confirm(`Remove ${s.name} from your log?`)) return;
     setDeletingId(s.id);
+    setError(null);
     try {
       const res = await fetch(`/api/supplement-log?userId=${userId}&id=${s.id}`, { method: 'DELETE' });
-      if (res.ok) setSupplements(prev => prev.filter(p => p.id !== s.id));
-    } catch {}
+      if (res.ok) {
+        setSupplements(prev => prev.filter(p => p.id !== s.id));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(`Couldn't remove ${s.name}: ${data.error || 'unknown error'}.`);
+      }
+    } catch (e: any) {
+      setError(`Couldn't remove ${s.name}: ${e?.message || 'network error'}.`);
+    }
     setDeletingId(null);
   };
 
@@ -142,6 +169,13 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
           + Add
         </button>
       </div>
+
+      {error && (
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: 'rgba(153,27,27,.07)', border: '1px solid rgba(153,27,27,.3)', borderRadius: 7, marginBottom: 14, fontSize: 13, color: '#991b1b' }}>
+          <span style={{ flex: 1, lineHeight: 1.5 }}>{error}</span>
+          <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991b1b', fontSize: 15, lineHeight: 1, padding: 0 }}>×</button>
+        </div>
+      )}
 
       {/* Add form */}
       {adding && (

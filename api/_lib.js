@@ -131,6 +131,43 @@ export async function callClaude({ apiKey, model, maxTokens, system, cachedText,
   };
 }
 
+// ── Citation grounding (PubMed) ──────────────────────────────────────────────
+// Free, no-API-key NCBI E-utilities. Used to ground "mechanism" claims in real
+// abstracts instead of letting the model produce plausible-sounding but
+// unverifiable citations. Best-effort: any failure here should never break
+// the calling endpoint — grounding is an enhancement, not a dependency.
+export async function pubmedSearch(query, maxResults = 2) {
+  try {
+    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(query)}&retmax=${maxResults}&sort=relevance&retmode=json`;
+    const searchRes = await fetch(searchUrl);
+    if (!searchRes.ok) return [];
+    const searchData = await searchRes.json();
+    const pmids = searchData?.esearchresult?.idlist || [];
+    if (pmids.length === 0) return [];
+
+    const fetchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${pmids.join(',')}&rettype=abstract&retmode=text`;
+    const fetchRes = await fetch(fetchUrl);
+    if (!fetchRes.ok) return [];
+    const raw = await fetchRes.text();
+
+    // MEDLINE plain-text abstracts are separated by blank-line-delimited blocks,
+    // each numbered "1.", "2.", etc. — split on that rather than parsing XML.
+    const blocks = raw.split(/\n\d+\.\s/).filter(Boolean);
+    return blocks.slice(0, pmids.length).map((block, i) => ({
+      pmid: pmids[i],
+      url: `https://pubmed.ncbi.nlm.nih.gov/${pmids[i]}/`,
+      text: block.replace(/\s+/g, ' ').trim().slice(0, 600),
+    })).filter(b => b.text.length > 40);
+  } catch {
+    return []; // grounding is best-effort — never let a PubMed hiccup break synthesis
+  }
+}
+
+export function formatCitationsForPrompt(citations) {
+  if (!citations || citations.length === 0) return '';
+  return `\n\nREAL SOURCE MATERIAL — you may cite these by PMID if genuinely relevant to a specific claim, using format "PMID:12345678". Never cite a PMID not listed here. If nothing here is relevant to a given claim, say "Established biological mechanism" as usual rather than forcing a citation:\n${citations.map(c => `[PMID:${c.pmid}] ${c.text}`).join('\n\n')}`;
+}
+
 export function json(body, init = {}) {
   return new Response(JSON.stringify(body), {
     ...init,

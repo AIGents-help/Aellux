@@ -1,4 +1,4 @@
-import { sha256, hashMarkers, sbSelect, sbUpsert, sbUpdate, rateLimit, logUsage, json, getProfile, formatProfileForPrompt, hashProfile, hasMedications, callClaude } from './_lib.js';
+import { sha256, hashMarkers, sbSelect, sbUpsert, sbUpdate, rateLimit, logUsage, json, getProfile, formatProfileForPrompt, hashProfile, hasMedications, callClaude, pubmedSearch, formatCitationsForPrompt } from './_lib.js';
 
 export const config = { runtime: 'edge' };
 
@@ -155,7 +155,7 @@ Your synthesis must:
 5. Identify what is WORKING — genuine wins in the biology that should be protected and amplified.
 6. Speak in first person as Aellux, directly to the person. Warm, ancient, wise, direct. Like a mentor who truly knows them.
 7. NEVER sound clinical. NEVER use passive voice. NEVER hedge with "consult your doctor." This is a mirror, not a prescription pad.
-8. For reasoning_basis fields: name real biological mechanisms (pathways, axes, processes). DO NOT fabricate citations, paper titles, author names, journal names, or DOIs. If you don't have high-confidence evidence-strength context, write "Established biological mechanism" rather than invent specifics.
+8. For reasoning_basis fields: name real biological mechanisms (pathways, axes, processes). DO NOT fabricate citations, paper titles, author names, journal names, or DOIs. If real source material is provided below (marked "REAL SOURCE MATERIAL"), you may cite a PMID from that list ONLY if it's genuinely relevant to the specific claim — put it in the citation_pmid field, never inline in the prose. If nothing provided is relevant, or no source material was given, write "Established biological mechanism" in reasoning_basis and leave citation_pmid null. Never invent a PMID.
 
 Schema (return ONLY this JSON — no markdown, no preamble):
 {
@@ -170,7 +170,8 @@ Schema (return ONLY this JSON — no markdown, no preamble):
       "markers_involved": ["marker1", "marker2"],
       "explanation": "2 sentences: what these markers are doing to each other and what it means for this person's body right now.",
       "impact": "One sentence: the lived consequence.",
-      "reasoning_basis": "Name the biological mechanism connecting these markers (e.g. 'Estrogen aromatization from adipose tissue' or 'HPA-thyroid axis crosstalk'). One brief mechanism-level note. DO NOT invent specific paper citations, journal names, or author names."
+      "reasoning_basis": "Name the biological mechanism connecting these markers (e.g. 'Estrogen aromatization from adipose tissue' or 'HPA-thyroid axis crosstalk'). One brief mechanism-level note. DO NOT invent specific paper citations, journal names, or author names.",
+      "citation_pmid": "A PMID from the REAL SOURCE MATERIAL below if genuinely relevant to this specific claim, else null. Never invent one."
     }
   ],
   "honest_combat": [
@@ -179,7 +180,8 @@ Schema (return ONLY this JSON — no markdown, no preamble):
       "why_it_works": "One sentence explaining the biological mechanism — not vague advice but specific biology.",
       "how": "Specific, concrete instruction. Not 'exercise more.' 'Zone 2 cardio 3x/week raises HDL, lowers triglycerides, and directly improves insulin sensitivity — the trifecta your markers need.'",
       "priority": 1,
-      "reasoning_basis": "Name the underlying mechanism (e.g. 'Mitochondrial biogenesis via PGC-1α activation' or 'Insulin sensitivity via GLUT4 translocation') and brief evidence-strength note. DO NOT invent specific citations."
+      "reasoning_basis": "Name the underlying mechanism (e.g. 'Mitochondrial biogenesis via PGC-1α activation' or 'Insulin sensitivity via GLUT4 translocation') and brief evidence-strength note. DO NOT invent specific citations.",
+      "citation_pmid": "A PMID from the REAL SOURCE MATERIAL below if genuinely relevant to this specific claim, else null. Never invent one."
     }
   ],
   "what_is_working": ["2-3 genuine wins in this biology — markers or patterns that are strong and should be protected"],
@@ -192,13 +194,26 @@ Schema (return ONLY this JSON — no markdown, no preamble):
   const maxTokens = TOKEN_BUDGETS[type] || 1500;
   const thinkingBudget = THINKING_BUDGETS[type];
 
+  // Citation grounding — synthesis only, since that's where "reasoning_basis"
+  // mechanism claims carry the most weight. Best-effort: pubmedSearch never
+  // throws, so a PubMed hiccup just means no citations get offered this call,
+  // not a broken synthesis.
+  let citationBlock = '';
+  if (type === 'synthesis') {
+    const flaggedForCitation = cleanMarkers(markers).filter(m => m.status === 'elevated' || m.status === 'low').slice(0, 2);
+    if (flaggedForCitation.length > 0) {
+      const citationResults = await Promise.all(flaggedForCitation.map(m => pubmedSearch(`${m.name} mechanism health`, 2)));
+      citationBlock = formatCitationsForPrompt(citationResults.flat().slice(0, 4));
+    }
+  }
+
   // ── Anthropic call ─────────────────────────────────────────────────────────
   try {
     const { text: rawText } = await callClaude({
       apiKey, model: 'claude-haiku-4-5-20251001', maxTokens,
       system: SYSTEM,
       cachedText: cachedInstructions[type],
-      dynamicText: dynamicData,
+      dynamicText: citationBlock ? `${dynamicData}${citationBlock}` : dynamicData,
       thinkingBudget,
     });
 
