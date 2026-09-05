@@ -5,15 +5,26 @@
  * their flagged biomarkers, their active protocol, and their profile
  * (sex/age/conditions/medications). Returns a real verdict, not just a
  * saved log entry.
+ *
+ * Node runtime (not Edge) — same reason as premortem.js: Edge Functions have
+ * a hard, non-configurable ~25s "must return an initial response" ceiling,
+ * and adaptive thinking on Sonnet 5 with this much context can genuinely
+ * take longer than that.
  */
 import {
   getProfile, formatProfileForPrompt, hasMedications,
-  sbSelect, sbUpdate, rateLimit, logUsage, json, callClaude,
+  sbSelect, sbUpdate, rateLimit, logUsage, callClaude,
 } from './_lib.js';
 
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs', maxDuration: 60 };
 
-function parseJSON(raw) {
+function sendJson(res, status, body) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(body));
+}
+
+function extractJSON(raw) {
   let text = String(raw || '').replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
   const start = text.indexOf('{'), end = text.lastIndexOf('}');
   if (start === -1 || end === -1) throw new Error('No JSON found in model output');
@@ -34,7 +45,7 @@ You must:
 6. Name ONE thing about this specific combination that a person evaluating supplements one at a time would typically miss — this is the most valuable part of your answer, so make it specific to their actual data, not a generic supplement fact.
 7. If this supplement has real interaction risk with a listed medication, say so plainly and recommend a pharmacist/doctor check — do not soften this into a vague "consult a professional" throwaway when the risk is specific and known.
 
-Return ONLY valid JSON, no markdown:
+Return ONLY valid JSON, no markdown, nothing after the closing brace:
 {
   "verdict": "agree|caution|disagree",
   "headline": "one direct sentence stating your position",
@@ -45,21 +56,21 @@ Return ONLY valid JSON, no markdown:
   "overlooked_nuance": "1-2 sentences — the specific thing about THIS combination most likely to be missed"
 }`;
 
-export default async function handler(req) {
-  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+export default async function handler(req, res) {
+  if (req.method !== 'POST') { res.statusCode = 405; return res.end('Method not allowed'); }
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return json({ error: 'No API key configured' }, { status: 500 });
+  if (!apiKey) return sendJson(res, 500, { error: 'No API key configured' });
 
-  let body;
-  try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, { status: 400 }); }
+  let body = '';
+  for await (const chunk of req) body += chunk;
+  let parsedBody;
+  try { parsedBody = JSON.parse(body); } catch { return sendJson(res, 400, { error: 'Invalid JSON' }); }
 
-  const { userId, plan, supplementId, supplement, allMarkers, mealStyle, cycleStartedAt, additionalGoal, protocolWatchFlags } = body || {};
-  if (!userId || !supplement?.name) return json({ error: 'Missing supplement' }, { status: 400 });
+  const { userId, plan, supplementId, supplement, allMarkers, mealStyle, cycleStartedAt, additionalGoal, protocolWatchFlags } = parsedBody || {};
+  if (!userId || !supplement?.name) return sendJson(res, 400, { error: 'Missing supplement' });
 
-  if (userId) {
-    const r = await rateLimit({ userId, endpoint: 'supplement-review', limit: plan === 'pro' ? 60 : 8, windowHours: 24 });
-    if (!r.ok) return json({ error: 'Daily supplement review limit reached.' }, { status: 429 });
-  }
+  const r = await rateLimit({ userId, endpoint: 'supplement-review', limit: plan === 'pro' ? 60 : 8, windowHours: 24 });
+  if (!r.ok) return sendJson(res, 429, { error: 'Daily supplement review limit reached.' });
 
   const [profile, stack] = await Promise.all([
     getProfile(userId),
@@ -107,22 +118,20 @@ ALREADY-DETECTED TRAJECTORY FLAGS (markers trending wrong since protocol start):
     });
 
     let result;
-    try { result = parseJSON(text); }
+    try { result = extractJSON(text); }
     catch (e) {
       console.error('[supplement-review] parse failed:', e?.message, 'raw:', String(text).slice(0, 500));
-      return json({ error: `Parse failed: ${e.message}` }, { status: 500 });
+      return sendJson(res, 502, { error: `Parse failed: ${e.message}` });
     }
 
-    // Persist onto the supplement row so it survives reload — this is a real
-    // verdict, not a throwaway chat response.
     if (supplementId) {
       sbUpdate('supplement_log', `id=eq.${supplementId}`, { review: result, reviewed_at: new Date().toISOString() }).catch(() => {});
     }
-    if (userId) logUsage(userId, 'supplement-review').catch(() => {});
+    logUsage(userId, 'supplement-review').catch(() => {});
 
-    return json({ review: result });
+    return sendJson(res, 200, { review: result });
   } catch (err) {
     console.error('[supplement-review] failed:', err?.message, err?.stack);
-    return json({ error: err.message || 'Review failed' }, { status: 500 });
+    return sendJson(res, 502, { error: err.message || 'Review failed' });
   }
 }
