@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Scenario {
   title: string;
@@ -33,9 +33,28 @@ const SEV = {
 export default function Premortem({ userId, plan, allMarkers, profile }: Props) {
   const [result, setResult] = useState<PremResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checkingSaved, setCheckingSaved] = useState(true);
   const [expanded, setExpanded] = useState<number | null>(null);
   const [ran, setRan] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+
+  // Load any previously-run analysis on mount — this is what makes it free to
+  // revisit. Only an explicit Run/Re-run below ever costs a fresh generation.
+  useEffect(() => {
+    if (!userId) { setCheckingSaved(false); return; }
+    fetch(`/api/premortem?userId=${userId}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d?.scenarios !== null && d?.scenarios !== undefined) {
+          setResult(d);
+          setSavedAt(d.savedAt || null);
+          setRan(true);
+        }
+        setCheckingSaved(false);
+      })
+      .catch(() => setCheckingSaved(false));
+  }, [userId]);
 
   const run = async () => {
     setLoading(true); setResult(null); setError(null);
@@ -52,6 +71,7 @@ export default function Premortem({ userId, plan, allMarkers, profile }: Props) 
         setError(data.error);
       } else {
         setResult(data);
+        setSavedAt(new Date().toISOString());
       }
     } catch (e: any) {
       setError(e?.message || 'Could not reach the trajectory analysis service.');
@@ -71,7 +91,7 @@ export default function Premortem({ userId, plan, allMarkers, profile }: Props) 
             Aellux reads your current biological trajectory and names the specific failure modes you are tracking toward — so you can change course while the window is still open.
           </div>
         </div>
-        {!ran && (
+        {!ran && !checkingSaved && (
           <button onClick={run} disabled={loading || markersWithHistory < 2}
             style={{ flexShrink: 0, fontSize: 14, color: markersWithHistory < 2 ? 'rgba(0,210,165,.3)' : 'rgba(248,113,113,1)', background: 'rgba(248,113,113,.08)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 6, padding: '10px 20px', cursor: markersWithHistory < 2 ? 'default' : 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
             {loading ? 'Reading your trajectory…' : 'Run premortem →'}
@@ -79,7 +99,13 @@ export default function Premortem({ userId, plan, allMarkers, profile }: Props) 
         )}
       </div>
 
-      {markersWithHistory < 2 && !ran && (
+      {savedAt && result && (
+        <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 14 }}>
+          Last analyzed {new Date(savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} — saved, no need to re-run unless your data's changed.
+        </div>
+      )}
+
+      {markersWithHistory < 2 && !ran && !checkingSaved && (
         <div style={{ padding: '14px 16px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 8, fontSize: 14, color: 'var(--text-tertiary)', lineHeight: 1.7 }}>
           Trajectory analysis requires at least 2 lab uploads separated in time. Upload your next set of labs to unlock this feature.
         </div>
@@ -178,7 +204,7 @@ export default function Premortem({ userId, plan, allMarkers, profile }: Props) 
           )}
 
           {/* Re-run */}
-          <button onClick={() => { setRan(false); setResult(null); setExpanded(null); }}
+          <button onClick={() => { setRan(false); setResult(null); setExpanded(null); setSavedAt(null); }}
             style={{ fontSize: 13, color: 'var(--text-tertiary)', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 5, padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>
             Re-run with latest data
           </button>
