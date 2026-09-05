@@ -764,6 +764,8 @@ export default function App() {
   const [protocolWatchFlags, setProtocolWatchFlags] = useState<any[]>([]);
   const [protocolWatchError, setProtocolWatchError] = useState<string | null>(null);
   const [protocolWatchDismissed, setProtocolWatchDismissed] = useState<Set<string>>(new Set());
+  const [connectedFindings, setConnectedFindings] = useState<any[]>([]);
+  const [connectedFindingsDismissed, setConnectedFindingsDismissed] = useState<Set<string>>(new Set());
   const [bpFlavorProfile, setBpFlavorProfile] = useState<string>('none');
   const [bpRecommendedStyle, setBpRecommendedStyle] = useState<string>('');
   const [bpRecommendedFlavor, setBpRecommendedFlavor] = useState<string>('');
@@ -964,6 +966,65 @@ export default function App() {
       })
       .catch(e => setProtocolWatchError(e?.message || 'Trend check failed to run'));
   }, [bpCycleStartedAt, allMarkers, user?.id]);
+
+  // Surface urgent symptom findings and real stack-review risks on the
+  // dashboard itself — otherwise they sit buried in Intelligent Consult and
+  // the dashboard banner only ever reflects protocol-watch, which misses
+  // everything the symptom/stack engines find.
+  useEffect(() => {
+    if (!user?.id) return;
+    Promise.all([
+      fetch(`/api/symptom-log?userId=${user.id}`).then(r => r.json()).catch(() => ({ symptoms: [] })),
+      fetch(`/api/stack-review?userId=${user.id}`).then(r => r.json()).catch(() => ({ headline: null })),
+    ]).then(([symptomData, stackData]) => {
+      const findings: any[] = [];
+
+      for (const s of symptomData?.symptoms || []) {
+        if (!s.review || s.ended_date) continue;
+        if (s.review.urgency === 'urgent' || s.review.urgency === 'soon') {
+          findings.push({
+            key: `symptom-${s.id}`,
+            severity: s.review.urgency === 'urgent' ? 'physician' : 'protocol',
+            label: s.review.urgency === 'urgent' ? 'Symptom needs attention' : 'Worth a doctor visit soon',
+            title: s.symptom,
+            text: s.review.headline,
+          });
+        }
+      }
+
+      if (stackData?.headline) {
+        for (const risk of stackData.lab_interference_risks || []) {
+          findings.push({
+            key: `stack-interference-${risk.supplement}-${risk.affected_marker}`,
+            severity: 'physician',
+            label: 'Lab interference risk',
+            title: `${risk.supplement} → ${risk.affected_marker}`,
+            text: `${risk.risk} ${risk.recommendation || ''}`.trim(),
+          });
+        }
+        for (const risk of stackData.masking_risks || []) {
+          findings.push({
+            key: `stack-masking-${risk.supplement}`,
+            severity: 'physician',
+            label: 'Could be masking a deficiency',
+            title: risk.supplement,
+            text: `${risk.could_mask} ${risk.recommendation || ''}`.trim(),
+          });
+        }
+        for (const combo of stackData.counterproductive_combinations || []) {
+          findings.push({
+            key: `stack-combo-${(combo.supplements || []).join('-')}`,
+            severity: 'protocol',
+            label: 'Working against each other',
+            title: (combo.supplements || []).join(' + '),
+            text: `${combo.issue} ${combo.recommendation || ''}`.trim(),
+          });
+        }
+      }
+
+      setConnectedFindings(findings);
+    }).catch(() => {});
+  }, [user?.id]);
 
   const markersByCategory = useMemo(() => {
     const cats: Record<string, typeof allMarkers> = {};
@@ -1813,6 +1874,42 @@ export default function App() {
                 />
               ) : (
                 <>
+                  {/* ── CONNECTED FINDINGS — urgent symptom analyses and real stack-review
+                      risks, surfaced here instead of staying buried in Intelligent Consult.
+                      This is the actual "single front door" — if it's serious, it shows up
+                      the moment you open the dashboard, not only if you go looking. ── */}
+                  {connectedFindings.filter(f => !connectedFindingsDismissed.has(f.key)).length > 0 && (
+                    <div style={{ marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {connectedFindings
+                        .filter(f => !connectedFindingsDismissed.has(f.key))
+                        .map(f => {
+                          const isPhysician = f.severity === 'physician';
+                          const accent = isPhysician ? '#991b1b' : '#92400e';
+                          return (
+                            <div key={f.key} style={{
+                              padding: '16px 18px', borderRadius: 10,
+                              background: isPhysician ? 'rgba(153,27,27,.06)' : 'rgba(146,64,14,.06)',
+                              border: `1.5px solid ${isPhysician ? 'rgba(153,27,27,.3)' : 'rgba(146,64,14,.3)'}`,
+                              display: 'flex', gap: 14, alignItems: 'flex-start',
+                            }}>
+                              <div style={{ flexShrink: 0, fontSize: 20, lineHeight: 1, marginTop: 1 }}>{isPhysician ? '🩺' : '⚠️'}</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                                  <span style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>{f.label}</span>
+                                  <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{f.title}</span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6, margin: 0 }}>{f.text}</p>
+                              </div>
+                              <button onClick={() => setConnectedFindingsDismissed(prev => new Set(prev).add(f.key))}
+                                style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-tertiary)', padding: 4, lineHeight: 1 }}>
+                                ×
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+
                   {/* If the proactive check itself failed, say so — silence here could
                       otherwise be mistaken for "nothing's wrong" when the check never ran. */}
                   {protocolWatchError && (
