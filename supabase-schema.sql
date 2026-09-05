@@ -22,8 +22,11 @@ create table if not exists public.documents (
   summary text default '',
   flags jsonb default '[]',
   recommendations jsonb default '[]',
-  uploaded_at timestamptz default now()
+  uploaded_at timestamptz default now(),
+  file_hash text
 );
+
+create index if not exists idx_documents_user_hash on public.documents(user_id, file_hash);
 
 -- Personalised recommendations table
 create table if not exists public.personalised (

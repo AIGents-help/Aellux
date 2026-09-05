@@ -28,6 +28,7 @@ export interface DbDocument {
   flags: string[];
   recommendations: string[];
   uploaded_at: string;
+  file_hash?: string | null;
 }
 
 export interface DbPersonalised {

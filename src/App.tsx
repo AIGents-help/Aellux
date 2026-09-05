@@ -58,6 +58,7 @@ interface Document {
   flags: string[];
   recommendations: string[];
   uploadedAt: string;
+  file_hash?: string | null;
 }
 
 interface PersonalisedData {
@@ -729,6 +730,7 @@ export default function App() {
   const [trendsFilter, setTrendsFilter] = React.useState<string>('All');
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
+  const [pendingDuplicate, setPendingDuplicate] = useState<{ file: File; hash: string; existingDoc: Document } | null>(null);
     const [generatingType, setGeneratingType] = useState<string | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [printSection, setPrintSection] = useState<'meals' | 'supps' | 'protocol' | 'synthesis' | 'week' | 'all' | null>(null);
@@ -841,6 +843,7 @@ export default function App() {
             markers: Array.isArray(d.markers) ? d.markers : [],
             summary: d.summary, flags: d.flags,
             recommendations: d.recommendations, uploadedAt: d.uploaded_at,
+            file_hash: d.file_hash || null,
           }));
           setDocuments(mapped);
           localStorage.setItem('aellux_documents', JSON.stringify(mapped));
@@ -1024,12 +1027,20 @@ export default function App() {
       name: doc.name, date: doc.date, document_type: doc.document_type,
       markers: doc.markers, summary: doc.summary, flags: doc.flags,
       recommendations: doc.recommendations, uploaded_at: doc.uploadedAt,
+      file_hash: doc.file_hash || null,
     });
   }, [user?.id]);
 
   // ── FILE PROCESSING ──────────────────────────────────────────────────────
 
-  const processFile = async (file: File) => {
+  // SHA-256 of the raw file bytes — used to detect an identical file being re-uploaded.
+  const hashFile = async (file: File): Promise<string> => {
+    const buf = await file.arrayBuffer();
+    const digest = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  const processFile = async (file: File, fileHash?: string) => {
     setUploading(true);
     setOrbState('thinking');
     setUploadStatus(`Reading ${file.name}...`);
@@ -1078,6 +1089,7 @@ export default function App() {
         flags: extracted.flags || [],
         recommendations: extracted.recommendations || [],
         uploadedAt: new Date().toISOString(),
+        file_hash: fileHash || null,
       };
 
       // Store current marker snapshot before merging new doc (for protocol outcome comparison)
@@ -1103,8 +1115,23 @@ export default function App() {
     }
   };
 
-  const handleFiles = (files: FileList) => {
-    Array.from(files).forEach(f => processFile(f));
+  const handleFiles = async (files: FileList) => {
+    for (const f of Array.from(files)) {
+      const hash = await hashFile(f);
+      const existingDoc = documents.find(d => d.file_hash && d.file_hash === hash);
+      if (existingDoc) {
+        // Flag it and wait for confirmation instead of uploading silently.
+        setPendingDuplicate({ file: f, hash, existingDoc });
+      } else {
+        processFile(f, hash);
+      }
+    }
+  };
+
+  const confirmDuplicateUpload = () => {
+    if (!pendingDuplicate) return;
+    processFile(pendingDuplicate.file, pendingDuplicate.hash);
+    setPendingDuplicate(null);
   };
 
   // ── PERSONALISATION GENERATION ────────────────────────────────────────────
@@ -2975,6 +3002,34 @@ export default function App() {
               <button onClick={() => setShowRegenConfirm(false)}
                 style={{ fontSize: 14, color: 'var(--text-secondary)', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '12px 18px', cursor: 'pointer', fontFamily: 'inherit' }}>
                 Keep current
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingDuplicate && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,26,15,.7)', backdropFilter: 'blur(6px)', padding: 20 }}
+          onClick={() => setPendingDuplicate(null)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 14, padding: '32px 32px 28px', maxWidth: 460, width: '100%', boxShadow: '0 8px 40px rgba(0,0,0,.15)' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Possible duplicate</div>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--text-primary)', margin: '0 0 14px', fontWeight: 400, lineHeight: 1.3 }}>
+              This file looks identical to one you already uploaded
+            </h3>
+            <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: '0 0 12px' }}>
+              <strong style={{ color: 'var(--text-primary)' }}>{pendingDuplicate.file.name}</strong> matches the contents of <strong style={{ color: 'var(--text-primary)' }}>{pendingDuplicate.existingDoc.name}</strong>, uploaded {new Date(pendingDuplicate.existingDoc.uploadedAt).toLocaleDateString()}.
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', lineHeight: 1.65, margin: '0 0 24px', padding: '10px 14px', background: 'var(--bg-sunken)', borderRadius: 8 }}>
+              💡 Uploading it again will add a second copy of the same markers to your record, which can distort trends over time.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setPendingDuplicate(null)}
+                style={{ flex: 1, fontSize: 15, color: '#fff', background: '#1a4731', border: 'none', borderRadius: 8, padding: '12px 18px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                Skip this file
+              </button>
+              <button onClick={confirmDuplicateUpload}
+                style={{ fontSize: 14, color: 'var(--text-secondary)', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '12px 18px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                Upload anyway
               </button>
             </div>
           </div>
