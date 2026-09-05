@@ -2485,7 +2485,14 @@ export default function App() {
                 subtitle="Track what you take — Aellux correlates it against your biomarker changes"
                 photo="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&q=80"
               >
-                <SupplementLog userId={user?.id} allMarkers={allMarkers} />
+                <SupplementLog
+                  userId={user?.id}
+                  allMarkers={allMarkers}
+                  mealStyle={bpMealStyle}
+                  cycleStartedAt={bpCycleStartedAt}
+                  additionalGoal={bpAdditionalGoal}
+                  protocolWatchFlags={protocolWatchFlags}
+                />
               </SectionCard>
 
               {/* ── PRACTITIONER SHARE ── */}
