@@ -37,6 +37,7 @@ const ACTIVITY = [
 const WEARABLES = [
   { id: 'apple',      label: 'Apple Watch / iPhone',  icon: '' },
   { id: 'oura',       label: 'Oura Ring',             icon: '' },
+  { id: 'hume',       label: 'Hume Band',             icon: '' },
   { id: 'garmin',     label: 'Garmin',                icon: '' },
   { id: 'whoop',      label: 'Whoop',                 icon: '' },
   { id: 'fitbit',     label: 'Fitbit',                icon: '' },
@@ -343,6 +344,11 @@ export default function Onboarding({ onComplete, onSkip }: Props) {
                 {profile.wearables.includes('oura') && (
                   <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
                     <strong style={{ color: 'var(--text-primary)' }}>Oura:</strong> Oura app → Profile → Download My Data → export CSV
+                  </div>
+                )}
+                {profile.wearables.includes('hume') && (
+                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
+                    <strong style={{ color: 'var(--text-primary)' }}>Hume Band:</strong> Hume app → Settings → Export My Data → select date range → save the CSV
                   </div>
                 )}
                 {profile.wearables.includes('garmin') && (

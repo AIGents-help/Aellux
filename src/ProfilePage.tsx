@@ -11,10 +11,10 @@ interface Props {
 
 const fieldStyle: React.CSSProperties = {
   width: '100%',
-  background: 'rgba(0,8,18,.7)',
+  background: 'var(--bg-surface)',
   border: '1px solid rgba(0,210,165,.22)',
   borderRadius: 5,
-  color: 'rgba(220,255,235,.95)',
+  color: 'var(--text-primary)',
   fontSize: 15,
   fontFamily: 'inherit',
   padding: '10px 13px',
@@ -24,7 +24,7 @@ const labelStyle: React.CSSProperties = {
   fontSize: 12,
   letterSpacing: '0.1em',
   textTransform: 'uppercase' as const,
-  color: 'rgba(0,210,165,.75)',
+  color: 'var(--brand)',
   marginBottom: 6,
   display: 'block',
 };
@@ -66,7 +66,7 @@ function ChipInput({ label, values, onChange, placeholder, helpText }: { label: 
   return (
     <div style={{ marginBottom: 16 }}>
       <label style={labelStyle}>{label}</label>
-      {helpText && <div style={{ fontSize: 13, color: 'rgba(0,210,165,.7)', marginBottom: 8, lineHeight: 1.55 }}>{helpText}</div>}
+      {helpText && <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.55 }}>{helpText}</div>}
       <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
         <input
           value={draft}
@@ -82,7 +82,7 @@ function ChipInput({ label, values, onChange, placeholder, helpText }: { label: 
           {values.map((v, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, padding: '5px 10px 5px 12px', background: 'rgba(0,210,165,.08)', border: '1px solid rgba(0,210,165,.22)', borderRadius: 14, color: 'var(--text-primary)' }}>
               {v}
-              <button type="button" onClick={() => remove(i)} style={{ background: 'none', border: 'none', color: 'rgba(0,210,165,.5)', cursor: 'pointer', fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+              <button type="button" onClick={() => remove(i)} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
             </div>
           ))}
         </div>
@@ -96,6 +96,9 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const avatarInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user?.id) { setLoading(false); return; }
@@ -104,6 +107,71 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
       .then(d => { setProfile(d.profile || {}); setLoading(false); })
       .catch(() => { setProfile({}); setLoading(false); });
   }, [user?.id]);
+
+  // Resize/crop to a square before upload — keeps payloads small and avatars consistent.
+  function resizeImageToSquareJpeg(file: File, size = 400): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read file'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Could not read image'));
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = size; canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return reject(new Error('Canvas unavailable'));
+          const side = Math.min(img.width, img.height);
+          const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+          ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+          resolve(canvas.toDataURL('image/jpeg', 0.88));
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    setAvatarUploading(true); setAvatarError(null);
+    try {
+      const dataUrl = await resizeImageToSquareJpeg(file);
+      const base64 = dataUrl.split(',')[1];
+      const res = await fetch('/api/profile-avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, imageBase64: base64, mimeType: 'image/jpeg' }),
+      });
+      const data = await res.json();
+      if (data.avatar_url) {
+        setProfile((p: any) => ({ ...(p || {}), avatar_url: data.avatar_url }));
+      } else {
+        setAvatarError(data.error || 'Upload failed — try a different photo.');
+      }
+    } catch (err: any) {
+      setAvatarError(err?.message || 'Could not process that image.');
+    }
+    setAvatarUploading(false);
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
+  }
+
+  async function handleAvatarRemove() {
+    if (!user?.id) return;
+    setAvatarUploading(true); setAvatarError(null);
+    try {
+      await fetch('/api/profile-avatar', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      setProfile((p: any) => ({ ...(p || {}), avatar_url: null }));
+    } catch (err: any) {
+      setAvatarError(err?.message || 'Could not remove photo.');
+    }
+    setAvatarUploading(false);
+  }
 
   function update<K extends string>(key: K, value: any) {
     setProfile((p: any) => ({ ...(p || {}), [key]: value }));
@@ -137,30 +205,55 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
 
   return (
     <div style={{ padding: '24px 28px', maxWidth: 760, margin: '0 auto' }}>
-      <h2 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 28, color: 'rgba(220,255,235,1)', fontWeight: 500, marginBottom: 6, marginTop: 0 }}>Profile &amp; Settings</h2>
-      <p style={{ color: 'rgba(0,210,165,.7)', fontSize: 13, letterSpacing: '0.1em', marginBottom: 28, marginTop: 0, textTransform: 'uppercase' }}>Your account &amp; biological context</p>
+      <h2 style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 28, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 6, marginTop: 0 }}>Profile &amp; Settings</h2>
+      <p style={{ color: 'var(--text-secondary)', fontSize: 13, letterSpacing: '0.1em', marginBottom: 28, marginTop: 0, textTransform: 'uppercase' }}>Your account &amp; biological context</p>
 
       {/* Account */}
       <div style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.15)', borderRadius: 8, padding: '20px 24px', marginBottom: 18 }}>
         <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 13, color: 'var(--text-secondary)', letterSpacing: '0.1em', marginBottom: 12, textTransform: 'uppercase' }}>Account</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%)', flexShrink: 0 }} />
+          <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleAvatarSelect} />
+          <div onClick={() => !avatarUploading && avatarInputRef.current?.click()}
+            title="Click to change photo"
+            style={{
+              width: 42, height: 42, borderRadius: '50%', flexShrink: 0, cursor: avatarUploading ? 'default' : 'pointer',
+              backgroundImage: profile?.avatar_url ? `url(${profile.avatar_url})` : undefined,
+              backgroundSize: 'cover', backgroundPosition: 'center',
+              background: profile?.avatar_url ? undefined : 'radial-gradient(ellipse at 38% 32%,rgba(0,240,185,.95) 0%,rgba(0,180,210,.75) 35%,rgba(0,8,22,.99) 100%)',
+              opacity: avatarUploading ? 0.5 : 1,
+              border: '1px solid rgba(0,210,165,.3)',
+            }} />
           <div>
-            <div style={{ color: 'rgba(220,255,235,.95)', fontSize: 16, fontFamily: 'EB Garamond, Georgia, serif', marginBottom: 4 }}>{user?.email || 'Not signed in'}</div>
-            <div style={{ display: 'inline-block', background: isPro ? 'rgba(0,225,180,.14)' : 'rgba(0,210,165,.06)', border: `1px solid ${isPro ? 'rgba(0,225,180,.45)' : 'rgba(0,210,165,.18)'}`, borderRadius: 12, padding: '2px 10px', fontSize: 10, color: isPro ? 'rgba(0,255,200,1)' : 'rgba(0,210,165,.55)', letterSpacing: '0.12em' }}>
+            <div style={{ color: 'var(--text-primary)', fontSize: 16, fontFamily: 'EB Garamond, Georgia, serif', marginBottom: 4 }}>{user?.email || 'Not signed in'}</div>
+            <div style={{ display: 'inline-block', background: isPro ? 'rgba(0,225,180,.14)' : 'rgba(0,210,165,.06)', border: `1px solid ${isPro ? 'rgba(0,225,180,.45)' : 'rgba(0,210,165,.18)'}`, borderRadius: 12, padding: '2px 10px', fontSize: 10, color: isPro ? 'var(--brand)' : 'var(--text-tertiary)', letterSpacing: '0.12em' }}>
               {isPro ? '✦ PRO' : 'FREE'}
             </div>
           </div>
+          <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            <button onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}
+              style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+              {avatarUploading ? 'Uploading…' : profile?.avatar_url ? 'Change photo' : 'Add photo'}
+            </button>
+            {profile?.avatar_url && !avatarUploading && (
+              <button onClick={handleAvatarRemove}
+                style={{ fontSize: 12, color: 'var(--accent-elevated)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+                Remove
+              </button>
+            )}
+          </div>
         </div>
+        {avatarError && (
+          <div style={{ fontSize: 12, color: 'var(--accent-elevated)', marginTop: 8 }}>{avatarError}</div>
+        )}
       </div>
 
       {/* HEALTH PROFILE */}
       <div style={{ background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.18)', borderRadius: 8, padding: '22px 26px', marginBottom: 18 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-          <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 13, color: 'rgba(0,225,180,.85)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Health Profile</div>
-          {saveStatus && <div style={{ fontSize: 13, color: saveStatus.startsWith('Saved') ? 'rgba(0,255,200,.9)' : 'rgba(255,160,100,.9)', letterSpacing: '0.06em' }}>{saveStatus}</div>}
+          <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 13, color: 'var(--brand)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Health Profile</div>
+          {saveStatus && <div style={{ fontSize: 13, color: saveStatus.startsWith('Saved') ? 'var(--accent-optimal)' : 'var(--accent-watch)', letterSpacing: '0.06em' }}>{saveStatus}</div>}
         </div>
-        <p style={{ fontSize: 14, color: 'rgba(0,210,165,.75)', lineHeight: 1.7, margin: '0 0 18px' }}>
+        <p style={{ fontSize: 14, color: 'var(--brand)', lineHeight: 1.7, margin: '0 0 18px' }}>
           The more context you give Aellux, the more accurate your protocols. Required fields shape every recommendation. Medications are checked for interactions with any supplement Aellux recommends.
         </p>
 
@@ -195,7 +288,7 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
 
             {/* Body composition (optional) */}
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 13, color: 'rgba(0,225,180,.75)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10, paddingTop: 6, borderTop: '1px solid rgba(0,210,165,.1)' }}>Body Composition <span style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: 0, textTransform: 'none' }}>(optional — improves protocol accuracy)</span></div>
+              <div style={{ fontSize: 13, color: 'var(--brand)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10, paddingTop: 6, borderTop: '1px solid rgba(0,210,165,.1)' }}>Body Composition <span style={{ fontSize: 12, color: 'var(--text-tertiary)', letterSpacing: 0, textTransform: 'none' }}>(optional — improves protocol accuracy)</span></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={labelStyle}>Body fat % <span style={{ color: 'var(--text-tertiary)', fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>from DEXA or calipers</span></label>
@@ -300,9 +393,9 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
 
             {hasMeds && (
               <div style={{ marginTop: 8, marginBottom: 16, padding: '10px 14px', background: 'rgba(255,200,80,.06)', border: '1px solid rgba(255,200,80,.3)', borderRadius: 5 }}>
-                <div style={{ fontSize: 12, color: 'rgba(255,210,100,.9)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>⚠ Medication interaction safety</div>
-                <p style={{ fontSize: 14, color: 'rgba(220,255,235,.85)', lineHeight: 1.55, margin: 0 }}>
-                  Aellux will flag known interactions between your medications and any recommended supplement, food, or protocol. This is not a substitute for clinical pharmacist review. <strong style={{ color: 'rgba(255,210,100,.9)' }}>Always clear new supplements or significant dietary changes with your prescribing physician.</strong>
+                <div style={{ fontSize: 12, color: 'var(--accent-watch)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>⚠ Medication interaction safety</div>
+                <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.55, margin: 0 }}>
+                  Aellux will flag known interactions between your medications and any recommended supplement, food, or protocol. This is not a substitute for clinical pharmacist review. <strong style={{ color: 'var(--accent-watch)' }}>Always clear new supplements or significant dietary changes with your prescribing physician.</strong>
                 </p>
               </div>
             )}
@@ -325,14 +418,14 @@ export default function ProfilePage({ user, isPro, signOut, documents, personali
             { label: 'Status', value: 'Active' },
           ].map(({ label, value }) => (
             <div key={label} style={{ textAlign: 'center', background: 'rgba(0,210,165,.04)', border: '1px solid rgba(0,210,165,.1)', borderRadius: 6, padding: '14px 8px' }}>
-              <div style={{ color: 'rgba(220,255,235,.95)', fontSize: 24, fontFamily: 'EB Garamond, Georgia, serif', marginBottom: 4 }}>{value}</div>
-              <div style={{ color: 'rgba(0,210,165,.65)', fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</div>
+              <div style={{ color: 'var(--text-primary)', fontSize: 24, fontFamily: 'EB Garamond, Georgia, serif', marginBottom: 4 }}>{value}</div>
+              <div style={{ color: 'var(--text-tertiary)', fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <button onClick={signOut} style={{ width: '100%', background: 'rgba(255,80,80,.08)', border: '1px solid rgba(255,80,80,.22)', color: 'rgba(255,120,120,.9)', borderRadius: 6, padding: '12px 0', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em' }}>
+      <button onClick={signOut} style={{ width: '100%', background: 'rgba(255,80,80,.08)', border: '1px solid rgba(255,80,80,.22)', color: 'var(--accent-elevated)', borderRadius: 6, padding: '12px 0', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em' }}>
         ⤺ Sign Out
       </button>
     </div>
