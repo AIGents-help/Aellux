@@ -35,9 +35,10 @@ export default function Premortem({ userId, plan, allMarkers, profile }: Props) 
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
   const [ran, setRan] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const run = async () => {
-    setLoading(true); setResult(null);
+    setLoading(true); setResult(null); setError(null);
     try {
       const res = await fetch('/api/premortem', {
         method: 'POST',
@@ -45,8 +46,16 @@ export default function Premortem({ userId, plan, allMarkers, profile }: Props) 
         body: JSON.stringify({ userId, plan, allMarkers }),
       });
       const data = await res.json();
-      if (!data.rateLimited) setResult(data);
-    } catch {}
+      if (data.rateLimited) {
+        // no-op — rate limit isn't an error, just don't set a result
+      } else if (data.error && (!data.scenarios || data.scenarios.length === 0)) {
+        setError(data.error);
+      } else {
+        setResult(data);
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Could not reach the trajectory analysis service.');
+    }
     setLoading(false); setRan(true);
   };
 
@@ -80,6 +89,16 @@ export default function Premortem({ userId, plan, allMarkers, profile }: Props) 
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <div style={{ fontSize: 14, color: 'rgba(248,113,113,.7)', fontStyle: 'italic', marginBottom: 8 }}>Aellux is reading across your timeline…</div>
           <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>Analyzing marker trajectories, compliance patterns, and biological age slope</div>
+        </div>
+      )}
+
+      {error && !loading && (
+        <div style={{ padding: '14px 16px', background: 'rgba(153,27,27,.06)', border: '1px solid rgba(153,27,27,.3)', borderRadius: 8, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, color: '#991b1b', lineHeight: 1.6, margin: '0 0 10px' }}>{error}</p>
+          <button onClick={() => { setRan(false); setError(null); }}
+            style={{ fontSize: 13, color: '#991b1b', background: 'none', border: '1px solid rgba(153,27,27,.3)', borderRadius: 5, padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>
+            Try again
+          </button>
         </div>
       )}
 

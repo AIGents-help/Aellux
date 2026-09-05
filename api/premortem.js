@@ -110,17 +110,29 @@ Return ONLY valid JSON, no markdown:
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1200, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 2400, messages: [{ role: 'user', content: prompt }] }),
     });
     const data = await res.json();
-    if (!res.ok) return json({ error: data?.error?.message || `API ${res.status}` }, { status: 502 });
+    if (!res.ok) {
+      console.error('[premortem] Anthropic non-ok', res.status, JSON.stringify(data).slice(0, 300));
+      return json({ error: data?.error?.message || `API ${res.status}` }, { status: 502 });
+    }
 
     const text = data?.content?.[0]?.text || '{"scenarios":[]}';
     let parsed;
     try { parsed = JSON.parse(text.replace(/```json|```/g, '').trim()); }
-    catch { parsed = { scenarios: [], error: 'Could not parse response' }; }
+    catch (e) {
+      console.error('[premortem] parse failed:', e?.message, 'raw (last 300 chars):', text.slice(-300));
+      // A parse failure here usually means the response got cut off mid-JSON —
+      // that's a real failure, not "nothing to report". Say so with a real
+      // status instead of quietly returning an empty, seemingly-successful result.
+      return json({ scenarios: [], error: 'Analysis was cut off before completing — try again.' }, { status: 502 });
+    }
 
     if (userId) logUsage(userId, 'premortem').catch(() => {});
     return json(parsed);
-  } catch { return json({ scenarios: [] }, { status: 502 }); }
+  } catch (e) {
+    console.error('[premortem] request failed:', e?.message);
+    return json({ scenarios: [], error: e?.message || 'Trajectory analysis failed.' }, { status: 502 });
+  }
 }
