@@ -108,7 +108,10 @@ ALREADY-DETECTED TRAJECTORY FLAGS (markers trending wrong since protocol start):
 
     let result;
     try { result = parseJSON(text); }
-    catch (e) { return json({ error: `Parse failed: ${e.message}` }, { status: 500 }); }
+    catch (e) {
+      console.error('[supplement-review] parse failed:', e?.message, 'raw:', String(text).slice(0, 500));
+      return json({ error: `Parse failed: ${e.message}` }, { status: 500 });
+    }
 
     // Persist onto the supplement row so it survives reload — this is a real
     // verdict, not a throwaway chat response.
@@ -119,6 +122,7 @@ ALREADY-DETECTED TRAJECTORY FLAGS (markers trending wrong since protocol start):
 
     return json({ review: result });
   } catch (err) {
+    console.error('[supplement-review] failed:', err?.message, err?.stack);
     return json({ error: err.message || 'Review failed' }, { status: 500 });
   }
 }
