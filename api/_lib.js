@@ -58,6 +58,15 @@ export async function sbUpdate(table, query, patch) {
   return res.ok;
 }
 
+export async function sbDelete(table, query) {
+  const url = `${SUPABASE_URL}/rest/v1/${table}?${query}`;
+  const res = await fetch(url, {
+    method: 'DELETE',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+  });
+  return res.ok;
+}
+
 // Rate-limit window helper. Returns { ok, count, limit, resetAt }.
 export async function rateLimit({ userId, endpoint, limit, windowHours }) {
   if (!userId) return { ok: true, count: 0, limit, resetAt: null }; // anonymous skipped

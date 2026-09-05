@@ -39,8 +39,11 @@ const VERDICT_STYLE = {
 export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStartedAt, additionalGoal, protocolWatchFlags }: Props) {
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Supplement>({ name: '', dose: '', frequency: 'Daily', started_date: new Date().toISOString().slice(0, 10) });
+  const [editForm, setEditForm] = useState<Supplement | null>(null);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -87,6 +90,42 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
       // Review immediately — this is the whole point: don't just log it, evaluate it.
       runReview(saved);
     }
+  };
+
+  const startEdit = (s: Supplement) => {
+    setEditingId(s.id || null);
+    setEditForm({ ...s });
+    setAdding(false);
+  };
+
+  const cancelEdit = () => { setEditingId(null); setEditForm(null); };
+
+  const saveEdit = async () => {
+    if (!editForm || !editForm.name.trim() || !editForm.id) return;
+    const res = await fetch('/api/supplement-log', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, id: editForm.id, supplement: editForm }),
+    });
+    const data = await res.json();
+    if (data.supplement) {
+      const updated = { ...data.supplement, review: null, reviewed_at: null };
+      setSupplements(prev => prev.map(p => p.id === updated.id ? updated : p));
+      setEditingId(null); setEditForm(null);
+      // Dose/name/frequency may have changed — the old verdict no longer applies.
+      runReview(updated);
+    }
+  };
+
+  const deleteSupplement = async (s: Supplement) => {
+    if (!s.id) return;
+    if (!window.confirm(`Remove ${s.name} from your log?`)) return;
+    setDeletingId(s.id);
+    try {
+      const res = await fetch(`/api/supplement-log?userId=${userId}&id=${s.id}`, { method: 'DELETE' });
+      if (res.ok) setSupplements(prev => prev.filter(p => p.id !== s.id));
+    } catch {}
+    setDeletingId(null);
   };
 
   const FREQS = ['Daily', 'Twice daily', 'Weekly', 'As needed', 'With meals'];
@@ -143,6 +182,42 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
           {supplements.map((s, i) => {
             const vs = s.review ? VERDICT_STYLE[s.review.verdict] : null;
+
+            if (editingId === s.id && editForm) {
+              return (
+                <div key={s.id || i} style={{ padding: '16px 18px', background: 'var(--bg-surface)', border: '1px solid var(--brand-dim)', borderRadius: 8 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+                    <input value={editForm.name} onChange={e => setEditForm(f => f && ({ ...f, name: e.target.value }))} placeholder="Supplement or medication name"
+                      style={{ fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit' }} />
+                    <input value={editForm.dose} onChange={e => setEditForm(f => f && ({ ...f, dose: e.target.value }))} placeholder="Dose (e.g. 300mg)"
+                      style={{ fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit' }} />
+                    <select value={editForm.frequency} onChange={e => setEditForm(f => f && ({ ...f, frequency: e.target.value }))}
+                      style={{ fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit' }}>
+                      {FREQS.map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 11, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>Started</label>
+                      <input type="date" value={editForm.started_date} onChange={e => setEditForm(f => f && ({ ...f, started_date: e.target.value }))}
+                        style={{ width: '100%', fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>Ended (optional)</label>
+                      <input type="date" value={editForm.ended_date || ''} onChange={e => setEditForm(f => f && ({ ...f, ended_date: e.target.value || undefined }))}
+                        style={{ width: '100%', fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit' }} />
+                    </div>
+                  </div>
+                  <input value={editForm.notes || ''} onChange={e => setEditForm(f => f && ({ ...f, notes: e.target.value }))} placeholder="Notes (optional)"
+                    style={{ width: '100%', fontSize: 14, padding: '9px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', borderRadius: 5, color: 'var(--text-primary)', fontFamily: 'inherit', marginBottom: 12 }} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={saveEdit} style={{ fontSize: 14, color: 'rgba(0,20,14,1)', background: 'var(--brand)', border: 'none', borderRadius: 5, padding: '9px 20px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>Save &amp; Re-review</button>
+                    <button onClick={cancelEdit} style={{ fontSize: 14, color: 'var(--text-secondary)', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 5, padding: '9px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div key={s.id || i} style={{ borderRadius: 8, border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: 'var(--bg-sunken)' }}>
@@ -161,6 +236,14 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
                   <button onClick={() => runReview(s)} disabled={reviewingId === s.id}
                     style={{ fontSize: 12, padding: '6px 12px', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 5, color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
                     {reviewingId === s.id ? 'Reviewing…' : s.review ? 'Re-review' : 'Review'}
+                  </button>
+                  <button onClick={() => startEdit(s)}
+                    style={{ fontSize: 12, padding: '6px 12px', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 5, color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
+                    Edit
+                  </button>
+                  <button onClick={() => deleteSupplement(s)} disabled={deletingId === s.id}
+                    style={{ fontSize: 12, padding: '6px 10px', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 5, color: '#991b1b', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
+                    {deletingId === s.id ? '…' : '✕'}
                   </button>
                 </div>
 
