@@ -116,11 +116,15 @@ MEAL PREP MODE — ACTIVE. The user wants to cook everything on prep day and por
   const dayCount = dayOnly ? 1 : 7;
   const dayList = dayOnly ? ['Day 1'] : ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7'];
 
-  return `${profileBlock}User biomarkers: ${ms}${styleBlock}${mealPrepBlock}${goalBlock}${intelligenceStr}${medSafetyBlock}
+  // Dynamic — varies every call, never cached.
+  const dynamic = `${profileBlock}User biomarkers: ${ms}${styleBlock}${mealPrepBlock}${goalBlock}${intelligenceStr}${medSafetyBlock}
 
-Design a personalised ${dayCount}-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return EXACTLY ONE day (Day 1) — this is a free-tier preview. Do not generate Day 2 through Day 7.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days. Generate ALL 7 days in order: ' + dayList.join(', ') + '.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density.
+Design a personalised ${dayCount}-day Biologic Protocol calibrated to the user's profile and biomarkers. ${dayOnly ? 'Return EXACTLY ONE day (Day 1) — this is a free-tier preview. Do not generate Day 2 through Day 7.' : 'Each of the 7 days MUST be biologically distinct: different theme, meals, training stimulus, focus marker. Do NOT repeat any meal across days. Generate ALL 7 days in order: ' + dayList.join(', ') + '.'} If the user is female and cycling, periodize training (heavier loads in follicular, lower-intensity in luteal). If postmenopausal, prioritize strength training and bone density.`;
 
-**PROTEIN TARGETS — CRITICAL, DO NOT UNDERESTIMATE:**
+  // Cached — identical for every user hitting this mode (dayOnly vs full). This is the
+  // bulk of the prompt (protein math, diet-style allow/ban lists, schema) and never
+  // changes, so it's the highest-value prompt-cache target in the whole app.
+  const cached = `**PROTEIN TARGETS — CRITICAL, DO NOT UNDERESTIMATE:**
 - Minimum protein: 1g per pound of target bodyweight (not current weight if overweight). For a 175lb male target = 175g protein/day minimum.
 - For males with low testosterone, elevated estrogen, or body recomposition goals: 1.0–1.2g per pound of target bodyweight. Protein IS the testosterone substrate — underfeeding it directly worsens hormonal recovery.
 - Distribute evenly: ~55–65g protein per meal across 3 meals. Breakfast must NOT be low-protein. 30–35g per meal is insufficient for a male trying to build or preserve lean mass.
@@ -163,7 +167,7 @@ For EACH meal, provide exactly 2 alternatives: one swap="nutrient_match" (differ
 
 Schema (return ONLY this JSON, no markdown, no commentary):
 {
-"key_insight":"one sentence describing the design${additionalGoal ? ' AND how it addresses the user\'s stated focus' : ''}",
+"key_insight":"one sentence describing the design (and how it addresses the user's stated additional weekly focus, if one was given)",
 "principles":["3-5 short guiding rules"],
 "days":[
 {
@@ -183,6 +187,8 @@ Schema (return ONLY this JSON, no markdown, no commentary):
 ],
 "weekly_summary":{"training_load":"e.g. 3 heavy + 2 zone 2 + 2 recovery","total_supp_cost":"$X/week","estimated_calorie_target":${dayCount * 2000}}
 }`;
+
+  return { dynamic, cached };
 }
 
 function tryExtractProgress(accumulatedText) {
@@ -295,7 +301,7 @@ export default async function handler(req, res) {
     clearInterval(keepalive); return res.end();
   }
 
-  const prompt = buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly, mealPrep, intelligenceStr });
+  const { dynamic, cached } = buildPrompt({ markers, profileStr, medFlag, mealStyle, additionalGoal, dayOnly, mealPrep, intelligenceStr });
   const maxTokens = dayOnly ? 2500 : 12000;
 
   sse(res, 'start', { dayOnly });
@@ -317,7 +323,15 @@ export default async function handler(req, res) {
         max_tokens: maxTokens,
         system: SYSTEM,
         stream: true,
-        messages: [{ role: 'user', content: prompt }],
+        // Static rules/schema block first (cached — identical for every user in this
+        // mode) followed by this user's dynamic biomarkers/profile/goal data.
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: cached, cache_control: { type: 'ephemeral' } },
+            { type: 'text', text: dynamic },
+          ],
+        }],
       }),
     });
   } catch (e) {

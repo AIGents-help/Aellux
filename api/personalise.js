@@ -1,4 +1,4 @@
-import { sha256, hashMarkers, sbSelect, sbUpsert, sbUpdate, rateLimit, logUsage, json, getProfile, formatProfileForPrompt, hashProfile, hasMedications } from './_lib.js';
+import { sha256, hashMarkers, sbSelect, sbUpsert, sbUpdate, rateLimit, logUsage, json, getProfile, formatProfileForPrompt, hashProfile, hasMedications, callClaude } from './_lib.js';
 
 export const config = { runtime: 'edge' };
 
@@ -13,7 +13,14 @@ function parseJSON(raw) {
 }
 
 // Tuned per call type — was 3000 across the board, wasteful for synthesis
-const TOKEN_BUDGETS = { synthesis: 900, meals: 2500, supps: 2500, protocol: 2500 };
+// synthesis/protocol get extra headroom because extended thinking tokens count toward max_tokens
+const TOKEN_BUDGETS = { synthesis: 3200, meals: 2500, supps: 2500, protocol: 4500 };
+
+// Extended thinking budget — only for the calls where cross-marker reasoning
+// (cascade analysis, contraindication checks) benefits from deeper reasoning
+// before the model commits to output. Meals/supps are formulaic — skip it there
+// to keep them fast and cheap.
+const THINKING_BUDGETS = { synthesis: 2000, protocol: 2000 };
 
 // Rate limits scoped per type:
 //   - free: 1 synthesis lifetime; week generation handled by /api/week-stream
@@ -48,15 +55,13 @@ export default async function handler(req) {
   const { markers, type, preference = null, userId = null, plan = 'free', dayOnly = false, bioAge, chronoAge, markerCtx, profile: bodyProfile } = body || {};
   if (!Array.isArray(markers) || markers.length === 0) return json({ error: 'No markers provided' }, { status: 400 });
 
-  // Handle bio_age_insight separately — lightweight, no cache needed
+  // Handle bio_age_insight separately — lightweight, no result-cache needed
+  // (prompt-cache still applies to the static instructions below)
   if (type === 'bio_age_insight') {
     const flagged = markers.filter(m => m.status === 'elevated' || m.status === 'low');
     const mCtx = markers.slice(0, 20).map(m => `${m.name}: ${m.value}${m.unit || ''} [${m.status || 'normal'}]`).join(', ');
-    const prompt = `You are Aellux. This person's biological age is ${bioAge || '?'} vs calendar age ${chronoAge || '?'}. Their flagged markers: ${flagged.map(m => `${m.name} [${m.status}]`).join(', ') || 'none'}.
 
-All markers: ${mCtx}
-
-Answer these questions about THEIR biological age specifically, grounded in their actual marker data.
+    const cachedInstructions = `You are Aellux. You will be given a person's biological age data. Answer these questions about THEIR biological age specifically, grounded in their actual marker data.
 
 Return ONLY valid JSON:
 {
@@ -76,14 +81,20 @@ Return ONLY valid JSON:
   "timeline": "Honest timeline: with full commitment to the protocol, what biological age could they realistically achieve in 6 months, 12 months, 2 years?"
 }`;
 
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 700, system: SYSTEM, messages: [{ role: 'user', content: prompt }] }),
-    });
-    const d = await r.json();
-    try { return json(parseJSON(d.content?.[0]?.text || '{}')); }
-    catch { return json({ error: 'Parse error' }, { status: 500 }); }
+    const dynamicData = `This person's biological age is ${bioAge || '?'} vs calendar age ${chronoAge || '?'}. Their flagged markers: ${flagged.map(m => `${m.name} [${m.status}]`).join(', ') || 'none'}.
+
+All markers: ${mCtx}`;
+
+    try {
+      const { text } = await callClaude({
+        apiKey, model: 'claude-sonnet-4-20250514', maxTokens: 2200,
+        cachedText: cachedInstructions, dynamicText: dynamicData, thinkingBudget: 1500,
+      });
+      return json(parseJSON(text || '{}'));
+    } catch (e) {
+      console.error('[personalise] bio_age_insight failed', e.message);
+      return json({ error: 'Parse error' }, { status: 500 });
+    }
   }
 
   if (!['meals', 'supps', 'protocol', 'synthesis'].includes(type)) return json({ error: 'Invalid type — week generation is handled by /api/week-stream' }, { status: 400 });
@@ -122,23 +133,19 @@ const cleanMarkers = (arr) => (arr || []).filter(m => m && m.name && !GPS_NOISE.
     ? '\nCRITICAL SAFETY: The user is on medications listed above. Before recommending any supplement, food, or protocol, check for known interactions with those medications. If a recommendation could interact (e.g. vitamin K with warfarin, calcium with levothyroxine, grapefruit with statins), either omit it or include a "contraindications" note explaining the interaction. Never recommend stopping or adjusting a prescription medication.\n'
     : '';
 
-  const prompts = {
-    meals: `${profileBlock}User biomarkers: ${ms}${preference && preference !== 'none' ? `\nDiet style: ${preference}. Tailor meals to this style while respecting biomarkers.` : ''}${medSafetyBlock}
+  const dynamicData = `${profileBlock}User biomarkers: ${ms}${preference && preference !== 'none' ? `\nDiet style: ${preference}. Tailor meals to this style while respecting biomarkers.` : ''}${medSafetyBlock}`;
 
-Calibrate calorie/macro targets to the user's profile (sex, age, weight, activity, goal) — not generic 2000 cal. If profile is absent, use generic targets but note the limitation in key_insight.
+  // Static instructions/schemas — identical across every call of a given type,
+  // for every user, so these get marked as a cache breakpoint below.
+  const cachedInstructions = {
+    meals: `Calibrate calorie/macro targets to the user's profile (sex, age, weight, activity, goal) — not generic 2000 cal. If profile is absent, use generic targets but note the limitation in key_insight.
 Schema (return ONLY this JSON, max 3 meals):
 {"key_insight":"one sentence","daily_targets":{"calories":2000,"protein":150,"carbs":200,"fat":65},"meals":[{"time":"Breakfast","name":"name","why":"one sentence referencing the user's actual numbers","items":["item 1","item 2","item 3"],"macros":{"p":30,"c":45,"f":15,"cal":430},"targets":["marker name"]}],"foods_to_avoid":["food — why"]}`,
-    supps: `${profileBlock}User biomarkers: ${ms}${medSafetyBlock}
-
-Schema (return ONLY this JSON, max 5 supplements):
+    supps: `Schema (return ONLY this JSON, max 5 supplements):
 {"key_insight":"one sentence","supplements":[{"name":"name","dose":"dose","timing":"when","why":"one sentence with user's numbers","targets_markers":["marker"],"expected_impact":"specific change","evidence_level":"strong","priority":1,"status":"active","cost_monthly":"$20","synergies":[],"contraindications":[],"reasoning_basis":"Name the biological mechanism this supplement acts on (e.g. 'Methylation via MTHFR pathway' or 'HPA axis cortisol regulation') and one sentence of evidence context — 'Meta-analyses show 15-25% reduction in inflammatory markers' or 'Established mechanism in clinical practice'. DO NOT invent specific paper citations, journal names, or author names. Stay at the mechanism + evidence-strength level."}],"total_foundation_cost":"$X/mo"}`,
-    protocol: `${profileBlock}User biomarkers: ${ms}${medSafetyBlock}
-
-Schema (return ONLY this JSON, max 5 protocols):
+    protocol: `Schema (return ONLY this JSON, max 5 protocols):
 {"biggest_lever":"one sentence","key_insight":"one sentence","protocols":[{"id":"p1","tier":1,"time_of_day":"morning","action":"specific action","duration":"20 min","why":"one sentence with user's numbers","targets_markers":["marker"],"expected_impact":"specific change","frequency":"Daily","reasoning_basis":"Name the biological mechanism this protocol acts on (e.g. 'Vagal tone via parasympathetic activation' or 'Mitochondrial biogenesis via Zone 2 cardio') and a brief mechanism-level evidence note. DO NOT invent specific paper citations, journal names, or DOIs. Stay at mechanism + general-evidence-strength level."}],"avoid":["thing — why"]}`,
-    synthesis: `${profileBlock}User biomarkers: ${ms}${medSafetyBlock}
-
-You are Aellux — an ancient intelligence that has witnessed ten thousand human biologies across centuries. You see the body not as a collection of symptoms to be treated, but as a living, breathing ecosystem where everything is in conversation with everything else. You are not of the medical industry. You have no drugs to sell. You have no incentive to keep anyone sick. You see the truth of what the numbers mean, how they interact, what they are silently doing to this person's energy, longevity, and daily experience — and you speak it plainly.
+    synthesis: `You are Aellux — an ancient intelligence that has witnessed ten thousand human biologies across centuries. You see the body not as a collection of symptoms to be treated, but as a living, breathing ecosystem where everything is in conversation with everything else. You are not of the medical industry. You have no drugs to sell. You have no incentive to keep anyone sick. You see the truth of what the numbers mean, how they interact, what they are silently doing to this person's energy, longevity, and daily experience — and you speak it plainly.
 
 Your synthesis must:
 1. Cross-reference at least 3 markers and explain HOW they are dancing together — what one is doing to another. Show the cascade.
@@ -183,28 +190,18 @@ Schema (return ONLY this JSON — no markdown, no preamble):
   };
 
   const maxTokens = TOKEN_BUDGETS[type] || 1500;
+  const thinkingBudget = THINKING_BUDGETS[type];
 
   // ── Anthropic call ─────────────────────────────────────────────────────────
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: maxTokens,
-        system: SYSTEM,
-        messages: [{ role: 'user', content: prompts[type] }],
-      }),
+    const { text: rawText } = await callClaude({
+      apiKey, model: 'claude-haiku-4-5-20251001', maxTokens,
+      system: SYSTEM,
+      cachedText: cachedInstructions[type],
+      dynamicText: dynamicData,
+      thinkingBudget,
     });
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('[personalise] Anthropic non-ok', response.status, err.slice(0, 300));
-      return json({ error: `Claude API ${response.status}: ${err.slice(0, 200)}` }, { status: 500 });
-    }
-
-    const data = await response.json();
-    const rawText = data?.content?.[0]?.text ?? '';
     if (!rawText) return json({ error: 'Empty model response' }, { status: 500 });
 
     let result;

@@ -72,7 +72,7 @@ export default async function handler(req) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: maxTokens,
-        system: EXTRACT_PROMPT,
+        system: [{ type: 'text', text: EXTRACT_PROMPT, cache_control: { type: 'ephemeral' } }],
         messages: [{ role: 'user', content: messageContent }],
       }),
     });

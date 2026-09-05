@@ -78,6 +78,50 @@ export async function logUsage(userId, endpoint) {
   await sbInsert('usage_log', { user_id: userId, endpoint });
 }
 
+// ── Claude API helper — prompt caching + extended thinking ──────────────────
+// `cachedText` should be the STATIC part of a prompt (identical across calls —
+// instructions, schemas, philosophy) so Anthropic can cache and reuse it.
+// `dynamicText` is the per-request part (user's actual markers/profile/data).
+// Pass `thinkingBudget` to enable extended thinking for calls that need deeper
+// cross-marker reasoning (contraindication checks, cascade analysis) — omit it
+// for fast/cheap calls where latency matters more than depth.
+export async function callClaude({ apiKey, model, maxTokens, system, cachedText, dynamicText, thinkingBudget }) {
+  const userContent = [];
+  if (cachedText) userContent.push({ type: 'text', text: cachedText, cache_control: { type: 'ephemeral' } });
+  if (dynamicText) userContent.push({ type: 'text', text: dynamicText });
+
+  const payload = {
+    model,
+    max_tokens: maxTokens,
+    messages: [{ role: 'user', content: userContent.length ? userContent : (dynamicText || cachedText || '') }],
+  };
+  if (system) payload.system = system;
+  if (thinkingBudget) payload.thinking = { type: 'enabled', budget_tokens: thinkingBudget };
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    const err = new Error(`Claude API ${res.status}: ${errText.slice(0, 300)}`);
+    err.status = res.status;
+    throw err;
+  }
+
+  const data = await res.json();
+  // Extended thinking returns a `thinking` block before the `text` block —
+  // find by type rather than assuming content[0].
+  const textBlock = (data.content || []).find(b => b.type === 'text');
+  return {
+    text: textBlock?.text || '',
+    raw: data,
+    usage: data.usage || {},
+  };
+}
+
 export function json(body, init = {}) {
   return new Response(JSON.stringify(body), {
     ...init,
