@@ -2514,6 +2514,7 @@ export default function App() {
               >
                 <SupplementLog
                   userId={user?.id}
+                  plan={isPro ? 'pro' : 'free'}
                   allMarkers={allMarkers}
                   mealStyle={bpMealStyle}
                   cycleStartedAt={bpCycleStartedAt}

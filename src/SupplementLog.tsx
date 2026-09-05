@@ -23,6 +23,7 @@ interface Supplement {
 
 interface Props {
   userId?: string;
+  plan?: string;
   allMarkers?: any[];
   mealStyle?: string;
   cycleStartedAt?: string | null;
@@ -36,7 +37,7 @@ const VERDICT_STYLE = {
   disagree: { color: '#991b1b', bg: 'rgba(153,27,27,.07)', border: 'rgba(153,27,27,.3)', label: 'Disagree' },
 };
 
-export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStartedAt, additionalGoal, protocolWatchFlags }: Props) {
+export default function SupplementLog({ userId, plan, allMarkers, mealStyle, cycleStartedAt, additionalGoal, protocolWatchFlags }: Props) {
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -45,6 +46,11 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [stackReview, setStackReview] = useState<any>(null);
+  const [stackReviewLoading, setStackReviewLoading] = useState(false);
+  const [stackReviewError, setStackReviewError] = useState<string | null>(null);
+  const [stackReviewSavedAt, setStackReviewSavedAt] = useState<string | null>(null);
+  const [stackReviewChecked, setStackReviewChecked] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -53,6 +59,38 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
       .then(d => setSupplements(d.supplements || []))
       .catch(() => {});
   }, [userId]);
+
+  useEffect(() => {
+    if (!userId) { setStackReviewChecked(true); return; }
+    fetch(`/api/stack-review?userId=${userId}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d?.headline) { setStackReview(d); setStackReviewSavedAt(d.savedAt || null); }
+        setStackReviewChecked(true);
+      })
+      .catch(() => setStackReviewChecked(true));
+  }, [userId]);
+
+  const runStackReview = async () => {
+    setStackReviewLoading(true); setStackReviewError(null);
+    try {
+      const res = await fetch('/api/stack-review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, plan: plan || 'free', allMarkers }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setStackReviewError(data.error);
+      } else {
+        setStackReview(data);
+        setStackReviewSavedAt(new Date().toISOString());
+      }
+    } catch (e: any) {
+      setStackReviewError(e?.message || 'Could not reach the stack review service.');
+    }
+    setStackReviewLoading(false);
+  };
 
   const runReview = async (s: Supplement) => {
     if (!s.id) return;
@@ -306,6 +344,121 @@ export default function SupplementLog({ userId, allMarkers, mealStyle, cycleStar
       ) : !adding && (
         <div style={{ padding: '14px 16px', background: 'var(--bg-sunken)', border: '1px solid var(--brand-ghost)', borderRadius: 7, fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 16 }}>
           No supplements logged yet. Add what you're taking and Aellux will review the dose, check it against everything else you take, and flag anything relevant to your current biomarkers.
+        </div>
+      )}
+
+      {/* ── FULL STACK REVIEW ── */}
+      {supplements.length >= 2 && (
+        <div style={{ marginTop: 8, paddingTop: 20, borderTop: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
+            <div>
+              <div style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: 18, color: 'var(--text-primary)', marginBottom: 4 }}>Full Stack Review</div>
+              <div style={{ fontSize: 13, color: 'var(--text-tertiary)', maxWidth: 480, lineHeight: 1.6 }}>
+                Redundancies, counterproductive combinations, whether anything here is actually moving your markers, lab-interference risks, and what could be masking a deficiency instead of fixing it.
+              </div>
+            </div>
+            {stackReviewChecked && (
+              <button onClick={runStackReview} disabled={stackReviewLoading}
+                style={{ flexShrink: 0, fontSize: 13, padding: '8px 16px', background: 'var(--brand-ghost)', border: '1px solid var(--border-medium)', borderRadius: 6, color: 'var(--brand)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
+                {stackReviewLoading ? 'Analyzing your whole stack…' : stackReview ? 'Re-review full stack' : 'Review full stack →'}
+              </button>
+            )}
+          </div>
+
+          {stackReviewSavedAt && stackReview && (
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 12 }}>
+              Last analyzed {new Date(stackReviewSavedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} — saved, no need to re-run unless your stack's changed.
+            </div>
+          )}
+
+          {stackReviewError && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: 'rgba(153,27,27,.07)', border: '1px solid rgba(153,27,27,.3)', borderRadius: 7, marginBottom: 14, fontSize: 13, color: '#991b1b' }}>
+              <span style={{ flex: 1, lineHeight: 1.5 }}>{stackReviewError}</span>
+              <button onClick={() => setStackReviewError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991b1b', fontSize: 15, lineHeight: 1, padding: 0 }}>×</button>
+            </div>
+          )}
+
+          {stackReview && (
+            <div>
+              <p style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 500, lineHeight: 1.6, margin: '0 0 16px' }}>{stackReview.headline}</p>
+
+              {stackReview.redundancies?.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, color: 'var(--accent-watch)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 600 }}>Redundancies</div>
+                  {stackReview.redundancies.map((r: any, i: number) => (
+                    <div key={i} style={{ padding: '10px 14px', background: 'rgba(146,64,14,.05)', border: '1px solid rgba(146,64,14,.2)', borderRadius: 6, marginBottom: 8 }}>
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 4 }}>{(r.supplements || []).join(' + ')}</div>
+                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 4px', lineHeight: 1.6 }}>{r.issue}</p>
+                      <p style={{ fontSize: 13, color: 'var(--accent-watch)', margin: 0, lineHeight: 1.6 }}><strong>Do:</strong> {r.recommendation}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {stackReview.counterproductive_combinations?.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, color: '#991b1b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 600 }}>Working against each other</div>
+                  {stackReview.counterproductive_combinations.map((r: any, i: number) => (
+                    <div key={i} style={{ padding: '10px 14px', background: 'rgba(153,27,27,.05)', border: '1px solid rgba(153,27,27,.2)', borderRadius: 6, marginBottom: 8 }}>
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 4 }}>{(r.supplements || []).join(' + ')}</div>
+                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 4px', lineHeight: 1.6 }}>{r.issue}</p>
+                      <p style={{ fontSize: 13, color: '#991b1b', margin: 0, lineHeight: 1.6 }}><strong>Do:</strong> {r.recommendation}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {stackReview.marker_correlations?.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 600 }}>Marker correlations</div>
+                  {stackReview.marker_correlations.map((r: any, i: number) => (
+                    <div key={i} style={{ padding: '10px 14px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 6, marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{r.supplement} → {r.marker}</span>
+                        <span style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: r.supports_causation ? 'var(--accent-watch)' : 'var(--text-tertiary)', flexShrink: 0, marginTop: 2 }}>
+                          {r.supports_causation ? `${r.confidence} link` : 'unlikely link'}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>{r.observation}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {stackReview.lab_interference_risks?.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, color: '#991b1b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 600 }}>Lab interference risk</div>
+                  {stackReview.lab_interference_risks.map((r: any, i: number) => (
+                    <div key={i} style={{ padding: '10px 14px', background: 'rgba(153,27,27,.05)', border: '1px solid rgba(153,27,27,.2)', borderRadius: 6, marginBottom: 8 }}>
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 4 }}>{r.supplement} → {r.affected_marker}</div>
+                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 4px', lineHeight: 1.6 }}>{r.risk}</p>
+                      <p style={{ fontSize: 13, color: '#991b1b', margin: 0, lineHeight: 1.6 }}><strong>Do:</strong> {r.recommendation}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {stackReview.masking_risks?.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, color: '#92400e', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 600 }}>Could be masking, not fixing</div>
+                  {stackReview.masking_risks.map((r: any, i: number) => (
+                    <div key={i} style={{ padding: '10px 14px', background: 'rgba(146,64,14,.05)', border: '1px solid rgba(146,64,14,.2)', borderRadius: 6, marginBottom: 8 }}>
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 4 }}>{r.supplement}</div>
+                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 4px', lineHeight: 1.6 }}>{r.could_mask}</p>
+                      <p style={{ fontSize: 13, color: '#92400e', margin: 0, lineHeight: 1.6 }}><strong>Instead, check:</strong> {r.recommendation}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {stackReview.overall_recommendation && (
+                <div style={{ padding: '14px 16px', background: 'var(--brand-ghost)', border: '1px solid var(--border-subtle)', borderRadius: 7 }}>
+                  <div style={{ fontSize: 11, color: 'var(--brand)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6, fontWeight: 600 }}>Bottom line</div>
+                  <p style={{ fontSize: 14, color: 'var(--text-primary)', margin: 0, lineHeight: 1.65 }}>{stackReview.overall_recommendation}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
