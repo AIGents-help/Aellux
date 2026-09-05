@@ -20,6 +20,16 @@ import { getProfile, formatProfileForPrompt, getIntelligenceContext, formatIntel
 
 export const config = { runtime: 'nodejs', maxDuration: 60 };
 
+function extractJSON(raw) {
+  let text = String(raw || '').replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+  const start = text.indexOf('{'), end = text.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('No JSON object found in model output');
+  const candidate = text.slice(start, end + 1);
+  try { return JSON.parse(candidate); } catch {
+    return JSON.parse(candidate.replace(/,\s*([}\]])/g, '$1'));
+  }
+}
+
 function sendJson(res, status, body) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json');
@@ -116,7 +126,7 @@ Generate 3 specific premortem scenarios. Each is a named failure mode that this 
 4. Actionable — what is the single intervention that changes this trajectory?
 5. Written as Aellux speaking directly: ancient, warm, direct — not clinical, not terrifying
 
-Return ONLY valid JSON, no markdown:
+Return ONLY valid JSON, no markdown. Nothing before the opening brace, nothing after the closing brace — no sign-off, no commentary, no "let me know what you find":
 {
   "scenarios": [
     {
@@ -147,10 +157,10 @@ Return ONLY valid JSON, no markdown:
 
     const text = data?.content?.[0]?.text || '{"scenarios":[]}';
     let parsed;
-    try { parsed = JSON.parse(text.replace(/```json|```/g, '').trim()); }
+    try { parsed = extractJSON(text); }
     catch (e) {
       console.error('[premortem] parse failed:', e?.message, 'raw (last 300 chars):', text.slice(-300));
-      return sendJson(res, 502, { scenarios: [], error: 'Analysis was cut off before completing — try again.' });
+      return sendJson(res, 502, { scenarios: [], error: "Analysis didn't come back in a usable format — try again." });
     }
 
     // Persist so this doesn't need to be re-run (and re-paid-for) every visit.
