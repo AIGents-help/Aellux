@@ -759,6 +759,9 @@ export default function App() {
   const [bpAdditionalGoal, setBpAdditionalGoal] = useState<string>('');
   const [bpCycleLengthDays, setBpCycleLengthDays] = useState<number>(30);
   const [bpMealPrep, setBpMealPrep] = useState<boolean>(false);
+  const [bpCycleStartedAt, setBpCycleStartedAt] = useState<string | null>(null);
+  const [protocolWatchFlags, setProtocolWatchFlags] = useState<any[]>([]);
+  const [protocolWatchDismissed, setProtocolWatchDismissed] = useState<Set<string>>(new Set());
   const [bpFlavorProfile, setBpFlavorProfile] = useState<string>('none');
   const [bpRecommendedStyle, setBpRecommendedStyle] = useState<string>('');
   const [bpRecommendedFlavor, setBpRecommendedFlavor] = useState<string>('');
@@ -880,6 +883,9 @@ export default function App() {
             if (d.protocol.mealPrep) {
               setBpMealPrep(true);
             }
+            if (d.protocol.cycleStartedAt) {
+              setBpCycleStartedAt(d.protocol.cycleStartedAt);
+            }
           }
         })
         .catch(() => {/* non-fatal */});
@@ -931,6 +937,27 @@ export default function App() {
     }
     return Array.from(map.values());
   }, [documents]);
+
+  // Proactive check: is any marker trending against the user since their
+  // active protocol started? Runs automatically — no button, no chart click.
+  useEffect(() => {
+    if (!bpCycleStartedAt || allMarkers.length === 0 || !user?.id) return;
+    fetch('/api/protocol-watch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: user.id,
+        plan: isPro ? 'pro' : 'free',
+        markers: allMarkers.map(m => ({ name: m.name, unit: m.unit, history: m.history })),
+        cycleStartedAt: bpCycleStartedAt,
+        mealStyle: bpMealStyle,
+        additionalGoal: bpAdditionalGoal,
+      }),
+    })
+      .then(r => r.json())
+      .then(d => setProtocolWatchFlags(Array.isArray(d?.flags) ? d.flags : []))
+      .catch(() => {});
+  }, [bpCycleStartedAt, allMarkers, user?.id]);
 
   const markersByCategory = useMemo(() => {
     const cats: Record<string, typeof allMarkers> = {};
@@ -1780,6 +1807,45 @@ export default function App() {
                 />
               ) : (
                 <>
+                  {/* ── PROACTIVE PROTOCOL WATCH — surfaces the moment something is trending
+                      wrong since the active protocol started. This is the front door: the
+                      one thing that should never require the user to go looking for it. ── */}
+                  {protocolWatchFlags.filter(f => !protocolWatchDismissed.has(f.marker)).length > 0 && (
+                    <div style={{ marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {protocolWatchFlags
+                        .filter(f => !protocolWatchDismissed.has(f.marker))
+                        .map(f => {
+                          const isPhysician = f.severity === 'physician';
+                          const accent = isPhysician ? '#991b1b' : '#92400e';
+                          return (
+                            <div key={f.marker} style={{
+                              padding: '16px 18px', borderRadius: 10,
+                              background: isPhysician ? 'rgba(153,27,27,.06)' : 'rgba(146,64,14,.06)',
+                              border: `1.5px solid ${isPhysician ? 'rgba(153,27,27,.3)' : 'rgba(146,64,14,.3)'}`,
+                              display: 'flex', gap: 14, alignItems: 'flex-start',
+                            }}>
+                              <div style={{ flexShrink: 0, fontSize: 20, lineHeight: 1, marginTop: 1 }}>{isPhysician ? '🩺' : '⚠️'}</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                                  <span style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
+                                    {isPhysician ? 'Talk to a doctor this week' : 'Protocol may be working against you'}
+                                  </span>
+                                  <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+                                    {f.marker} · {f.pct_change != null ? `${f.pct_change}% worse` : ''} since {f.baseline_date}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6, margin: 0 }}>{f.alert}</p>
+                              </div>
+                              <button onClick={() => setProtocolWatchDismissed(prev => new Set(prev).add(f.marker))}
+                                style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-tertiary)', padding: 4, lineHeight: 1 }}>
+                                ×
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+
                   {/* ── DASHBOARD HERO ── */}
                   <div style={{
                     position: 'relative', height: 200, marginBottom: 28, borderRadius: 16, overflow: 'hidden',
