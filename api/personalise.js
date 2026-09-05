@@ -87,7 +87,7 @@ All markers: ${mCtx}`;
 
     try {
       const { text } = await callClaude({
-        apiKey, model: 'claude-sonnet-4-20250514', maxTokens: 2200,
+        apiKey, model: 'claude-sonnet-5', maxTokens: 2200,
         cachedText: cachedInstructions, dynamicText: dynamicData, thinkingBudget: 1500,
       });
       return json(parseJSON(text || '{}'));

@@ -102,7 +102,7 @@ ALREADY-DETECTED TRAJECTORY FLAGS (markers trending wrong since protocol start):
 
   try {
     const { text } = await callClaude({
-      apiKey, model: 'claude-sonnet-4-20250514', maxTokens: 2800,
+      apiKey, model: 'claude-sonnet-5', maxTokens: 2800,
       cachedText: CACHED_INSTRUCTIONS, dynamicText: dynamicData, thinkingBudget: 1600,
     });
 
