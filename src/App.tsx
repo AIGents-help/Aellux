@@ -13,6 +13,7 @@ import BiologicalAgeChart from './BiologicalAgeChart';
 import PatternInsights from './PatternInsights';
 import ProtocolOutcome from './ProtocolOutcome';
 import SupplementLog from './SupplementLog';
+import SymptomLog from './SymptomLog';
 import PractitionerShare from './PractitionerShare';
 import DoctorMissed from './DoctorMissed';
 import Accountability from './Accountability';
@@ -2518,6 +2519,21 @@ export default function App() {
                   cycleStartedAt={bpCycleStartedAt}
                   additionalGoal={bpAdditionalGoal}
                   protocolWatchFlags={protocolWatchFlags}
+                />
+              </SectionCard>
+
+              {/* ── SYMPTOM JOURNAL ── */}
+              <SectionCard
+                title="Symptom Journal"
+                subtitle="Log what you're feeling — Aellux cross-references it against every marker's timeline"
+                photo="https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?w=800&q=80"
+              >
+                <SymptomLog
+                  userId={user?.id}
+                  allMarkers={allMarkers}
+                  mealStyle={bpMealStyle}
+                  cycleStartedAt={bpCycleStartedAt}
+                  additionalGoal={bpAdditionalGoal}
                 />
               </SectionCard>
 
