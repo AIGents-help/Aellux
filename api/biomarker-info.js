@@ -21,10 +21,12 @@ export default async function handler(req) {
   try { body = await req.json(); }
   catch { return json({ error: 'Invalid JSON body' }, { status: 400 }); }
 
-  const { name, category = '', unit = '' } = body || {};
+  const { name, category = '', unit = '', sex = 'unknown', age = null } = body || {};
   if (!name || typeof name !== 'string') return json({ error: 'Missing marker name' }, { status: 400 });
 
-  const markerKey = name.trim().toLowerCase();
+  // Cache key includes sex — content is explicitly sex-differentiated (see prompt below),
+  // so a shared key would let one user's sex-specific content leak into another's.
+  const markerKey = `${name.trim().toLowerCase()}::${(sex || 'unknown').toLowerCase()}`;
 
   // ── Cache lookup ───────────────────────────────────────────────────────────
   const cached = await sbSelect('biomarker_info_cache', `marker_key=eq.${encodeURIComponent(markerKey)}&select=info,hits&limit=1`);
@@ -81,7 +83,7 @@ Reference specific mechanisms, food sources, supplement doses, and timelines whe
     try { info = parseJSON(rawText); }
     catch (e) { return json({ error: `Parse failed: ${e.message}`, raw: rawText.slice(0, 400) }, { status: 500 }); }
 
-    // Persist (fire-and-forget; cache is global so even other users benefit)
+    // Persist (fire-and-forget; cache is shared across users of the same sex bucket)
     sbUpsert('biomarker_info_cache', { marker_key: markerKey, display_name: name, info, hits: 0, created_at: new Date().toISOString() }, 'marker_key').catch(() => {});
 
     return json(info, { headers: { 'x-cache': 'MISS' } });
