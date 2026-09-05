@@ -17,6 +17,7 @@ interface Supplement {
     interactions_or_redundancies?: string[];
     connects_to_current_flags?: string | null;
     overlooked_nuance?: string;
+    citation_pmid?: string | null;
   } | null;
   reviewed_at?: string | null;
 }
@@ -333,7 +334,15 @@ export default function SupplementLog({ userId, plan, allMarkers, mealStyle, cyc
                       <p style={{ fontSize: 13, color: vs?.color, margin: '0 0 6px', lineHeight: 1.6, fontWeight: 500 }}>{s.review.connects_to_current_flags}</p>
                     )}
                     {s.review.overlooked_nuance && (
-                      <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0, lineHeight: 1.6, fontStyle: 'italic' }}>💡 {s.review.overlooked_nuance}</p>
+                      <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0, lineHeight: 1.6, fontStyle: 'italic' }}>
+                        💡 {s.review.overlooked_nuance}
+                        {s.review.citation_pmid && (
+                          <a href={`https://pubmed.ncbi.nlm.nih.gov/${s.review.citation_pmid}/`} target="_blank" rel="noopener noreferrer"
+                            style={{ marginLeft: 6, color: 'var(--brand)', textDecoration: 'none', fontWeight: 600, fontStyle: 'normal' }}>
+                            [PMID:{s.review.citation_pmid}]
+                          </a>
+                        )}
+                      </p>
                     )}
                   </div>
                 )}
@@ -415,6 +424,31 @@ export default function SupplementLog({ userId, plan, allMarkers, mealStyle, cyc
                     <div key={i} style={{ padding: '10px 14px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 6, marginBottom: 8 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
                         <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{r.supplement} → {r.marker}</span>
+                        <span style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: r.supports_causation ? 'var(--accent-watch)' : 'var(--text-tertiary)', flexShrink: 0, marginTop: 2 }}>
+                          {r.supports_causation ? `${r.confidence} link` : 'unlikely link'}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+                        {r.observation}
+                        {r.citation_pmid && (
+                          <a href={`https://pubmed.ncbi.nlm.nih.gov/${r.citation_pmid}/`} target="_blank" rel="noopener noreferrer"
+                            style={{ marginLeft: 6, color: 'var(--brand)', textDecoration: 'none', fontWeight: 600 }}>
+                            [PMID:{r.citation_pmid}]
+                          </a>
+                        )}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {stackReview.symptom_correlations?.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 600 }}>Symptom correlations</div>
+                  {stackReview.symptom_correlations.map((r: any, i: number) => (
+                    <div key={i} style={{ padding: '10px 14px', background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 6, marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{r.supplement} → {r.symptom}</span>
                         <span style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: r.supports_causation ? 'var(--accent-watch)' : 'var(--text-tertiary)', flexShrink: 0, marginTop: 2 }}>
                           {r.supports_causation ? `${r.confidence} link` : 'unlikely link'}
                         </span>

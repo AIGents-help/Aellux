@@ -13,7 +13,7 @@
  */
 import {
   getProfile, formatProfileForPrompt, hasMedications,
-  sbSelect, sbUpsert, hashMarkers, callClaude, rateLimit, logUsage,
+  sbSelect, sbUpsert, hashMarkers, callClaude, rateLimit, logUsage, pubmedSearch, formatCitationsForPrompt,
 } from './_lib.js';
 
 export const config = { runtime: 'nodejs', maxDuration: 60 };
@@ -66,14 +66,17 @@ Do all of the following, thoroughly:
 
 5. MASKING RISK: identify anything in the stack that could be masking an underlying deficiency or condition rather than resolving it — the classic example is high-dose folate masking the anemia of B12 deficiency while allowing neurological damage from that same deficiency to progress silently. Look for this pattern in what's actually in the stack.
 
-Ground every finding in the ACTUAL data given — supplement names, start dates, marker names and values. Do not invent a specific study, citation, or DOI; general mechanism-level and dosing knowledge is fine, fabricated specifics are not.
+6. SYMPTOM CORRELATIONS: if any symptoms are given below, check each one's onset date against every supplement's start date the same way you check markers — a supplement started shortly before a symptom began is real evidence worth surfacing, and one started long before or after is evidence against a connection. Say so either way.
+
+Ground every finding in the ACTUAL data given — supplement names, start dates, marker names and values. Do not invent a specific study, citation, or DOI; general mechanism-level and dosing knowledge is fine, fabricated specifics are not. If real source material is provided below, you may cite a PMID in a citation_pmid field ONLY if genuinely relevant to that specific finding — never invent one.
 
 Return ONLY valid JSON, no markdown, nothing after the closing brace:
 {
   "headline": "One direct sentence — the single most important thing about this stack as a whole.",
   "redundancies": [{"supplements": ["name1","name2"], "issue": "the specific overlap", "recommendation": "what to do about it"}],
   "counterproductive_combinations": [{"supplements": ["name1","name2"], "issue": "the specific conflict", "recommendation": "what to do about it"}],
-  "marker_correlations": [{"supplement": "name", "started_date": "date", "marker": "name", "observation": "what the timeline actually shows relative to the start date", "supports_causation": true, "confidence": "strong|possible|weak"}],
+  "marker_correlations": [{"supplement": "name", "started_date": "date", "marker": "name", "observation": "what the timeline actually shows relative to the start date", "supports_causation": true, "confidence": "strong|possible|weak", "citation_pmid": "PMID if relevant, else null"}],
+  "symptom_correlations": [{"supplement": "name", "symptom": "name", "observation": "timing comparison between the supplement's start date and the symptom's onset date", "supports_causation": true, "confidence": "strong|possible|weak"}],
   "lab_interference_risks": [{"supplement": "name", "affected_marker": "name", "risk": "how it could produce a false reading", "recommendation": "e.g. stop N days before next draw"}],
   "masking_risks": [{"supplement": "name", "could_mask": "what underlying issue this could be hiding", "recommendation": "what to actually check instead"}],
   "overall_recommendation": "1-3 sentences — the single most important structural change to make to this stack, if any."
@@ -107,9 +110,10 @@ export default async function handler(req, res) {
   const r = await rateLimit({ userId, endpoint: 'stack-review', limit: plan === 'pro' ? 20 : 3, windowHours: 24 * 7 });
   if (!r.ok) return sendJson(res, 200, { error: 'Weekly stack review limit reached.' });
 
-  const [profile, stack] = await Promise.all([
+  const [profile, stack, symptoms] = await Promise.all([
     getProfile(userId),
     sbSelect('supplement_log', `user_id=eq.${userId}&ended_date=is.null&select=name,dose,frequency,started_date,notes`),
+    sbSelect('symptom_log', `user_id=eq.${userId}&ended_date=is.null&select=symptom,started_date,frequency`),
   ]);
 
   if (!stack || stack.length < 2) {
@@ -119,16 +123,28 @@ export default async function handler(req, res) {
   const profileStr = formatProfileForPrompt(profile);
   const medFlag = hasMedications(profile);
   const stackStr = stack.map(s => `${s.name}${s.dose ? ` ${s.dose}` : ''} — ${s.frequency || 'daily'}, started ${s.started_date || 'unknown'}${s.notes ? ` (${s.notes})` : ''}`).join('\n');
+  const symptomsStr = (symptoms || []).map(s => `${s.symptom} (${s.frequency || 'ongoing'}), started ${s.started_date}`).join('\n') || 'None currently logged.';
   const timelines = buildMarkerTimelines(allMarkers);
   const medSafetyNote = medFlag ? '\nThis person has logged medications — check the stack for interactions with those too, not just within the supplements themselves.' : '';
+
+  // Ground lab-interference and top marker-correlation claims in real PubMed
+  // material where possible — best-effort, never blocks the review.
+  let citationBlock = '';
+  if (stack.length > 0) {
+    const citationResults = await Promise.all(stack.slice(0, 3).map(s => pubmedSearch(`${s.name} supplement interaction`, 1)));
+    citationBlock = formatCitationsForPrompt(citationResults.flat().slice(0, 4));
+  }
 
   const dynamicData = `USER PROFILE: ${profileStr || 'Not provided'}${medSafetyNote}
 
 FULL ACTIVE STACK:
 ${stackStr}
 
+ACTIVE SYMPTOMS (check timing against each supplement's start date):
+${symptomsStr}
+
 MARKER TIMELINES (date:value, most recent points):
-${timelines.join('\n') || 'No marker history available.'}`;
+${timelines.join('\n') || 'No marker history available.'}${citationBlock}`;
 
   try {
     const { text } = await callClaude({

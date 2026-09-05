@@ -13,7 +13,7 @@
  */
 import {
   getProfile, formatProfileForPrompt, hasMedications,
-  sbSelect, sbUpdate, rateLimit, logUsage, callClaude,
+  sbSelect, sbUpdate, rateLimit, logUsage, callClaude, pubmedSearch, formatCitationsForPrompt,
 } from './_lib.js';
 
 export const config = { runtime: 'nodejs', maxDuration: 60 };
@@ -44,6 +44,7 @@ You must:
 5. If any currently-flagged biomarker or active protocol issue is directly relevant to this supplement (helps it, worsens it, or is unrelated but worth naming), say so explicitly and specifically — reference the actual marker/value you're given.
 6. Name ONE thing about this specific combination that a person evaluating supplements one at a time would typically miss — this is the most valuable part of your answer, so make it specific to their actual data, not a generic supplement fact.
 7. If this supplement has real interaction risk with a listed medication, say so plainly and recommend a pharmacist/doctor check — do not soften this into a vague "consult a professional" throwaway when the risk is specific and known.
+8. If real source material is provided below, you may cite a PMID in citation_pmid ONLY if genuinely relevant — never invent one, leave it null otherwise.
 
 Return ONLY valid JSON, no markdown, nothing after the closing brace:
 {
@@ -53,7 +54,8 @@ Return ONLY valid JSON, no markdown, nothing after the closing brace:
   "timing": "1 sentence, or null if there's nothing specific to say",
   "interactions_or_redundancies": ["specific finding", "..."],
   "connects_to_current_flags": "1-2 sentences tying this to a specific currently-flagged marker or active protocol issue if genuinely relevant, else null",
-  "overlooked_nuance": "1-2 sentences — the specific thing about THIS combination most likely to be missed"
+  "overlooked_nuance": "1-2 sentences — the specific thing about THIS combination most likely to be missed",
+  "citation_pmid": "A PMID from real source material if genuinely relevant, else null"
 }`;
 
 export default async function handler(req, res) {
@@ -95,6 +97,9 @@ export default async function handler(req, res) {
     ? protocolWatchFlags.map(f => `${f.marker} (${f.severity === 'physician' ? 'physician-severity' : 'protocol-severity'}): ${f.alert || ''}`).join(' | ')
     : 'None currently active';
 
+  const citationResults = await pubmedSearch(`${supplement.name} supplementation effects`, 2);
+  const citationBlock = formatCitationsForPrompt(citationResults);
+
   const medSafetyBlock = medFlag
     ? `\nCRITICAL: This person is on medications (see profile). Explicitly check this supplement for known interactions with those medications. If there's real interaction risk, say so plainly and specifically — do not bury it as a generic disclaimer.\n`
     : '';
@@ -109,7 +114,7 @@ CURRENTLY FLAGGED BIOMARKERS: ${flaggedStr}
 
 ACTIVE PROTOCOL: ${mealStyle && mealStyle !== 'none' ? mealStyle : 'none set'}${cycleStartedAt ? `, started ${cycleStartedAt.slice(0, 10)}` : ''}${additionalGoal ? `, goal: ${additionalGoal}` : ''}
 
-ALREADY-DETECTED TRAJECTORY FLAGS (markers trending wrong since protocol start): ${watchStr}`;
+ALREADY-DETECTED TRAJECTORY FLAGS (markers trending wrong since protocol start): ${watchStr}${citationBlock}`;
 
   try {
     const { text } = await callClaude({

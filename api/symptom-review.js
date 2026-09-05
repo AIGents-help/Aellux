@@ -15,7 +15,7 @@
  */
 import {
   getProfile, formatProfileForPrompt, hasMedications,
-  sbSelect, sbUpdate, callClaude, rateLimit, logUsage,
+  sbSelect, sbUpdate, callClaude, rateLimit, logUsage, pubmedSearch, formatCitationsForPrompt,
 } from './_lib.js';
 
 export const config = { runtime: 'nodejs', maxDuration: 60 };
@@ -73,18 +73,33 @@ function computeMarkerWindows(markers, onsetDate) {
   return windows.slice(0, 25);
 }
 
+// Days between each supplement's start and symptom onset — the same kind of
+// concrete timing evidence as marker windows, but for the stack itself. A
+// supplement started 3 days before onset is very different evidence than one
+// started 8 months before.
+function computeSupplementTiming(stack, onsetDate) {
+  const onset = onsetDate ? new Date(onsetDate) : null;
+  return (stack || []).map(s => {
+    if (!onset || !s.started_date) return { ...s, days_relative_to_onset: null };
+    const started = new Date(s.started_date);
+    const days = Math.round((onset - started) / (1000 * 60 * 60 * 24));
+    return { ...s, days_relative_to_onset: days };
+  });
+}
+
 const CACHED_INSTRUCTIONS = `You are Aellux, doing genuine differential reasoning about a symptom a person has logged, grounded in their actual biomarker history — not a generic symptom checker.
 
-You will be given: the symptom, when it started, every marker's value just before onset vs its most current value (a "window" of evidence — some will show large changes, some will show no change, both are meaningful), their current supplement stack, active protocol, and profile including medications/conditions.
+You will be given: the symptom, when it started, every marker's value just before onset vs its most current value (a "window" of evidence — some will show large changes, some will show no change, both are meaningful), their current supplement stack WITH each item's timing relative to symptom onset already computed, active protocol, and profile including medications/conditions.
 
 Your job:
 1. Identify which marker changes plausibly connect to this symptom, given the TIMING (did the marker start moving before or around symptom onset?) and the physiology (does this marker's change actually explain this kind of symptom?).
-2. For each differential consideration, cite what evidence in the data ARGUES FOR it and what ARGUES AGAINST it. A marker staying flat when a common cause would predict it moving is real evidence against that cause — say so explicitly, the same way stable ferritin argues against iron-deficiency even when hemoglobin is falling.
-3. If confidently narrowing this down depends on information not given here — most commonly hormone therapy status (e.g. TRT), a medication change, or a recent illness — say so explicitly in missing_info_question. Do not guess past a real gap in the data.
-4. Rank considerations by how well they fit the actual evidence, not by how common or scary they are.
-5. Set urgency honestly: "urgent" only if the symptom itself or a specific marker value poses near-term risk; "soon" if this warrants a real visit but isn't an emergency; "routine" if it's worth mentioning at a regular check-in.
-6. Never fabricate a specific study, citation, or diagnosis. Name mechanisms and physiology in general terms. This is not a diagnosis — say so if the framing risks sounding like one.
-7. No markdown, no bullet characters inside strings — plain sentences.
+2. Separately, check whether any supplement or medication STARTED close to symptom onset (days_relative_to_onset near zero, especially 0-30) — a new supplement starting right before a new symptom is a distinct category of evidence from a marker moving, and just as important to surface. A supplement started 8+ months before onset is much weaker evidence than one started days before.
+3. For each differential consideration, cite what evidence in the data ARGUES FOR it and what ARGUES AGAINST it. A marker staying flat when a common cause would predict it moving is real evidence against that cause — say so explicitly, the same way stable ferritin argues against iron-deficiency even when hemoglobin is falling.
+4. If confidently narrowing this down depends on information not given here — most commonly hormone therapy status (e.g. TRT), a medication change, or a recent illness — say so explicitly in missing_info_question. Do not guess past a real gap in the data.
+5. Rank considerations by how well they fit the actual evidence, not by how common or scary they are.
+6. Set urgency honestly: "urgent" only if the symptom itself or a specific marker value poses near-term risk; "soon" if this warrants a real visit but isn't an emergency; "routine" if it's worth mentioning at a regular check-in.
+7. If real source material is provided below (marked "REAL SOURCE MATERIAL"), you may cite a PMID from that list in a consideration's citation_pmid field ONLY if genuinely relevant — never invent one, and leave it null when nothing given is relevant.
+8. No markdown, no bullet characters inside strings — plain sentences. This is not a diagnosis — say so if the framing risks sounding like one.
 
 Return ONLY valid JSON, no markdown, nothing after the closing brace:
 {
@@ -93,9 +108,10 @@ Return ONLY valid JSON, no markdown, nothing after the closing brace:
   "considerations": [
     {
       "explanation": "Name of the physiological explanation (e.g. 'Rapid hemoglobin decline outpacing compensation')",
-      "supporting_evidence": "What in the actual data argues for this — cite specific markers/values/dates given.",
+      "supporting_evidence": "What in the actual data argues for this — cite specific markers/values/dates OR supplement/timing given.",
       "against_evidence": "What in the actual data argues against this, or null if nothing argues against it.",
-      "fit": "strong|possible|weak"
+      "fit": "strong|possible|weak",
+      "citation_pmid": "A PMID from REAL SOURCE MATERIAL if genuinely relevant, else null"
     }
   ],
   "missing_info_question": "A specific question whose answer would meaningfully change this analysis, or null if nothing critical is missing.",
@@ -125,12 +141,27 @@ export default async function handler(req, res) {
   ]);
   const profileStr = formatProfileForPrompt(profile);
   const medFlag = hasMedications(profile);
-  const stackStr = (stack || []).map(s => `${s.name}${s.dose ? ` ${s.dose}` : ''} (${s.frequency || 'daily'}, since ${s.started_date || 'unknown'})`).join(', ') || 'None currently logged';
+  const timedStack = computeSupplementTiming(stack, symptom.started_date);
+  const stackStr = timedStack.map(s => {
+    const timing = s.days_relative_to_onset === null ? ''
+      : s.days_relative_to_onset >= 0 ? ` [started ${s.days_relative_to_onset}d before symptom onset]`
+      : ` [started ${Math.abs(s.days_relative_to_onset)}d AFTER symptom onset]`;
+    return `${s.name}${s.dose ? ` ${s.dose}` : ''} (${s.frequency || 'daily'}, since ${s.started_date || 'unknown'})${timing}`;
+  }).join(', ') || 'None currently logged';
 
   const windows = computeMarkerWindows(allMarkers, symptom.started_date);
   const windowsStr = windows.length > 0
     ? windows.map(w => `${w.marker}: ${w.baseline_value}${w.unit} (${w.baseline_date}, before onset) → ${w.latest_value}${w.unit} (${w.latest_date}, latest) — ${w.pct_change > 0 ? '+' : ''}${w.pct_change}%`).join('\n')
     : 'No marker history available to window against this symptom.';
+
+  // Ground the top 1-2 marker movements against real PubMed abstracts, same
+  // approach as synthesis — best-effort, never blocks the analysis.
+  const topWindows = [...windows].sort((a, b) => Math.abs(b.pct_change) - Math.abs(a.pct_change)).slice(0, 2);
+  let citationBlock = '';
+  if (topWindows.length > 0) {
+    const citationResults = await Promise.all(topWindows.map(w => pubmedSearch(`${w.marker} ${symptom.symptom}`, 2)));
+    citationBlock = formatCitationsForPrompt(citationResults.flat().slice(0, 4));
+  }
 
   const medSafetyNote = medFlag ? '\nThis person has logged medications (see profile) — factor known interactions/side effects into your reasoning.' : '\nNo medications currently logged in this profile — if hormone therapy (e.g. TRT) or another medication seems like the most likely explanation, this is exactly the kind of gap to flag in missing_info_question, since none is on record.';
 
@@ -138,12 +169,12 @@ export default async function handler(req, res) {
 
 USER PROFILE: ${profileStr || 'Not provided'}${medSafetyNote}
 
-CURRENT SUPPLEMENT/MEDICATION STACK: ${stackStr}
+CURRENT SUPPLEMENT/MEDICATION STACK (with timing relative to this symptom's onset): ${stackStr}
 
 ACTIVE PROTOCOL: ${mealStyle && mealStyle !== 'none' ? mealStyle : 'none set'}${cycleStartedAt ? `, started ${cycleStartedAt.slice(0, 10)}` : ''}${additionalGoal ? `, goal: ${additionalGoal}` : ''}
 
 MARKER WINDOWS (value before symptom onset → latest value):
-${windowsStr}`;
+${windowsStr}${citationBlock}`;
 
   try {
     const { text } = await callClaude({

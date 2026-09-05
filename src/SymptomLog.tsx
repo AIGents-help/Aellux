@@ -11,7 +11,7 @@ interface Symptom {
   review?: {
     urgency: 'routine' | 'soon' | 'urgent';
     headline: string;
-    considerations?: Array<{ explanation: string; supporting_evidence: string; against_evidence?: string | null; fit: 'strong' | 'possible' | 'weak' }>;
+    considerations?: Array<{ explanation: string; supporting_evidence: string; against_evidence?: string | null; fit: 'strong' | 'possible' | 'weak'; citation_pmid?: string | null }>;
     missing_info_question?: string | null;
     what_to_ask_your_doctor?: string;
   } | null;
@@ -268,7 +268,15 @@ export default function SymptomLog({ userId, allMarkers, mealStyle, cycleStarted
                           {s.review.considerations.map((c, ci) => (
                             <div key={ci} style={{ padding: '10px 14px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 6 }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
-                                <span style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>{c.explanation}</span>
+                                <span style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>
+                                  {c.explanation}
+                                  {c.citation_pmid && (
+                                    <a href={`https://pubmed.ncbi.nlm.nih.gov/${c.citation_pmid}/`} target="_blank" rel="noopener noreferrer"
+                                      style={{ marginLeft: 6, color: 'var(--brand)', textDecoration: 'none', fontWeight: 600, fontSize: 12 }}>
+                                      [PMID:{c.citation_pmid}]
+                                    </a>
+                                  )}
+                                </span>
                                 <span style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-tertiary)', flexShrink: 0, marginTop: 2 }}>{FIT_LABEL[c.fit] || c.fit}</span>
                               </div>
                               <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 4px', lineHeight: 1.6 }}><strong>For:</strong> {c.supporting_evidence}</p>
