@@ -127,6 +127,13 @@ export default function SphereAdvisor({ userId, isPro, OrbComponent }: Props) {
             });
           } else if (eventName === 'error') {
             setError(data.message || 'Something went wrong.');
+            // Drop the trailing blank assistant bubble so a failed turn
+            // doesn't just sit there looking like the app hung.
+            setMessages(prev => {
+              const last = prev[prev.length - 1];
+              if (last && last.role === 'assistant' && !last.content) return prev.slice(0, -1);
+              return prev;
+            });
           } else if (eventName === 'complete') {
             loadThreads();
           }
@@ -223,7 +230,11 @@ export default function SphereAdvisor({ userId, isPro, OrbComponent }: Props) {
         )}
 
         {error && (
-          <div style={{ fontSize: 13.5, color: 'var(--accent-elevated)', marginBottom: 12, fontFamily: 'var(--font-body)' }}>{error}</div>
+          <div style={{
+            fontSize: 14, color: 'var(--accent-elevated)', marginBottom: 12, fontFamily: 'var(--font-body)',
+            background: 'rgba(153,27,27,.06)', border: '1px solid rgba(153,27,27,.22)', borderRadius: 'var(--r-md)',
+            padding: '10px 14px',
+          }}>{error}</div>
         )}
 
         <div style={{ display: 'flex', gap: 10 }}>

@@ -18,8 +18,11 @@ function sse(res, event, data) {
 }
 
 const MODEL = 'claude-sonnet-5';
-const MAX_TOKENS = 1600;
-const THINKING_BUDGET = 1200; // adaptive on claude-sonnet-5 — model decides depth
+// Adaptive thinking shares this same budget with the actual reply — on
+// claude-sonnet-5 the model can spend most of it reasoning before ever
+// emitting text. 1600 was too tight and produced silent empty replies
+// (200 response, no error, zero text_delta events). Bumped with headroom.
+const MAX_TOKENS = 4000;
 const HISTORY_TURNS = 16; // prior messages pulled into context per request
 
 // Pro-only feature (flagship differentiator, gated like other generation endpoints).
@@ -214,6 +217,7 @@ ${extrasStr}
   const reader = anthropicRes.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let stopReason = null;
 
   try {
     while (true) {
@@ -230,19 +234,34 @@ ${extrasStr}
           if (data.type === 'content_block_delta' && data.delta?.type === 'text_delta') {
             accumulated += data.delta.text;
             sse(res, 'delta', { text: data.delta.text });
+          } else if (data.type === 'message_delta' && data.delta?.stop_reason) {
+            stopReason = data.delta.stop_reason;
           }
         } catch { /* ignore malformed events */ }
       }
     }
   } catch (e) {
+    console.error('[sphere-chat] stream read error', e.message);
     sse(res, 'error', { message: `Stream read error: ${e.message}` });
     clearInterval(keepalive); return res.end();
   }
 
-  // Persist assistant reply + housekeeping (fire-and-forget)
-  if (accumulated.trim()) {
-    sbInsert('sphere_messages', { thread_id: activeThreadId, user_id: userId, role: 'assistant', content: accumulated.trim() }).catch(() => {});
+  // Guard against exactly the failure mode that shipped silent: adaptive
+  // thinking burns the token budget and the model never reaches text output.
+  // Surface this loudly instead of completing with nothing to show for it.
+  if (!accumulated.trim()) {
+    console.error('[sphere-chat] empty reply', { stopReason, userId, threadId: activeThreadId });
+    sse(res, 'error', {
+      message: stopReason === 'max_tokens'
+        ? 'Aellux ran out of room thinking through that one before replying — try asking again, sometimes shorter or more specific.'
+        : 'No reply generated — try again.',
+      code: 'empty_reply',
+    });
+    clearInterval(keepalive); return res.end();
   }
+
+  // Persist assistant reply + housekeeping (fire-and-forget)
+  sbInsert('sphere_messages', { thread_id: activeThreadId, user_id: userId, role: 'assistant', content: accumulated.trim() }).catch(() => {});
   sbUpdate('sphere_threads', `id=eq.${activeThreadId}`, { updated_at: new Date().toISOString() }).catch(() => {});
   logUsage(userId, 'sphere-chat').catch(() => {});
 
