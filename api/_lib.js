@@ -9,6 +9,33 @@ export async function sha256(text) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// ── SHIFTED bridge — HMAC sign/verify ────────────────────────────────────────
+// Keyed (not plain-hash) signatures for the cross-app grant/callback handshake.
+// Both sides hold SHIFTED_BRIDGE_SECRET; nothing else can mint a valid grant.
+async function bridgeKey() {
+  const secret = process.env.SHIFTED_BRIDGE_SECRET || '';
+  return crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']
+  );
+}
+
+export async function hmacSign(payload) {
+  const key = await bridgeKey();
+  const buf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+export async function hmacVerify(payload, signatureHex) {
+  if (!signatureHex) return false;
+  const expected = await hmacSign(payload);
+  if (expected.length !== signatureHex.length) return false;
+  // Constant-time compare — avoid leaking match length via early-exit timing.
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ signatureHex.charCodeAt(i);
+  return diff === 0;
+}
+
 // Stable, order-independent hash of a marker set.
 export async function hashMarkers(markers) {
   const norm = (markers || [])
@@ -260,6 +287,36 @@ export function hasMedications(p) {
   return !!(p && Array.isArray(p.medications) && p.medications.length > 0);
 }
 
+// ── SHIFTED chrono-context ────────────────────────────────────────────────────
+// If the user has connected SHIFTED (public.shifted_connections), pull their
+// live rotation/readiness/sleep-timing data server-to-server. Read-only, and
+// silently returns null on any failure — a broken bridge should degrade to
+// "no chrono-context" for this call, never break the underlying synthesis.
+const SHIFTED_CONTEXT_URL = process.env.SHIFTED_CONTEXT_EXPORT_URL || 'https://companion.shifted.systems/api/aellux-context-export';
+
+export async function getShiftedContext(userId) {
+  if (!userId) return null;
+  try {
+    const rows = await sbSelect('shifted_connections', `user_id=eq.${userId}&status=eq.connected&select=shifted_user_id,grant_token_encrypted,grant_expires_at&limit=1`);
+    const conn = rows && rows[0];
+    if (!conn) return null;
+    if (conn.grant_expires_at && new Date(conn.grant_expires_at) < new Date()) return null;
+
+    const timestamp = Date.now().toString();
+    const signature = await hmacSign(`${conn.shifted_user_id}.${timestamp}`);
+    const res = await fetch(`${SHIFTED_CONTEXT_URL}?shifted_user_id=${encodeURIComponent(conn.shifted_user_id)}&ts=${timestamp}&sig=${signature}`, {
+      headers: { 'Accept': 'application/json' },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+
+    await sbUpdate('shifted_connections', `user_id=eq.${userId}`, { last_synced_at: new Date().toISOString() });
+    return data; // expected shape: { schedule, live_phase, wake_anchor, measured_wake_drift: [...] }
+  } catch {
+    return null; // bridge down — degrade silently, never break the caller
+  }
+}
+
 // ── Intelligence context ─────────────────────────────────────────────────────
 // Pulls ALL accumulated intelligence for a user — doctor-missed flags,
 // detected patterns, supplement log, bio age trajectory, correlation notes.
@@ -268,15 +325,17 @@ export async function getIntelligenceContext(userId) {
   if (!userId) return null;
 
   // Run all lookups in parallel
-  const [suppRows, bioAgeRows, docRows, recRows, checkinRows] = await Promise.all([
+  const [suppRows, bioAgeRows, docRows, recRows, checkinRows, shiftedCtx] = await Promise.all([
     sbSelect('supplement_log', `user_id=eq.${userId}&ended_date=is.null&order=started_date.desc&select=name,dose,frequency,started_date&limit=10`),
     sbSelect('bio_age_history', `user_id=eq.${userId}&order=created_at.desc&limit=6&select=biological_age,chronological_age,gap_years,created_at`),
     sbSelect('documents', `user_id=eq.${userId}&select=doctor_missed_flags,document_date,document_type&limit=10`),
     sbSelect('recommendations', `user_id=eq.${userId}&order=created_at.desc&limit=20&select=recommendation,status,target_marker,target_direction,source,created_at,user_note`),
     sbSelect('checkins', `user_id=eq.${userId}&order=week_start.desc&limit=4&select=week_start,protocol_followed,energy_level,sleep_quality,mood,blockers`),
+    getShiftedContext(userId),
   ]);
 
   const ctx = {};
+  if (shiftedCtx) ctx.shifted = shiftedCtx;
 
   // Active supplements
   if (suppRows && suppRows.length > 0) {
@@ -345,6 +404,19 @@ export function formatIntelligenceForPrompt(intel) {
 
   if (intel.supplements) {
     parts.push(`ACTIVE SUPPLEMENTS: ${intel.supplements}`);
+  }
+
+  if (intel.shifted) {
+    const s = intel.shifted;
+    const drift = Array.isArray(s.measured_wake_drift) && s.measured_wake_drift.length > 0
+      ? s.measured_wake_drift.slice(0, 7).map(d => `${d.date}: measured ${d.measured_wake} vs stated anchor ${s.wake_anchor} (+${d.drift_hours}h)`).join('; ')
+      : null;
+    parts.push(
+      `SHIFT SCHEDULE CONTEXT (from SHIFTED, powered by SHIFTED): ${s.schedule || 'schedule unknown'}. ` +
+      `Stated wake anchor ${s.wake_anchor || 'unknown'}. Live phase: ${s.live_phase || 'unknown'}.` +
+      (drift ? ` Measured wake-time drift vs stated anchor: ${drift}.` : '') +
+      ` DIFFERENTIAL-PARITY RULE: shift work/circadian disruption may ONLY be cited as the cause of a finding when there is direct corroborating evidence for that specific finding (a measured sleep-timing or rhythm marker, e.g. the drift data above). For any distal marker (lipids, glucose, inflammatory, hormonal), give the strongest non-circadian explanation first and mention shift work only as a secondary, explicitly-indirect hypothesis if warranted. Never state "[finding] is caused by shift work" for a distal marker.`
+    );
   }
 
   if (intel.biologicalAge) {

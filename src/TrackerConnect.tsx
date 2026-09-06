@@ -10,7 +10,7 @@ export const TRACKERS = [
     description: 'Export from iPhone Health app → Share → Export All Health Data',
     dataTypes: ['steps','heart_rate','hrv','sleep','active_calories','workout','resting_hr','vo2max','weight'],
     exportInstructions: 'Health app → your avatar → Export All Health Data → save the ZIP, upload export.xml here',
-    color: '#ff6b8a',
+    color: '#c1495f',
     fileTypes: ['.xml','.csv'],
   },
   {
@@ -20,7 +20,7 @@ export const TRACKERS = [
     description: 'Best HRV, deep sleep, readiness score data available',
     dataTypes: ['hrv','deep_sleep','rem_sleep','readiness','body_temp','resting_hr','spo2'],
     exportInstructions: 'Oura app → Profile → Data Export → Download CSV',
-    color: '#a78bfa',
+    color: '#6d5ba8',
     fileTypes: ['.csv'],
   },
   {
@@ -30,7 +30,7 @@ export const TRACKERS = [
     description: 'Recovery, strain, sleep performance data',
     dataTypes: ['recovery','strain','hrv','sleep_performance','resting_hr','active_calories'],
     exportInstructions: 'WHOOP app → Profile → Export Data → CSV',
-    color: '#00e5ff',
+    color: '#1e3a5f',
     fileTypes: ['.csv'],
   },
   {
@@ -40,7 +40,7 @@ export const TRACKERS = [
     description: 'VO2max, training load, steps, workouts',
     dataTypes: ['steps','vo2max','training_load','heart_rate','sleep','active_calories','workout'],
     exportInstructions: 'Garmin Connect app → More → Data Management → Export Your Data',
-    color: '#00d2a5',
+    color: '#166534',
     fileTypes: ['.csv','.fit'],
   },
   {
@@ -50,7 +50,7 @@ export const TRACKERS = [
     description: 'Steps, sleep stages, heart rate zones',
     dataTypes: ['steps','heart_rate','sleep','active_calories','resting_hr'],
     exportInstructions: 'fitbit.com → Account → Data Export → Request Data',
-    color: '#64d2ff',
+    color: '#1e3a5f',
     fileTypes: ['.csv','.json'],
   },
   {
@@ -60,7 +60,7 @@ export const TRACKERS = [
     description: 'Log workouts, sleep, and habits manually',
     dataTypes: ['workout','sleep','diet','metrics'],
     exportInstructions: 'Log entries directly in Aellux',
-    color: '#ffa040',
+    color: '#92400e',
     fileTypes: [],
   },
 ];
@@ -134,22 +134,26 @@ function ManualLogForm({ onLog }: { onLog: (entry: TrackerEntry) => void }) {
     setSleepHrs(''); setDeepSleepHrs(''); setHrvMs(''); setNotes('');
   }
 
-  const S: React.CSSProperties = { fontFamily: 'EB Garamond, Georgia, serif' };
+  const S: React.CSSProperties = { fontFamily: 'var(--font-display)' };
+  const label: React.CSSProperties = {
+    fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4, ...S,
+    letterSpacing: '0.08em', textTransform: 'uppercase',
+  };
   const inp: React.CSSProperties = {
-    background: 'rgba(0,8,18,.8)', border: '1px solid rgba(0,175,138,.22)',
-    color: 'rgba(0,220,175,.92)', fontFamily: 'EB Garamond,Georgia,serif',
-    fontSize: 14, padding: '8px 12px', borderRadius: 3, outline: 'none', width: '100%',
+    background: 'var(--bg-surface)', border: '1px solid var(--border-medium)',
+    color: 'var(--text-primary)', fontFamily: 'var(--font-display)',
+    fontSize: 14, padding: '8px 12px', borderRadius: 'var(--r-sm)', outline: 'none', width: '100%',
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <div>
-          <div style={{ fontSize: 11, color: 'rgba(0,175,142,.5)', marginBottom: 4, ...S, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Date</div>
+          <div style={label}>Date</div>
           <input type="date" style={inp} value={date} onChange={e => setDate(e.target.value)} />
         </div>
         <div>
-          <div style={{ fontSize: 11, color: 'rgba(0,175,142,.5)', marginBottom: 4, ...S, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Workout Type</div>
+          <div style={label}>Workout type</div>
           <select style={{ ...inp, cursor: 'pointer' }} value={workoutType} onChange={e => setWorkoutType(e.target.value)}>
             <option value="">None today</option>
             {['Zone 2 Cardio','HIIT','Strength','Yoga','Walk','Run','Swim','Cycling','Rest'].map(w => (
@@ -158,32 +162,32 @@ function ManualLogForm({ onLog }: { onLog: (entry: TrackerEntry) => void }) {
           </select>
         </div>
         <div>
-          <div style={{ fontSize: 11, color: 'rgba(0,175,142,.5)', marginBottom: 4, ...S, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Duration (min)</div>
+          <div style={label}>Duration (min)</div>
           <input type="number" style={inp} placeholder="45" value={durationMin} onChange={e => setDurationMin(e.target.value)} />
         </div>
         <div>
-          <div style={{ fontSize: 11, color: 'rgba(0,175,142,.5)', marginBottom: 4, ...S, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Avg HR (bpm)</div>
+          <div style={label}>Avg HR (bpm)</div>
           <input type="number" style={inp} placeholder="135" value={hrAvg} onChange={e => setHrAvg(e.target.value)} />
         </div>
         <div>
-          <div style={{ fontSize: 11, color: 'rgba(0,175,142,.5)', marginBottom: 4, ...S, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Sleep Hours</div>
+          <div style={label}>Sleep hours</div>
           <input type="number" step="0.1" style={inp} placeholder="7.5" value={sleepHrs} onChange={e => setSleepHrs(e.target.value)} />
         </div>
         <div>
-          <div style={{ fontSize: 11, color: 'rgba(0,175,142,.5)', marginBottom: 4, ...S, letterSpacing: '0.1em', textTransform: 'uppercase' }}>HRV (ms)</div>
+          <div style={label}>HRV (ms)</div>
           <input type="number" style={inp} placeholder="42" value={hrvMs} onChange={e => setHrvMs(e.target.value)} />
         </div>
       </div>
       <div>
-        <div style={{ fontSize: 11, color: 'rgba(0,175,142,.5)', marginBottom: 4, ...S, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Notes (optional)</div>
+        <div style={label}>Notes (optional)</div>
         <input type="text" style={inp} placeholder="Felt strong, stayed in Zone 2 the whole session..." value={notes} onChange={e => setNotes(e.target.value)} />
       </div>
       <button onClick={submit} style={{
-        background: saved ? 'rgba(0,165,132,.3)' : 'rgba(0,200,160,.88)',
-        color: '#020810', border: 'none', fontFamily: 'EB Garamond,serif',
-        fontSize: 16, padding: '10px 0', borderRadius: 3, cursor: 'pointer', fontWeight: 500,
+        background: saved ? 'var(--accent-optimal)' : 'var(--brand)',
+        color: 'var(--text-inverse)', border: 'none', fontFamily: 'var(--font-display)',
+        fontSize: 16, padding: '10px 0', borderRadius: 'var(--r-sm)', cursor: 'pointer', fontWeight: 500,
       }}>
-        {saved ? '✓ Logged' : 'Log This Entry →'}
+        {saved ? '✓ Logged' : 'Log this entry →'}
       </button>
     </div>
   );
@@ -223,7 +227,7 @@ export default function TrackerConnect({ userId, onDataImported, connectedSource
     setUploading(false);
   }
 
-  const S: React.CSSProperties = { fontFamily: 'EB Garamond, Georgia, serif' };
+  const S: React.CSSProperties = { fontFamily: 'var(--font-display)' };
 
   return (
     <div>
@@ -236,17 +240,22 @@ export default function TrackerConnect({ userId, onDataImported, connectedSource
             <div key={t.id}
               onClick={() => setActiveTracker(active ? null : t.id)}
               style={{
-                background: active ? `rgba(${t.id === 'manual' ? '255,160,64' : '0,210,165'},.06)` : 'rgba(0,6,14,.82)',
-                border: `1px solid ${active ? t.color : connected ? `${t.color}44` : 'rgba(0,165,132,.14)'}`,
-                borderRadius: 6, padding: '14px 16px', cursor: 'pointer',
+                background: active ? 'var(--brand-ghost)' : 'var(--bg-surface)',
+                border: `1px solid ${active ? t.color : connected ? `${t.color}55` : 'var(--border-subtle)'}`,
+                borderRadius: 'var(--r-md)', padding: '14px 16px', cursor: 'pointer',
                 transition: 'all .18s', position: 'relative',
+                boxShadow: 'var(--shadow-card)',
               }}>
               {connected && (
-                <div style={{ position: 'absolute', top: 8, right: 10, fontSize: 10, color: '#00d2a5', fontFamily: 'monospace', letterSpacing: '0.1em' }}>LIVE</div>
+                <div style={{
+                  position: 'absolute', top: 10, right: 12, fontSize: 11,
+                  color: 'var(--accent-optimal)', background: 'rgba(22,101,52,.1)',
+                  padding: '2px 8px', borderRadius: 5, ...S,
+                }}>Connected</div>
               )}
               <div style={{ fontSize: 24, marginBottom: 8 }}>{t.icon}</div>
-              <div style={{ fontSize: 15, color: active ? t.color : 'rgba(0,215,172,.88)', fontWeight: 500, ...S, marginBottom: 4 }}>{t.name}</div>
-              <div style={{ fontSize: 12, color: 'rgba(0,165,132,.5)', lineHeight: 1.5, ...S }}>{t.description}</div>
+              <div style={{ fontSize: 15, color: active ? t.color : 'var(--text-primary)', fontWeight: 500, ...S, marginBottom: 4 }}>{t.name}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.5, ...S }}>{t.description}</div>
             </div>
           );
         })}
@@ -254,16 +263,23 @@ export default function TrackerConnect({ userId, onDataImported, connectedSource
 
       {/* Active tracker panel */}
       {tracker && (
-        <div style={{ background: 'rgba(0,6,14,.82)', border: `1px solid ${tracker.color}44`, borderTop: `2px solid ${tracker.color}`, borderRadius: 6, padding: '20px 22px' }}>
-          <div style={{ ...S, fontSize: 18, color: 'rgba(0,215,172,.94)', fontWeight: 500, marginBottom: 12 }}>{tracker.icon} {tracker.name}</div>
+        <div style={{
+          background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+          borderTop: `2px solid ${tracker.color}`, borderRadius: 'var(--r-md)',
+          padding: '20px 22px', boxShadow: 'var(--shadow-card)',
+        }}>
+          <div style={{ ...S, fontSize: 18, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 12 }}>{tracker.icon} {tracker.name}</div>
 
           {tracker.id === 'manual' ? (
             <ManualLogForm onLog={(entry) => onDataImported([entry], 'manual')} />
           ) : (
             <>
-              <div style={{ background: 'rgba(0,40,32,.3)', borderLeft: '3px solid rgba(0,210,165,.4)', padding: '12px 14px', borderRadius: '0 4px 4px 0', marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: '#00d2a5', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6, ...S }}>Export Instructions</div>
-                <div style={{ fontSize: 14, color: 'rgba(0,195,158,.8)', lineHeight: 1.6, ...S }}>{tracker.exportInstructions}</div>
+              <div style={{
+                background: 'var(--brand-ghost)', borderLeft: `3px solid ${tracker.color}66`,
+                padding: '12px 14px', borderRadius: '0 4px 4px 0', marginBottom: 16,
+              }}>
+                <div style={{ fontSize: 11, color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6, ...S }}>Export instructions</div>
+                <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, ...S }}>{tracker.exportInstructions}</div>
               </div>
 
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -271,13 +287,13 @@ export default function TrackerConnect({ userId, onDataImported, connectedSource
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
                   style={{
-                    background: tracker.color, color: '#020810', border: 'none',
-                    fontFamily: 'EB Garamond,serif', fontSize: 15, fontWeight: 500,
-                    padding: '10px 22px', borderRadius: 3, cursor: 'pointer', opacity: uploading ? .5 : 1,
+                    background: 'var(--brand)', color: 'var(--text-inverse)', border: 'none',
+                    fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 500,
+                    padding: '10px 22px', borderRadius: 'var(--r-sm)', cursor: 'pointer', opacity: uploading ? .5 : 1,
                   }}>
                   {uploading ? 'Reading…' : `Upload ${tracker.fileTypes.join(' / ')} →`}
                 </button>
-                {status && <div style={{ fontSize: 13, color: status.startsWith('✓') ? '#00d2a5' : 'rgba(255,160,100,.9)', ...S }}>{status}</div>}
+                {status && <div style={{ fontSize: 13, color: status.startsWith('✓') ? 'var(--accent-optimal)' : 'var(--accent-watch)', ...S }}>{status}</div>}
               </div>
 
               <input
