@@ -23,6 +23,7 @@ import Onboarding from './Onboarding';
 import PrivacyPolicy from './PrivacyPolicy';
 import EmptyDashboard from './EmptyDashboard';
 import GetTested from './GetTested';
+import SphereAdvisor from './SphereAdvisor';
 import AdminDashboard from './AdminDashboard';
 import PrintableReport from './PrintableReport';
 import WeekView from './WeekView';
@@ -34,7 +35,7 @@ import { identifyErrorUser, resetErrorUser, captureError } from './errors';
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
 type OrbState = 'dormant' | 'idle' | 'listening' | 'thinking' | 'speaking';
-type Panel = 'upload' | 'dashboard' | 'trends' | 'meals' | 'supps' | 'protocol' | 'protocols' | 'week' | 'ask' | 'profile' | 'admin' | 'tested';
+type Panel = 'upload' | 'dashboard' | 'trends' | 'meals' | 'supps' | 'protocol' | 'protocols' | 'week' | 'ask' | 'sphere' | 'profile' | 'admin' | 'tested';
 
 interface Marker {
   name: string;
@@ -94,7 +95,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 // ── ORB ──────────────────────────────────────────────────────────────────────
 
-function Orb({ state, size = 110 }: { state: OrbState; size?: number }) {
+export function Orb({ state, size = 110 }: { state: OrbState; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   useEffect(() => {
@@ -1565,6 +1566,7 @@ export default function App() {
     { id: 'dashboard', label: 'Health Dashboard',  count: allMarkers.length },
     { id: 'week',      label: 'Biologic Protocol'                           },
     { id: 'intelligence', label: 'Intelligent Consult'                      },
+    { id: 'sphere',    label: 'Ask Aellux Sphere'                           },
     { id: 'tested',    label: 'Lab Testing'                                 },
     // Legacy — admin only
     ...(isAdmin ? [
@@ -1607,6 +1609,7 @@ export default function App() {
           {panel === 'profile' && 'Profile'}
           {panel === 'tested' && 'Lab Testing'}
           {panel === 'ask' && 'Ask Aellux'}
+          {panel === 'sphere' && 'Aellux Sphere'}
           {panel === 'meals' && 'Meal Protocol'}
           {panel === 'supps' && 'Supp Stack'}
           {panel === 'protocol' && 'Daily Protocol'}
@@ -3022,7 +3025,12 @@ export default function App() {
             </div>
           )}
 
-          {/* ── ASK ── */}
+          {/* ── SPHERE ── */}
+          {panel === 'sphere' && (
+            <SphereAdvisor userId={user?.id} isPro={isPro} OrbComponent={Orb} />
+          )}
+
+          {/* ── ASK (legacy single-shot — admin only) ── */}
           {panel === 'ask' && (
             <div>
               <p style={{ ...S.label, marginBottom: 8 }}>Ask Aellux anything about your health</p>
