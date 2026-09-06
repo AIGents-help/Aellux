@@ -163,10 +163,17 @@ Return ONLY valid JSON, no markdown. Nothing before the opening brace, nothing a
       return sendJson(res, 502, { scenarios: [], error: "Analysis didn't come back in a usable format — try again." });
     }
 
-    // Persist so this doesn't need to be re-run (and re-paid-for) every visit.
+    // Must be awaited — firing this unawaited right before the response
+    // ends let Vercel freeze the function before the write ever reached
+    // Supabase, so every "successful" premortem silently failed to persist
+    // and the user had to regenerate (and re-pay for) it every visit.
     const markerHash = await hashMarkers(allMarkers);
-    sbUpsert('premortem_snapshots', { user_id: userId, result: parsed, marker_hash: markerHash, updated_at: new Date().toISOString() }, 'user_id').catch(() => {});
-    logUsage(userId, 'premortem').catch(() => {});
+    try {
+      await sbUpsert('premortem_snapshots', { user_id: userId, result: parsed, marker_hash: markerHash, updated_at: new Date().toISOString() }, 'user_id');
+    } catch (e) {
+      console.error('[premortem] snapshot save failed:', e?.message);
+    }
+    try { await logUsage(userId, 'premortem'); } catch (e) { console.error('[premortem] usage log failed:', e?.message); }
 
     return sendJson(res, 200, parsed);
   } catch (e) {

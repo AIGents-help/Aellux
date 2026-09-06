@@ -160,8 +160,15 @@ ${timelines.join('\n') || 'No marker history available.'}${citationBlock}`;
     }
 
     const stackHash = await hashMarkers(stack.map(s => ({ name: s.name, value: s.dose, unit: s.frequency, status: s.started_date })));
-    sbUpsert('stack_review_snapshots', { user_id: userId, result, stack_hash: stackHash, updated_at: new Date().toISOString() }, 'user_id').catch(() => {});
-    logUsage(userId, 'stack-review').catch(() => {});
+    // Must be awaited — firing this unawaited right before the response ends
+    // let Vercel freeze the function before the write ever reached Supabase,
+    // so every "successful" review silently failed to persist.
+    try {
+      await sbUpsert('stack_review_snapshots', { user_id: userId, result, stack_hash: stackHash, updated_at: new Date().toISOString() }, 'user_id');
+    } catch (e) {
+      console.error('[stack-review] snapshot save failed:', e?.message);
+    }
+    try { await logUsage(userId, 'stack-review'); } catch (e) { console.error('[stack-review] usage log failed:', e?.message); }
 
     return sendJson(res, 200, result);
   } catch (err) {

@@ -173,9 +173,12 @@ ${intelligenceStr}
 ${extrasStr}
 === END CONTEXT ===`;
 
-  // Persist the user's message immediately (fire-and-forget is fine — we
-  // want it recorded even if generation fails downstream).
-  sbInsert('sphere_messages', { thread_id: activeThreadId, user_id: userId, role: 'user', content: message.trim() }).catch(() => {});
+  // Persist the user's message before calling the model — awaited (not
+  // fire-and-forget) so it can't get lost to the same freeze-after-response
+  // problem, even though this one had a long window before response end.
+  try {
+    await sbInsert('sphere_messages', { thread_id: activeThreadId, user_id: userId, role: 'user', content: message.trim() });
+  } catch (e) { console.error('[sphere-chat] user message save failed:', e?.message); }
 
   const history = (priorMessages || []).map(m => ({ role: m.role, content: m.content }));
 
@@ -210,6 +213,7 @@ ${extrasStr}
 
   if (!anthropicRes.ok) {
     const errText = await anthropicRes.text().catch(() => '');
+    console.error('[sphere-chat] Anthropic non-ok', anthropicRes.status, errText.slice(0, 300));
     sse(res, 'error', { message: `Claude API ${anthropicRes.status}: ${errText.slice(0, 200)}` });
     clearInterval(keepalive); return res.end();
   }
@@ -260,10 +264,17 @@ ${extrasStr}
     clearInterval(keepalive); return res.end();
   }
 
-  // Persist assistant reply + housekeeping (fire-and-forget)
-  sbInsert('sphere_messages', { thread_id: activeThreadId, user_id: userId, role: 'assistant', content: accumulated.trim() }).catch(() => {});
-  sbUpdate('sphere_threads', `id=eq.${activeThreadId}`, { updated_at: new Date().toISOString() }).catch(() => {});
-  logUsage(userId, 'sphere-chat').catch(() => {});
+  // Persist assistant reply + housekeeping — must be awaited (same class of
+  // bug as premortem/stack-review: fire-and-forget here let Vercel freeze
+  // the function before the write reached Supabase, so replies streamed
+  // fine but the thread lost them on reload).
+  try {
+    await sbInsert('sphere_messages', { thread_id: activeThreadId, user_id: userId, role: 'assistant', content: accumulated.trim() });
+  } catch (e) { console.error('[sphere-chat] message save failed:', e?.message); }
+  try {
+    await sbUpdate('sphere_threads', `id=eq.${activeThreadId}`, { updated_at: new Date().toISOString() });
+  } catch (e) { console.error('[sphere-chat] thread touch failed:', e?.message); }
+  try { await logUsage(userId, 'sphere-chat'); } catch (e) { console.error('[sphere-chat] usage log failed:', e?.message); }
 
   sse(res, 'complete', { threadId: activeThreadId });
   clearInterval(keepalive);
